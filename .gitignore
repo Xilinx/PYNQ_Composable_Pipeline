@@ -1,0 +1,13 @@
+# Copyright (C) 2021 Xilinx, Inc
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+*.log
+*.jou
+*.str
+.Xil/
+*.vhlsprj
+NA/
+cv_dfx_4_pr/
+overlay/
+overlay.zip
