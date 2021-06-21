@@ -38,6 +38,7 @@ from .apps import ColorDetect
 from .apps import Filter2DApp
 from .apps import LutApp
 from .libs import *
+from .video import *
 
 
 __author__ = "Mario Ruiz"
