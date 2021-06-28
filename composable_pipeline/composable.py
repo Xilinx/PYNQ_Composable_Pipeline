@@ -905,12 +905,15 @@ class Composable:
                 decoupler_hl = GPIO(GPIO.get_gpio_pin(self._dfx_dict[pr]\
                     ['gpio']['decouple']), 'out')
                 decoupler_hl.write(1)
-                while True:
-                    # workaround to prevent the timeout getting to users
+                for i in range(5):
                     try:
                         self._pr_download(pr, path + bit_dict[pr]['bitstream'])
                         break
                     except TimeoutError:
+                        if i == 4:
+                            raise TimeoutError("{} partial bitstream could" \
+                                "not be downloaded".\
+                                format(bit_dict[pr]['bitstream']))
                         continue
 
                 decoupler_hl.write(0)
