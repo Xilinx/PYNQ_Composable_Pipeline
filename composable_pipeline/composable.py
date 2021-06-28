@@ -130,7 +130,7 @@ def _find_connected_node(slot: dict, tree: ElementTree) -> tuple:
     return s, False
 
 def _dfx_get_oposite_port(port: str) -> str:
-    """ Get corresponding opposite port for a dfx decoupler"""
+    """Get corresponding opposite port for a dfx decoupler"""
 
     return 's' + port[2::] if 'rp' in port else 'rp' + port[1::]
 
@@ -246,8 +246,7 @@ def _dfx_ip_discovery(partial_region: str, partial_hwh: str) -> dict:
     return dfx_dict
 
 def _port_to_key(port: int) -> str:
-    """ create string from an port number
-    """
+    """Create string from an port number"""
 
     string = str(port) + '_AXIS'
     if port < 10:
@@ -257,8 +256,7 @@ def _port_to_key(port: int) -> str:
 
 def _find_index_in_list(pipeline: list, element: Type[DefaultIP]) \
     -> Union[int, tuple]:
-    """ Return the index of the element in the pipeline
-    """
+    """Return the index of the element in the pipeline"""
 
     for i, v in enumerate(pipeline):
         if isinstance(v, list):
@@ -307,7 +305,7 @@ class ComposableOverlay(Overlay):
 
 
 class Composable:
-    """ This class keeps track of a composable overlay
+    """This class keeps track of a composable overlay
 
     The Composable class holds the state of the logic available for run-time 
     composition through and AXI4-Stream switch 
@@ -393,7 +391,6 @@ class Composable:
             base_pr_1_function_1.hwh
             base_pr_1_function_2.bit
             base_pr_1_function_2.hwh            
-
         """
 
         self._ol = ol
@@ -426,6 +423,7 @@ class Composable:
     @property
     def c_dict(self):
         """Returns the c_dict dictionary"""
+
         return ReprDictComposable(self._c_dict, rootname='composable')
 
     @property
@@ -539,7 +537,7 @@ class Composable:
         self._default_dfx_dict = default_dfx_dict
 
     def _dfx_regions_discovery(self) -> None:
-        """ Discover DFX regions in the overlay and create dfx_dict dict
+        """Discover DFX regions in the overlay and create dfx_dict dict
 
         The .dfx_dict dictionary contains relevant information about the 
         DFX regions 
@@ -576,7 +574,7 @@ class Composable:
         self._dfx_dict = dfx_dict
 
     def _soft_reset_discovery(self) -> None:
-        """Finding soft reset logic """
+        """Finding soft reset logic"""
         
         tree = ElementTree.parse(self._hwh_name)
         tree_root = tree.getroot()
@@ -629,6 +627,7 @@ class Composable:
     
     def _pr_download(self, partial_region: str, partial_bit: str) -> None:
         """The method to download a partial bitstream onto PL.
+
         The composable dictionary is updated with the new hardware loaded onto
         the reconfigurable region
         In this method, the corresponding parser will only be
@@ -726,8 +725,6 @@ class Composable:
                 -> a -> b               f -> g ->
                           \\            /
                             -> e ------
-
-
         """
 
         if not isinstance(cle_list, list):
@@ -920,7 +917,7 @@ class Composable:
 
 
     def remove(self, iplist: list=None) -> None:
-        """ Remove IP object from the current pipeline
+        """Remove IP object from the current pipeline
         
         Parameters
         ----------
@@ -950,7 +947,7 @@ class Composable:
 
 
     def insert(self, iptuple: tuple) -> None:
-        """ Insert a new IP or list of IP into current pipeline
+        """Insert a new IP or list of IP into current pipeline
 
         Parameters
         ----------
@@ -986,7 +983,7 @@ class Composable:
 
 
     def replace(self, replaceip: tuple) -> None:
-        """ Replace an IP object in the current pipeline
+        """Replace an IP object in the current pipeline
 
         Parameters
         ----------
@@ -1090,7 +1087,7 @@ class Composable:
                           list(self._c_dict.keys())))
 
     def _configure_switch(self, new_sw_config: dict) -> None:
-        """ Verify that default values are set and configure the switch"""
+        """Verify that default values are set and configure the switch"""
 
         switch_conf = np.copy(new_sw_config)
         
@@ -1102,8 +1099,7 @@ class Composable:
 
     @property
     def _debug_switch(self) -> HTML:
-        """ Display AXI4-Stream Switch configuration table
-        """
+        """Display AXI4-Stream Switch configuration table"""
 
         stringout = '<table><thead><tr><th>Consumer Interface</th><th></th>'\
             '<th>Producer Interface</th></tr></thead><tbody>'
@@ -1159,10 +1155,10 @@ class UnloadedIP:
         self._fullpath = path
 
 class BufferIP:
-    """ Handles IP objects that are of buffering type
+    """Handles IP objects that are of buffering type
 
-    Expose a dummy start method and fullpath attribute for buffering type IP 
-    such as a) FIFOs b) Slice registers. 
+    Expose fullpath attribute for buffering type IP such as a) FIFOs 
+    b) Slice registers. 
     """
 
     def __init__(self, path: str):
@@ -1312,8 +1308,7 @@ class ReprDictComposable(dict):
         super().__init__(*args, **kwargs)
 
     def _filter_by_status(self, loaded: bool) -> dict:
-        """Returns a new dictionary that matches boolean value of 'loaded'
-        """
+        """Returns a new dictionary that matches boolean value of 'loaded'"""
 
         newdict = self.copy()
         for i in self:
@@ -1324,16 +1319,16 @@ class ReprDictComposable(dict):
 
     @property
     def loaded(self):
-        """Displays only loaded IP
-        """
+        """Displays only loaded IP"""
+
         newdict =  self._filter_by_status(True)
         return ReprDictComposable(newdict, expanded=self._expanded, \
                 rootname=self._rootname)
 
     @property
     def unloaded(self):
-        """Displays only unloaded IP
-        """
+        """Displays only unloaded IP"""
+
         newdict =  self._filter_by_status(False)
         return ReprDictComposable(newdict, expanded=self._expanded, \
                 rootname=self._rootname)
