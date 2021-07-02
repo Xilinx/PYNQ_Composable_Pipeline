@@ -2290,8 +2290,7 @@ proc create_hier_cell_dfx_decouplers { parentCell nameHier } {
   # Create instance: status_xlconcat, and set properties
   set status_xlconcat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 status_xlconcat ]
   set_property -dict [ list \
-   CONFIG.NUM_PORTS {5} \
-   CONFIG.IN0_WIDTH {4} \
+   CONFIG.NUM_PORTS {8} \
  ] $status_xlconcat
 
   # Create instance: xlslice_pr_0, and set properties
@@ -2387,10 +2386,10 @@ proc create_hier_cell_dfx_decouplers { parentCell nameHier } {
   connect_bd_intf_net -intf_net video_M14_AXIS [get_bd_intf_pins s_axis_dfx_pr_1_0] [get_bd_intf_pins dfx_decoupler_pr_1/s_in_0]
 
   # Create port connections
-  connect_bd_net -net dfx_decoupler_0_decouple_status [get_bd_pins dfx_decoupler_pr_0/decouple_status] [get_bd_pins status_xlconcat/In1]
-  connect_bd_net -net dfx_decoupler_1_decouple_status [get_bd_pins dfx_decoupler_pr_1/decouple_status] [get_bd_pins status_xlconcat/In2]
-  connect_bd_net -net dfx_decoupler_2_decouple_status [get_bd_pins dfx_decoupler_pr_join/decouple_status] [get_bd_pins status_xlconcat/In3]
-  connect_bd_net -net dfx_decoupler_3_decouple_status [get_bd_pins dfx_decoupler_pr_fork/decouple_status] [get_bd_pins status_xlconcat/In4]
+  connect_bd_net -net dfx_decoupler_0_decouple_status [get_bd_pins dfx_decoupler_pr_0/decouple_status] [get_bd_pins status_xlconcat/In4]
+  connect_bd_net -net dfx_decoupler_1_decouple_status [get_bd_pins dfx_decoupler_pr_1/decouple_status] [get_bd_pins status_xlconcat/In5]
+  connect_bd_net -net dfx_decoupler_2_decouple_status [get_bd_pins dfx_decoupler_pr_join/decouple_status] [get_bd_pins status_xlconcat/In6]
+  connect_bd_net -net dfx_decoupler_3_decouple_status [get_bd_pins dfx_decoupler_pr_fork/decouple_status] [get_bd_pins status_xlconcat/In7]
   connect_bd_net -net ps7_0_FCLK_CLK1 [get_bd_pins clk_300MHz] [get_bd_pins pr_0_in0/aclk] [get_bd_pins pr_0_in1/aclk] [get_bd_pins pr_0_out0/aclk] [get_bd_pins pr_0_out1/aclk] [get_bd_pins pr_1_in0/aclk] [get_bd_pins pr_1_in1/aclk] [get_bd_pins pr_1_out0/aclk] [get_bd_pins pr_1_out1/aclk] [get_bd_pins pr_fork_in0/aclk] [get_bd_pins pr_fork_out0/aclk] [get_bd_pins pr_fork_out1/aclk] [get_bd_pins pr_join_fifo_in_0/s_axis_aclk] [get_bd_pins pr_join_fifo_in_1/s_axis_aclk] [get_bd_pins pr_join_in0/aclk] [get_bd_pins pr_join_in1/aclk] [get_bd_pins pr_join_out0/aclk] [get_bd_pins smartconnect_0/aclk]
   connect_bd_net -net ps7_0_GPIO_O [get_bd_pins dfx_decouple] [get_bd_pins xlslice_pr_0/Din] [get_bd_pins xlslice_pr_1/Din] [get_bd_pins xlslice_pr_join/Din] [get_bd_pins xlslice_pr_fork/Din]
   connect_bd_net -net rst_ps7_0_fclk1_soft_reset [get_bd_pins soft_rst_n] [get_bd_pins pr_0_in0/aresetn] [get_bd_pins pr_0_in1/aresetn] [get_bd_pins pr_0_out0/aresetn] [get_bd_pins pr_0_out1/aresetn] [get_bd_pins pr_1_in0/aresetn] [get_bd_pins pr_1_in1/aresetn] [get_bd_pins pr_1_out0/aresetn] [get_bd_pins pr_1_out1/aresetn] [get_bd_pins pr_fork_in0/aresetn] [get_bd_pins pr_fork_out0/aresetn] [get_bd_pins pr_fork_out1/aresetn] [get_bd_pins pr_join_fifo_in_0/s_axis_aresetn] [get_bd_pins pr_join_fifo_in_1/s_axis_aresetn] [get_bd_pins pr_join_in0/aresetn] [get_bd_pins pr_join_in1/aresetn] [get_bd_pins pr_join_out0/aresetn]
@@ -3783,7 +3782,6 @@ wait_on_run child_2_impl_1
 # create bitstreams directory
 set dest_dir "./overlay"
 exec mkdir $dest_dir -p
-
 
 # cp hwh files
 # pr_0 related

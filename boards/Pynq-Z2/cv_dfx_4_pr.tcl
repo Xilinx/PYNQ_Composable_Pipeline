@@ -2030,8 +2030,7 @@ proc create_hier_cell_dfx_decouplers { parentCell nameHier } {
   # Create instance: status_xlconcat, and set properties
   set status_xlconcat [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconcat:2.1 status_xlconcat ]
   set_property -dict [ list \
-   CONFIG.NUM_PORTS {5} \
-   CONFIG.IN0_WIDTH {4} \
+   CONFIG.NUM_PORTS {8} \
  ] $status_xlconcat
 
   # Create instance: xlslice_pr_0, and set properties
@@ -2126,10 +2125,10 @@ proc create_hier_cell_dfx_decouplers { parentCell nameHier } {
   connect_bd_intf_net -intf_net video_M22_AXI [get_bd_intf_pins m_axi_dfx_pr_1_1] [get_bd_intf_pins dfx_decoupler_pr_1/rp_axi_lite1]
 
   # Create port connections
-  connect_bd_net -net dfx_decoupler_0_decouple_status [get_bd_pins dfx_decoupler_pr_0/decouple_status] [get_bd_pins status_xlconcat/In1]
-  connect_bd_net -net dfx_decoupler_1_decouple_status [get_bd_pins dfx_decoupler_pr_1/decouple_status] [get_bd_pins status_xlconcat/In2]
-  connect_bd_net -net dfx_decoupler_2_decouple_status [get_bd_pins dfx_decoupler_pr_join/decouple_status] [get_bd_pins status_xlconcat/In3]
-  connect_bd_net -net dfx_decoupler_3_decouple_status [get_bd_pins dfx_decoupler_pr_fork/decouple_status] [get_bd_pins status_xlconcat/In4]
+  connect_bd_net -net dfx_decoupler_0_decouple_status [get_bd_pins dfx_decoupler_pr_0/decouple_status] [get_bd_pins status_xlconcat/In4]
+  connect_bd_net -net dfx_decoupler_1_decouple_status [get_bd_pins dfx_decoupler_pr_1/decouple_status] [get_bd_pins status_xlconcat/In5]
+  connect_bd_net -net dfx_decoupler_2_decouple_status [get_bd_pins dfx_decoupler_pr_join/decouple_status] [get_bd_pins status_xlconcat/In6]
+  connect_bd_net -net dfx_decoupler_3_decouple_status [get_bd_pins dfx_decoupler_pr_fork/decouple_status] [get_bd_pins status_xlconcat/In7]
   connect_bd_net -net ps7_0_FCLK_CLK1 [get_bd_pins clk_142M] [get_bd_pins pr_0_in0/aclk] [get_bd_pins pr_0_in1/aclk] [get_bd_pins pr_0_out0/aclk] [get_bd_pins pr_0_out1/aclk] [get_bd_pins pr_1_in0/aclk] [get_bd_pins pr_1_in1/aclk] [get_bd_pins pr_1_out0/aclk] [get_bd_pins pr_1_out1/aclk] [get_bd_pins pr_fork_in0/aclk] [get_bd_pins pr_fork_out0/aclk] [get_bd_pins pr_fork_out1/aclk] [get_bd_pins pr_join_fifo_in_0/s_axis_aclk] [get_bd_pins pr_join_fifo_in_1/s_axis_aclk] [get_bd_pins pr_join_in0/aclk] [get_bd_pins pr_join_in1/aclk] [get_bd_pins pr_join_out0/aclk]
   connect_bd_net -net ps7_0_GPIO_O [get_bd_pins dfx_decouple] [get_bd_pins xlslice_pr_0/Din] [get_bd_pins xlslice_pr_1/Din] [get_bd_pins xlslice_pr_join/Din] [get_bd_pins xlslice_pr_fork/Din]
   connect_bd_net -net peripheral_aresetn [get_bd_pins periph_resetn_clk142M] [get_bd_pins pr_0_in0/aresetn] [get_bd_pins pr_0_in1/aresetn] [get_bd_pins pr_0_out0/aresetn] [get_bd_pins pr_0_out1/aresetn] [get_bd_pins pr_1_in0/aresetn] [get_bd_pins pr_1_in1/aresetn] [get_bd_pins pr_1_out0/aresetn] [get_bd_pins pr_1_out1/aresetn] [get_bd_pins pr_fork_in0/aresetn] [get_bd_pins pr_fork_out0/aresetn] [get_bd_pins pr_fork_out1/aresetn] [get_bd_pins pr_join_fifo_in_0/s_axis_aresetn] [get_bd_pins pr_join_fifo_in_1/s_axis_aresetn] [get_bd_pins pr_join_in0/aresetn] [get_bd_pins pr_join_in1/aresetn] [get_bd_pins pr_join_out0/aresetn]
@@ -3560,15 +3559,18 @@ create_run child_2_impl_1 -parent_run impl_1 -flow {Vivado Implementation 2020} 
 # Change global implementation strategy
 set_property strategy Performance_NetDelay_low [get_runs impl_1]
 
-launch_runs impl_1 child_0_impl_1 child_1_impl_1 child_2_impl_1 -to_step write_bitstream -jobs 4
+launch_runs impl_1 -to_step write_bitstream -jobs 4
 wait_on_run impl_1
+launch_runs child_0_impl_1 -to_step write_bitstream -jobs 4
 wait_on_run child_0_impl_1
+launch_runs child_1_impl_1 child_2_impl_1 -to_step write_bitstream -jobs 4
 wait_on_run child_1_impl_1
 wait_on_run child_2_impl_1
 
 # create bitstreams directory
 set dest_dir "./overlay"
 exec mkdir $dest_dir -p
+
 # cp hwh files
 # pr_0 related
 exec cp ./${prj_name}/${prj_name}.gen/sources_1/bd/${pr_0_dilate_erode}/hw_handoff/${pr_0_dilate_erode}.hwh ./$dest_dir/${prj_name}_${pr_0_dilate_erode}_partial.hwh
