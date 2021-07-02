@@ -27,7 +27,8 @@
 #   OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from pynq import Overlay, DefaultIP, GPIO
+from pynq import Overlay, DefaultIP
+from pynq.lib import AxiGPIO
 from pynq.utils import ReprDict
 from xml.etree import ElementTree
 from collections import defaultdict
@@ -406,7 +407,7 @@ class Composable:
         self._dfx_regions_discovery()
         self._partial_bitstreams_discovery()
         self._insert_dfx_ip()
-        self._soft_reset_discovery()
+        self._pipeline_control_discovery()
         self.graph = Digraph()
         self.graph.graph_attr['size'] = '14'
         self.graph.graph_attr['rankdir'] = 'LR'
@@ -542,8 +543,10 @@ class Composable:
         The .dfx_dict dictionary contains relevant information about the 
         DFX regions 
             - decoupler name
-            - gpio pins that control decoupler and status
-            - list of bitstreams and the available IP
+            - decouple gpio pin that control the decoupler
+            - status gpio pin, decupler status
+            - reconfigurable module (rm), list of partial bitstreams and their
+              available IP
         If the design has no DFX region the dictionary will be empty
         """
 
@@ -564,35 +567,36 @@ class Composable:
             decoupler = dfx_dict[d]['decoupler']
             search_term = "MODULES/*/[@FULLNAME=\'" + decoupler + "\']"
             node = tree.find(search_term)
-            decouple = _get_slice_gpio_pin(\
+            dfx_dict[d]['decouple'] = _get_slice_gpio_pin(\
                 node.find("./PORTS/*[@NAME='decouple']").get('SIGNAME'), tree)
-            status = _get_decouple_status_gpio_pin(\
+            dfx_dict[d]['status'] = _get_decouple_status_gpio_pin(\
                 node.find("./PORTS/*[@NAME='decouple_status']")\
                 .get('SIGNAME'),tree)
-            dfx_dict[d]['gpio'] = {'decouple' : decouple, 'status' : status}
         
         self._dfx_dict = dfx_dict
 
-    def _soft_reset_discovery(self) -> None:
+    def _pipeline_control_discovery(self) -> None:
         """Finding soft reset logic"""
         
         tree = ElementTree.parse(self._hwh_name)
         tree_root = tree.getroot()
         
-        search_term = "MODULES/*/[@MODTYPE=\'proc_sys_reset\']"
+        search_term = "MODULES/*/[@MODTYPE=\'axi_gpio\']"
         node = tree.findall(search_term)
         
-        pin = None
+        fullname = None
         for m in node:
-            if 'ps_user_soft_reset' in m.get('FULLNAME'):
-                pin = _get_slice_gpio_pin(m.find(\
-                    "./PORTS/*[@NAME='aux_reset_in']").get('SIGNAME'), tree)
+            if 'pipeline_control' in m.get('FULLNAME'):
+                fullname = m.get('FULLNAME')
                 break
 
-        if pin is not None:
-            self._soft_reset = GPIO(GPIO.get_gpio_pin(pin), 'out')
+        if fullname is not None:
+            gpio = AxiGPIO(self._ol.ip_dict[fullname.lstrip('/')])
+            self._soft_reset = gpio.channel1
+            self._dfx_control = gpio.channel2
         else:
             self._soft_reset = None
+            self._dfx_control = None
 
     def _partial_bitstreams_discovery(self) -> None:
         """Search for partial bitstreams and add them to the dictionary"""
@@ -602,10 +606,10 @@ class Composable:
             for r in self._dfx_dict:
                 name = os.path.basename(f)
                 if r in name and '.bit' in f:
-                    if 'ip' not in self._dfx_dict[r].keys():
-                        self._dfx_dict[r]['ip'] = dict()
+                    if 'rm' not in self._dfx_dict[r].keys():
+                        self._dfx_dict[r]['rm'] = dict()
 
-                    self._dfx_dict[r]['ip'][f] = dict()
+                    self._dfx_dict[r]['rm'][f] = dict()
                     break 
 
 
@@ -618,10 +622,10 @@ class Composable:
 
         dir_name = os.path.dirname(self._ol.bitfile_name)
         for r in self._dfx_dict:
-            for b in self._dfx_dict[r]['ip']:
+            for b in self._dfx_dict[r]['rm']:
                 hwh_name = dir_name + '/' + os.path.splitext(b)[0] + '.hwh'
                 dfx_dict = _dfx_ip_discovery(r, hwh_name)
-                self._dfx_dict[r]['ip'][b] = dfx_dict
+                self._dfx_dict[r]['rm'][b] = dfx_dict
                 self._update_ip_dict_with_dfx(r, dfx_dict)
 
     
@@ -649,7 +653,7 @@ class Composable:
         self._ol.pr_download(partial_region, partial_bit)
         self._unload_region_from_ip_dict(partial_region)
         dfx_dict = self._dfx_dict[partial_region]\
-            ['ip'][os.path.basename(partial_bit)]
+            ['rm'][os.path.basename(partial_bit)]
         self._set_loaded(dfx_dict)
 
 
@@ -841,8 +845,8 @@ class Composable:
                                 "can only be used once" .format(ip._fullpath))
         
         if self._soft_reset is not None:
-            self._soft_reset.write(1)
-            self._soft_reset.write(0)
+            self._soft_reset[0].write(1)
+            self._soft_reset[0].write(0)
         
         self._configure_switch(switch_conf)
         
@@ -899,9 +903,7 @@ class Composable:
         path = os.path.dirname(self._hwh_name) + '/'
         for pr in bit_dict:
             if not bit_dict[pr]['loaded']:
-                decoupler_hl = GPIO(GPIO.get_gpio_pin(self._dfx_dict[pr]\
-                    ['gpio']['decouple']), 'out')
-                decoupler_hl.write(1)
+                self._dfx_control[self._dfx_dict[pr]['decouple']].write(1)
                 for i in range(5):
                     try:
                         self._pr_download(pr, path + bit_dict[pr]['bitstream'])
@@ -913,7 +915,7 @@ class Composable:
                                 format(bit_dict[pr]['bitstream']))
                         continue
 
-                decoupler_hl.write(0)
+                self._dfx_control[self._dfx_dict[pr]['decouple']].write(0)
 
 
     def remove(self, iplist: list=None) -> None:
@@ -1353,4 +1355,4 @@ class ReprDictComposable(dict):
                 rootname=key)
         else:
             return obj
-            
+
