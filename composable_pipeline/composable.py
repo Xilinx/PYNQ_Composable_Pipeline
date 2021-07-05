@@ -39,6 +39,7 @@ import numpy as np
 import re
 import os
 import json
+import glob
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
@@ -551,14 +552,12 @@ class Composable:
         """
 
         dfx_dict = dict()
-        for d in self._switch_conn:
-            if self._switch_conn[d]['dfx']:
-                fullname = self._switch_conn[d]['fullname'][1::]
-                key = re.sub(r'\/.*','',fullname)
+        for k, v in self._switch_conn.items():
+            if v['dfx']:
+                key = v['fullname'].lstrip('/')
                 if key not in dfx_dict.keys():
                     dfx_dict[key] = dict()    
-                dfx_dict[key]['decoupler'] = \
-                    self._switch_conn[d]['decoupler']
+                dfx_dict[key]['decoupler'] = v['decoupler']
 
         tree = ElementTree.parse(self._hwh_name)
         tree_root = tree.getroot()
@@ -602,15 +601,19 @@ class Composable:
         """Search for partial bitstreams and add them to the dictionary"""
 
         dir_name = os.path.dirname(self._ol.bitfile_name)
-        for f in os.listdir(dir_name):
-            for r in self._dfx_dict:
-                name = os.path.basename(f)
-                if r in name and '.bit' in f:
-                    if 'rm' not in self._dfx_dict[r].keys():
-                        self._dfx_dict[r]['rm'] = dict()
+        filelist = glob.glob(dir_name +'/*.bit')
+        working_list = filelist.copy()
 
-                    self._dfx_dict[r]['rm'][f] = dict()
-                    break 
+        for key in self._dfx_dict:
+            bitkey = key.replace('/','_')
+            for f in working_list:
+                file = os.path.split(f)[1]
+                if bitkey in file:
+                    if 'rm' not in self._dfx_dict[key].keys():
+                        self._dfx_dict[key]['rm'] = dict()
+                    self._dfx_dict[key]['rm'][file] = dict()
+                    filelist.remove(f)
+            working_list = filelist.copy()
 
 
     def _insert_dfx_ip(self) -> None:
@@ -1189,7 +1192,6 @@ class StreamSwitch(DefaultIP):
     def __init__(self, description: dict):
         super().__init__(description=description)
         self.max_slots = int(description['parameters']['C_NUM_MI_SLOTS'])
-        self._description = description
         self._pi = np.zeros(self.max_slots, dtype=np.int32)
 
     def default(self):
