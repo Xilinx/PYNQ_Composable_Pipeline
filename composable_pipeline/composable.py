@@ -27,7 +27,7 @@
 #   OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from pynq import Overlay, DefaultIP
+from pynq import Overlay, DefaultIP, DefaultHierarchy
 from pynq.lib import AxiGPIO
 from pynq.utils import ReprDict
 from xml.etree import ElementTree
@@ -272,41 +272,7 @@ def _find_index_in_list(pipeline: list, element: Type[DefaultIP]) \
     return None
 
 
-class ComposableOverlay(Overlay):
-    """This class keeps track of a composable overlay
-
-    The ComposableOverlay class enhances the Overlay class by exposing run-time 
-    composition through the .composable hierarchy
-
-    This class inherits from Overlay class and only exposes the composable
-    method if there is at least one AXI4-Stream Switch
-    """
-    def __init__(self, bitfile_name, dtbo=None, download=True, 
-            ignore_version=False, device=None):
-        """Return a new Composable object.
-
-        It checks whether the Overlay is composable, if so it adds a new
-        Composable object into the composable hierarchy
-        """
-
-        super().__init__(bitfile_name, dtbo, download, ignore_version, device)
-
-        switch = list()
-        for d in self.ip_dict:
-            if self.ip_dict[d]['type'] == 'xilinx.com:ip:axis_switch:1.1':
-                composable = True
-                switch_desc = self.ip_dict[d]
-                switch.append(d)
-                self._max_slots = int(self.ip_dict[d]['parameters']
-                    ['C_NUM_MI_SLOTS'])
-        
-        predefpaths = _default_paths[self.device.name]
-
-        if len(switch) != 0:
-            self.composable = Composable(self, switch[0], predefpaths)
-
-
-class Composable:
+class Composable(DefaultHierarchy):
     """This class keeps track of a composable overlay
 
     The Composable class holds the state of the logic available for run-time 
@@ -355,7 +321,13 @@ class Composable:
         list of the IP objects in the current dataflow pipeline
     """
 
-    def __init__(self, ol, name, sw_default=None):
+    @staticmethod
+    def checkhierarchy(description):
+        return (
+            'axis_switch' in description['ip'] and
+            'pipeline_control' in description['ip'])
+
+    def __init__(self, description):
         """Return a new Composable object.
 
         Performs a hardware discovery where the different IP cores connected 
@@ -395,20 +367,25 @@ class Composable:
             base_pr_1_function_2.hwh            
         """
 
-        self._ol = ol
-        self._max_slots = int(ol.ip_dict[name]['parameters']['C_NUM_MI_SLOTS'])
-        self._switch = StreamSwitch(self._ol.ip_dict[name])
-        
+        super().__init__(description)
+        self._hier = description['fullpath'] + '/'
+        self._dfx_dict = None
+        sw_default = _default_paths[description['device'].name]
+        self._bitfile = description['device'].bitfile_name
+        self._pipecrtl = self.pipeline_control
+        self._switch = self.axis_switch
+
         self._sw_default, self._default_switch_m_list, \
             self._default_switch_s_list = \
-            _generate_switch_default(sw_default, self._max_slots)
+            _generate_switch_default(sw_default, self._switch.max_slots)
         self._switch.pi = self._sw_default 
       
         self._hardware_discovery()
         self._dfx_regions_discovery()
         self._partial_bitstreams_discovery()
         self._insert_dfx_ip()
-        self._pipeline_control_discovery()
+        self._soft_reset = self._pipecrtl.channel1
+        self._dfx_control = self._pipecrtl.channel2
         self.graph = Digraph()
         self.graph.graph_attr['size'] = '14'
         self.graph.graph_attr['rankdir'] = 'LR'
@@ -437,7 +414,7 @@ class Composable:
     def _hardware_discovery(self) -> None:
         """Discover how functions are connected to the switch"""
 
-        self._hwh_name = os.path.splitext(self._ol.bitfile_name)[0] + '.hwh'
+        self._hwh_name = os.path.splitext(self._bitfile)[0] + '.hwh'
         tree = ElementTree.parse(self._hwh_name)
         tree_root = tree.getroot()
         no_stream_list = ['axis_switch', 'xlconcat', 'axi_intc', 'xlslice',
@@ -517,7 +494,7 @@ class Composable:
             else:
                 key = switch_conn[d]['interface']
                 dictionary = default_dfx_dict
-
+            key = key.replace(self._hier,'').lstrip('/')
             if key not in static_dict.keys():
                 dictionary[key] = dict()
 
@@ -554,7 +531,7 @@ class Composable:
         dfx_dict = dict()
         for k, v in self._switch_conn.items():
             if v['dfx']:
-                key = v['fullname'].lstrip('/')
+                key = v['fullname'].replace(self._hier,'').lstrip('/')
                 if key not in dfx_dict.keys():
                     dfx_dict[key] = dict()    
                 dfx_dict[key]['decoupler'] = v['decoupler']
@@ -574,33 +551,10 @@ class Composable:
         
         self._dfx_dict = dfx_dict
 
-    def _pipeline_control_discovery(self) -> None:
-        """Finding soft reset logic"""
-        
-        tree = ElementTree.parse(self._hwh_name)
-        tree_root = tree.getroot()
-        
-        search_term = "MODULES/*/[@MODTYPE=\'axi_gpio\']"
-        node = tree.findall(search_term)
-        
-        fullname = None
-        for m in node:
-            if 'pipeline_control' in m.get('FULLNAME'):
-                fullname = m.get('FULLNAME')
-                break
-
-        if fullname is not None:
-            gpio = AxiGPIO(self._ol.ip_dict[fullname.lstrip('/')])
-            self._soft_reset = gpio.channel1
-            self._dfx_control = gpio.channel2
-        else:
-            self._soft_reset = None
-            self._dfx_control = None
-
     def _partial_bitstreams_discovery(self) -> None:
         """Search for partial bitstreams and add them to the dictionary"""
 
-        dir_name = os.path.dirname(self._ol.bitfile_name)
+        dir_name = os.path.dirname(self._bitfile)
         filelist = glob.glob(dir_name +'/*.bit')
         working_list = filelist.copy()
 
@@ -623,7 +577,7 @@ class Composable:
         into the self._c_dict
         """
 
-        dir_name = os.path.dirname(self._ol.bitfile_name)
+        dir_name = os.path.dirname(self._bitfile)
         for r in self._dfx_dict:
             for b in self._dfx_dict[r]['rm']:
                 hwh_name = dir_name + '/' + os.path.splitext(b)[0] + '.hwh'
@@ -653,7 +607,7 @@ class Composable:
         """
 
         hwh_par = os.path.splitext(os.path.abspath(partial_bit))[0] + '.hwh'
-        self._ol.pr_download(partial_region, partial_bit)
+        self.ol.pr_download(partial_region, partial_bit)
         self._unload_region_from_ip_dict(partial_region)
         dfx_dict = self._dfx_dict[partial_region]\
             ['rm'][os.path.basename(partial_bit)]
@@ -684,17 +638,18 @@ class Composable:
         for k in dfx_dict:
             updated_dict[k] = dict()
             for i in dfx_dict[k]['interface']:
-                if 'pi' in self._default_dfx_dict[i].keys():
+                key = i.lstrip('/')
+                if 'pi' in self._default_dfx_dict[key].keys():
                     if 'pi' not in updated_dict[k].keys():
                         port = list()
 
-                    port.append(self._default_dfx_dict[i]['pi'][0])
+                    port.append(self._default_dfx_dict[key]['pi'][0])
                     updated_dict[k]['pi'] = port
                 else:
                     if 'ci' not in updated_dict[k].keys():
                         port = list()
                     
-                    port.append(self._default_dfx_dict[i]['ci'][0])
+                    port.append(self._default_dfx_dict[key]['ci'][0])
                     updated_dict[k]['ci'] = port
 
 
@@ -1081,10 +1036,12 @@ class Composable:
         self.compose(self._current_pipeline)
 
     def __getattr__(self, name):
-        if name in self._dfx_dict: 
+        if self._dfx_dict is None:
+            return super().__getattr__(name)
+        elif name in self._dfx_dict:
             return PRRegion(self, name)
         else:
-            return getattr(self._ol, name)
+            return super().__getattr__(name)
 
     def __dir__(self):
         return sorted(set(super().__dir__() +
@@ -1132,7 +1089,7 @@ class PRRegion:
     """Class that wraps attributes for IP objects on dfx regions"""
 
     def __init__(self, cpipe: Composable, name: str):
-        self._overlay = cpipe._ol
+        self._cpipe = cpipe
         self._c_dict = cpipe._c_dict
         self.key = name
 
@@ -1141,10 +1098,10 @@ class PRRegion:
         if key in self._c_dict.keys():
             if not self._c_dict[key]['loaded']:
                 return UnloadedIP(key)
-            if self._c_dict[key]['modtype'] in _mem_items:
+            elif self._c_dict[key]['modtype'] in _mem_items:
                 return BufferIP(key)
             else:
-                return getattr(self._overlay, key)
+                return getattr(self._cpipe, key)
         else:
             raise ValueError("IP \'{}\' does not exist in partial region "
                 "\'{}\'".format(name, self.key))
