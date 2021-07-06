@@ -411,7 +411,8 @@ class Composable(DefaultHierarchy):
     def c_dict(self):
         """Returns the c_dict dictionary"""
 
-        return ReprDictComposable(self._c_dict, rootname='composable')
+        return ReprDictComposable(self._c_dict,
+            rootname=self._hier.replace('/',''))
 
     @property
     def current_pipeline(self) -> list:
@@ -669,13 +670,10 @@ class Composable(DefaultHierarchy):
         self._c_dict = updated_dict
 
 
-    def _basename(self, name: str) -> str:
-        """Return the basename given a fullpath"""
+    def _relative_path(self, fullpath: str) -> str:
+        """For IP within the hierarchy return relative path"""
 
-        if self._c_dict[name]['dfx']:
-            return name
-
-        return os.path.basename(name)
+        return fullpath.replace(self._hier,'')
     
     def compose(self, cle_list: list) -> None:
         """Configure design to implement required dataflow pipeline
@@ -731,11 +729,12 @@ class Composable(DefaultHierarchy):
 
         for i, l0 in enumerate(cle_list):
             if isinstance(l0, list):
-                next_node = self._c_dict[cle_list[i+1]._fullpath]
+                key = self._relative_path(cle_list[i+1]._fullpath)
+                next_node = self._c_dict[key]
                 if len(l0) != len(next_node['pi']):
                     raise SystemError("Node {} has {} input(s) and cannot "
                         "meet pipeline requirement of {} input(s)".format(
-                        cle_list[i+1]._fullpath, len(next_node['pi']), \
+                        key, len(next_node['pi']), \
                         len(l0)))
                 for ii, l1 in enumerate(l0):
                     if not isinstance(l1, list):
@@ -746,20 +745,22 @@ class Composable(DefaultHierarchy):
                         if ip == 1:
                             continue
                         flat_list.append(ip)
-                        ci = self._c_dict[ip._fullpath]['ci'][0]
+                        ci = self._c_dict[\
+                            self._relative_path(ip._fullpath)]['ci'][0]
                         if iii == len(l1) - 1:
-                            consumer = cle_list[i+1]._fullpath
+                            consumer = key
                             pi = self._c_dict[consumer]['pi'][ii]
                         else:
-                            consumer = cle_list[i][ii][iii+1]._fullpath
+                            consumer = self._relative_path(
+                                cle_list[i][ii][iii+1]._fullpath)
                             pi = self._c_dict[consumer]['pi'][0]
 
                         if not np.where(switch_conf == ci)[0].size:
                             switch_conf[pi] = ci
                             label = labelcolor + 'ci=' + str(ci) + ' pi=' + \
                                 str(pi) + '</font>>'
-                            graph.edge(self._basename(ip._fullpath), \
-                                self._basename(consumer), label=label)
+                            graph.edge(self._relative_path(ip._fullpath), \
+                                consumer, label=label)
                         else:
                             raise SystemError("IP: {} is already being used "
                                 "in the provided pipeline. An IP instance "
@@ -769,16 +770,16 @@ class Composable(DefaultHierarchy):
                 flat_list.append(ip)
                 if i == len(cle_list) - 1:
                     break
-                ci = self._c_dict[ip._fullpath]['ci']
+                ci = self._c_dict[self._relative_path(ip._fullpath)]['ci']
                 if not isinstance(cle_list[i+1], list):
-                    pi = self._c_dict[cle_list[i+1]._fullpath]['pi']
+                    key = self._relative_path(cle_list[i+1]._fullpath)
+                    pi = self._c_dict[key]['pi']
 
                     if not np.where(switch_conf == ci[0])[0].size:
                         switch_conf[pi[0]] = ci[0]
                         label = labelcolor + 'ci=' + str(ci[0]) + ' pi=' + \
                             str(pi[0]) + '</font>>'
-                        graph.edge(self._basename(ip._fullpath), \
-                            self._basename(cle_list[i+1]._fullpath), \
+                        graph.edge(self._relative_path(ip._fullpath), key, \
                             label = label)
                     else:
                         raise SystemError("IP: {} is already being used "
@@ -793,17 +794,19 @@ class Composable(DefaultHierarchy):
                     for j in range(len(ci)):
                         nextip = cle_list[i+1][j][0]
                         if nextip != 1:
-                            pi = self._c_dict[nextip._fullpath]['pi'][0]
+                            nextkey = self._relative_path(nextip._fullpath)
+                            pi = self._c_dict[nextkey]['pi'][0]
                         else:
                             nextip = cle_list[i+2]
-                            pi = self._c_dict[nextip._fullpath]['pi'][j]
+                            nextkey = self._relative_path(nextip._fullpath)
+                            pi = self._c_dict[nextkey]['pi'][j]
 
                         if not np.where(switch_conf == ci[j])[0].size:
                             switch_conf[pi] = ci[j]
                             label = labelcolor + 'ci=' + str(ci[j]) + ' pi=' +\
                                 str(pi) + '</font>>'
-                            graph.edge(self._basename(ip._fullpath), \
-                                self._basename(nextip._fullpath),\
+                            graph.edge(self._relative_path(ip._fullpath), \
+                                self._relative_path(nextip._fullpath),\
                                 label=label)
                         else:
                             raise SystemError("IP: {} is already being used "
@@ -849,7 +852,7 @@ class Composable(DefaultHierarchy):
             if isinstance(ip, str):
                 fullpath = ip
             else:
-                fullpath = ip._fullpath
+                fullpath = self._relative_path(ip._fullpath)
 
             bitname = os.path.basename(self._c_dict[fullpath]['bitstream'])
             for pr in self._dfx_dict:
@@ -1026,7 +1029,8 @@ class Composable(DefaultHierarchy):
         new_list = self._current_pipeline[0:index+1]
 
         if index < len(self._current_pipeline)-1:
-            if len(self._c_dict[ip._fullpath]['ci']) != 1:
+            key = self._relative_path(ip._fullpath)
+            if len(self._c_dict[key]['ci']) != 1:
                 raise SystemError("tap into an IP with multiple outputs is "
                     "not supported")
             new_list.append(self._current_pipeline[-1])
