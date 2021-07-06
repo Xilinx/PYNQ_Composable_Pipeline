@@ -40,6 +40,7 @@ import re
 import os
 import json
 import glob
+import pickle as pkl
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
@@ -380,10 +381,16 @@ class Composable(DefaultHierarchy):
             _generate_switch_default(sw_default, self._switch.max_slots)
         self._switch.pi = self._sw_default 
       
-        self._hardware_discovery()
-        self._dfx_regions_discovery()
-        self._partial_bitstreams_discovery()
-        self._insert_dfx_ip()
+        pklfile = os.path.splitext(self._bitfile)[0] + '_' + \
+            description['fullpath'] + '_hierarchy' + '.pkl'
+        if os.path.isfile(pklfile):
+            self._c_dict, self._dfx_dict = pkl.load(open(pklfile, "rb"))
+        else:
+            self._hardware_discovery()
+            self._dfx_regions_discovery()
+            self._partial_bitstreams_discovery()
+            self._insert_dfx_ip()
+            pkl.dump([self._c_dict, self._dfx_dict], open(pklfile, "wb" ))
         self._soft_reset = self._pipecrtl.channel1
         self._dfx_control = self._pipecrtl.channel2
         self.graph = Digraph()
