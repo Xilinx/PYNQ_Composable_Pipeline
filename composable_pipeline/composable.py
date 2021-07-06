@@ -375,13 +375,14 @@ class Composable(DefaultHierarchy):
         self._bitfile = description['device'].bitfile_name
         self._pipecrtl = self.pipeline_control
         self._switch = self.axis_switch
+        self._max_slots = self._switch.max_slots
 
         self._sw_default, self._default_switch_m_list, \
             self._default_switch_s_list = \
-            _generate_switch_default(sw_default, self._switch.max_slots)
+            _generate_switch_default(sw_default, self._max_slots)
         self._switch.pi = self._sw_default 
       
-        pklfile = os.path.splitext(self._bitfile)[0] + '_' + \
+        pklfile = os.path.dirname(self._bitfile) + '_' + \
             description['fullpath'] + '_hierarchy' + '.pkl'
         if os.path.isfile(pklfile):
             self._c_dict, self._dfx_dict = pkl.load(open(pklfile, "rb"))
@@ -865,7 +866,7 @@ class Composable(DefaultHierarchy):
                                 bit_dict[pr]['bitstream'], bitname, pr))
         
 
-        path = os.path.dirname(self._hwh_name) + '/'
+        path = os.path.dirname(self._bitfile) + '/'
         for pr in bit_dict:
             if not bit_dict[pr]['loaded']:
                 self._dfx_control[self._dfx_dict[pr]['decouple']].write(1)
@@ -1048,7 +1049,11 @@ class Composable(DefaultHierarchy):
         elif name in self._dfx_dict:
             return PRRegion(self, name)
         else:
-            return super().__getattr__(name)
+            try:
+                attr = super().__getattr__(name)
+            except AttributeError:
+                attr = getattr(self.ol, name)
+            return attr
 
     def __dir__(self):
         return sorted(set(super().__dir__() +
