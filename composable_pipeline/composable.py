@@ -607,7 +607,7 @@ class Composable(DefaultHierarchy):
         """
 
         hwh_par = os.path.splitext(os.path.abspath(partial_bit))[0] + '.hwh'
-        self.ol.pr_download(partial_region, partial_bit)
+        self.ol.pr_download(self._hier + partial_region, partial_bit)
         self._unload_region_from_ip_dict(partial_region)
         dfx_dict = self._dfx_dict[partial_region]\
             ['rm'][os.path.basename(partial_bit)]
