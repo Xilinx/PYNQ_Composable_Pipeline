@@ -1089,7 +1089,8 @@ class PRRegion:
     """Class that wraps attributes for IP objects on dfx regions"""
 
     def __init__(self, cpipe: Composable, name: str):
-        self._cpipe = cpipe
+        self._ol = cpipe.ol
+        self._tophier = cpipe._hier
         self._c_dict = cpipe._c_dict
         self.key = name
 
@@ -1101,7 +1102,7 @@ class PRRegion:
             elif self._c_dict[key]['modtype'] in _mem_items:
                 return BufferIP(key)
             else:
-                return getattr(self._cpipe, key)
+                return getattr(self._ol, self._tophier + key)
         else:
             raise ValueError("IP \'{}\' does not exist in partial region "
                 "\'{}\'".format(name, self.key))
