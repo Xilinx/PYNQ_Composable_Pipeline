@@ -358,17 +358,20 @@ class Composable(DefaultHierarchy):
             self._default_switch_s_list = \
             _generate_switch_default(sw_default, self._max_slots)
         self._switch.pi = self._sw_default 
-      
-        pklfile = os.path.dirname(self._bitfile) + '_' + \
-            description['fullpath'] + '_hierarchy' + '.pkl'
+
+        pklfile = os.path.splitext(self._bitfile)[0] + '_' + \
+            description['fullpath'] + '.pkl'
         if os.path.isfile(pklfile):
-            self._c_dict, self._dfx_dict = pkl.load(open(pklfile, "rb"))
+            with open(pklfile, "rb") as file:
+                self._c_dict, self._dfx_dict = pkl.load(file)
         else:
             self._hardware_discovery()
             self._dfx_regions_discovery()
             self._partial_bitstreams_discovery()
             self._insert_dfx_ip()
-            pkl.dump([self._c_dict, self._dfx_dict], open(pklfile, "wb" ))
+            with open(pklfile, "wb" ) as file:
+                pkl.dump([self._c_dict, self._dfx_dict], file)
+
         self._soft_reset = self._pipecrtl.channel1
         self._dfx_control = self._pipecrtl.channel2
         self.graph = Digraph()
