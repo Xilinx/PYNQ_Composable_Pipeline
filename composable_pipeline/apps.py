@@ -27,7 +27,8 @@
 #   OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from .composable import ComposableOverlay
+from pynq import Overlay
+from .composable import Composable
 from .libs import *
 from ipywidgets import widgets, VBox, HBox, IntRangeSlider, FloatSlider, \
     interact, interactive_output, IntSlider, Dropdown
@@ -65,7 +66,7 @@ class PipelineApp:
         """
 
 
-        self._ol = ComposableOverlay(bitfile_name)
+        self._ol = Overlay(bitfile_name)
         self._cpipe = self._ol.composable
 
         vsources = ['HDMI', 'MIPI']
@@ -84,12 +85,12 @@ class PipelineApp:
             self._vii = self._cpipe.mipi.v_proc_sys
             self._vio = self._cpipe.mipi.pixel_pack
 
-        self._fi2d0 = self._cpipe.video.composable.filter2d_accel
-        self._r2g = self._cpipe.video.composable.rgb2gray_accel
-        self._g2r = self._cpipe.video.composable.gray2rgb_accel
-        self._r2h = self._cpipe.video.composable.rgb2hsv_accel
-        self._ct = self._cpipe.video.composable.colorthresholding_accel
-        self._lut = self._cpipe.video.composable.lut_accel
+        self._fi2d0 = self._cpipe.filter2d_accel
+        self._r2g = self._cpipe.rgb2gray_accel
+        self._g2r = self._cpipe.gray2rgb_accel
+        self._r2h = self._cpipe.rgb2hsv_accel
+        self._ct = self._cpipe.colorthresholding_accel
+        self._lut = self._cpipe.lut_accel
         self._app_pipeline = [self._vii, self._vio]
         if self._dfx_ip:
             self._cpipe.loadIP(self._dfx_ip)

@@ -28,7 +28,6 @@
 #   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-from .composable import ComposableOverlay
 from .composable import Composable
 from .composable import StreamSwitch
 from .apps import PipelineApp
