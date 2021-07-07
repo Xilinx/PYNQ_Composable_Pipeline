@@ -376,6 +376,7 @@ class Composable(DefaultHierarchy):
         self._pipecrtl = self.pipeline_control
         self._switch = self.axis_switch
         self._max_slots = self._switch.max_slots
+        self._ol = description['overlay']
 
         self._sw_default, self._default_switch_m_list, \
             self._default_switch_s_list = \
@@ -616,7 +617,7 @@ class Composable(DefaultHierarchy):
         """
 
         hwh_par = os.path.splitext(os.path.abspath(partial_bit))[0] + '.hwh'
-        self.ol.pr_download(self._hier + partial_region, partial_bit)
+        self._ol.pr_download(self._hier + partial_region, partial_bit)
         self._unload_region_from_ip_dict(partial_region)
         dfx_dict = self._dfx_dict[partial_region]\
             ['rm'][os.path.basename(partial_bit)]
@@ -1056,7 +1057,7 @@ class Composable(DefaultHierarchy):
             try:
                 attr = super().__getattr__(name)
             except AttributeError:
-                attr = getattr(self.ol, name)
+                attr = getattr(self._ol, name)
             return attr
 
     def __dir__(self):
@@ -1105,8 +1106,8 @@ class PRRegion:
     """Class that wraps attributes for IP objects on dfx regions"""
 
     def __init__(self, cpipe: Composable, name: str):
-        self._ol = cpipe.ol
-        self._tophier = cpipe._hier
+        self._ol = cpipe._ol
+        self._parent = cpipe._hier
         self._c_dict = cpipe._c_dict
         self.key = name
 
@@ -1118,7 +1119,7 @@ class PRRegion:
             elif self._c_dict[key]['modtype'] in _mem_items:
                 return BufferIP(key)
             else:
-                return getattr(self._ol, self._tophier + key)
+                return getattr(self._ol, self._parent + key)
         else:
             raise ValueError("IP \'{}\' does not exist in partial region "
                 "\'{}\'".format(name, self.key))
