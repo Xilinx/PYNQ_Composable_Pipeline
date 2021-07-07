@@ -9,7 +9,6 @@ from xml.etree import ElementTree
 from collections import defaultdict
 from graphviz import Digraph
 from typing import Type, Union
-from IPython.core.display import display, HTML
 import numpy as np
 import re
 import os
@@ -223,15 +222,6 @@ def _dfx_ip_discovery(partial_region: str, partial_hwh: str) -> dict:
                 + '.bit'
 
     return dfx_dict
-
-def _port_to_key(port: int) -> str:
-    """Create string from an port number"""
-
-    string = str(port) + '_AXIS'
-    if port < 10:
-        string = '0' + string
-    
-    return string
 
 def _find_index_in_list(pipeline: list, element: Type[DefaultIP]) \
     -> Union[int, tuple]:
@@ -1052,31 +1042,6 @@ class Composable(DefaultHierarchy):
 
         self._switch.pi = switch_conf
 
-    @property
-    def _debug_switch(self) -> HTML:
-        """Display AXI4-Stream Switch configuration table"""
-
-        stringout = '<table><thead><tr><th>Consumer Interface</th><th></th>'\
-            '<th>Producer Interface</th></tr></thead><tbody>'
-
-        for idx, value in enumerate(self._switch.pi):
-            if value < 16 and value >= 0:
-                pi_key = 'M' + _port_to_key(idx)
-                ci_key = 'S' + _port_to_key(value)
-                if not self._switch_conn[pi_key]['dfx']:
-                    pi_fullname = self._switch_conn[pi_key]['fullname']
-                    ci_fullname = self._switch_conn[ci_key]['fullname']
-                else:
-                    # TODO: find a way to get the full name for PR regions
-                    pi_fullname = self._switch_conn[pi_key]['fullname']
-                    ci_fullname = self._switch_conn[ci_key]['fullname']
-
-                stringout = stringout + '<tr><td>' + pi_fullname + '</td>'\
-                    '<td>&#x2192</td><td>' + ci_fullname + '</td></tr>'
-        
-
-        return display(HTML(stringout + '</tbody></table>'))
-    
 
 class PRRegion:
     """Class that wraps attributes for IP objects on dfx regions"""
