@@ -4,7 +4,7 @@
 
 
 from .composable import Composable
-from .composable import StreamSwitch
+from .switch import StreamSwitch
 from .apps import PipelineApp
 from .apps import DifferenceGaussians
 from .apps import CornerDetect
