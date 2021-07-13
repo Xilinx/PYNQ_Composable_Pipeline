@@ -16,6 +16,7 @@ import json
 import glob
 import pickle as pkl
 from .switch import StreamSwitch
+import hashlib
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
@@ -339,6 +340,7 @@ class Composable(DefaultHierarchy):
         self._dfx_dict = None
         sw_default = _default_paths[description['device'].name]
         self._bitfile = description['device'].bitfile_name
+        self._hwh_name = os.path.splitext(self._bitfile)[0] + '.hwh'
         self._pipecrtl = self.pipeline_control
         self._switch = self.axis_switch
         self._max_slots = self._switch.max_slots
@@ -349,18 +351,22 @@ class Composable(DefaultHierarchy):
             _generate_switch_default(sw_default, self._max_slots)
         self._switch.pi = self._sw_default 
 
+        with open(self._hwh_name, 'rb') as file:
+            hwhdigest = hashlib.md5(file.read()).hexdigest()
+        saved_digest = None
+
         pklfile = os.path.splitext(self._bitfile)[0] + '_' + \
             description['fullpath'] + '.pkl'
         if os.path.isfile(pklfile):
             with open(pklfile, "rb") as file:
-                self._c_dict, self._dfx_dict = pkl.load(file)
-        else:
+                saved_digest, self._c_dict, self._dfx_dict = pkl.load(file)
+        if not os.path.isfile(pklfile) or saved_digest != hwhdigest:
             self._hardware_discovery()
             self._dfx_regions_discovery()
             self._partial_bitstreams_discovery()
             self._insert_dfx_ip()
             with open(pklfile, "wb" ) as file:
-                pkl.dump([self._c_dict, self._dfx_dict], file)
+                pkl.dump([hwhdigest, self._c_dict, self._dfx_dict], file)
 
         self._soft_reset = self._pipecrtl.channel1
         self._dfx_control = self._pipecrtl.channel2
@@ -393,7 +399,6 @@ class Composable(DefaultHierarchy):
     def _hardware_discovery(self) -> None:
         """Discover how functions are connected to the switch"""
 
-        self._hwh_name = os.path.splitext(self._bitfile)[0] + '.hwh'
         tree = ElementTree.parse(self._hwh_name)
         tree_root = tree.getroot()
         no_stream_list = ['axis_switch', 'xlconcat', 'axi_intc', 'xlslice',
