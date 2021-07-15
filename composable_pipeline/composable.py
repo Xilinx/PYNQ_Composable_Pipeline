@@ -737,6 +737,8 @@ class Composable(DefaultHierarchy):
             return super().__getattr__(name)
         elif name in self._dfx_dict:
             return PRRegion(self, name)
+        elif name in self._paths:
+            return getattr(self._ol, self._paths[name]['fullpath'])
         else:
             try:
                 attr = super().__getattr__(name)
@@ -747,7 +749,8 @@ class Composable(DefaultHierarchy):
     def __dir__(self):
         return sorted(set(super().__dir__() +
                           list(self.__dict__.keys()) + \
-                          list(self._c_dict.keys())))
+                          list(self._c_dict.keys()) + \
+                          list(self._paths.keys())))
 
     def _configure_switch(self, new_sw_config: dict) -> None:
         """Verify that default values are set and configure the switch"""
