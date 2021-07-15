@@ -17,6 +17,7 @@ pynq_hls:
 
 project:
 	vivado -mode batch -source $(overlay_name).tcl -notrace
+	cp default_paths.json overlay/$(overlay_name)_paths.json
 
 clean:
 	rm -rf *.jou *.log NA *.str .Xil/
