@@ -237,21 +237,26 @@ class Composable(DefaultHierarchy):
                     'fullpath' : None
                 }
 
+        c_dict = self._c_dict.copy()
+        self._default_ip = dict()
         for k, v in paths.items():
             for kk, vv in self._c_dict.items():
                 ci = v.get('ci')
                 pi = v.get('pi')
                 cii = vv.get('ci')
                 pii = vv.get('pi')
-                if ci is not None and cii is not None and ci in cii:
+                if (ci is not None and cii is not None and ci in cii) or \
+                    (pi is not None and pii is not None and pi in pii):
+                    c_dict.pop(kk)
                     v['fullpath'] = kk
-                    vv['default'] = True
-                    break
-                elif pi is not None and pii is not None and pi in pii:
-                    v['fullpath'] = kk
-                    vv['default'] = True
+                    c_dict[k] = vv
+                    c_dict[k]['default'] = True
+                    c_dict[k]['fullpath'] = kk
+                    self._default_ip[kk] = c_dict[k]
+                    self._default_ip[kk]['cpath'] = k
                     break
 
+        self._c_dict = c_dict
         self._paths = paths
 
     def _pr_download(self, partial_region: str, partial_bit: str) -> None:
@@ -298,9 +303,18 @@ class Composable(DefaultHierarchy):
 
 
     def _relative_path(self, fullpath: str) -> str:
-        """For IP within the hierarchy return relative path"""
+        """For IP within the hierarchy return relative path
 
-        return fullpath.replace(self._hier,'')
+        If the IP is in the default paths, return proper name
+        """
+
+        fullpath = fullpath.replace(self._hier,'')
+        if fullpath not in self._default_ip.keys():
+            return fullpath
+
+        for k, v in self._default_ip.items():
+            if v['fullpath'] == fullpath:
+                return v['cpath']
 
     def compose(self, cle_list: list) -> None:
         """Configure design to implement required dataflow pipeline
@@ -691,8 +705,7 @@ class Composable(DefaultHierarchy):
     def __dir__(self):
         return sorted(set(super().__dir__() +
                           list(self.__dict__.keys()) + \
-                          list(self._c_dict.keys()) + \
-                          list(self._paths.keys())))
+                          list(self._c_dict.keys())))
 
     def _configure_switch(self, new_sw_config: dict) -> None:
         """Verify that default values are set and configure the switch"""
