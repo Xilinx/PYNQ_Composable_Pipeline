@@ -8,8 +8,7 @@ from pynq.utils import ReprDict
 from graphviz import Digraph
 from typing import Type, Union
 import numpy as np
-import os
-import json
+import os, json
 from .switch import StreamSwitch
 from .parser import HWHComposable
 
@@ -21,66 +20,6 @@ __email__ = "pynq_support@xilinx.com"
 _mem_items = ['axis_register_slice', 'axis_data_fifo', 
     'fifo_generator', 'axis_dwidth_converter', 'axis_subset_converter']
 
-_default_user_paths = {
-    "Pynq-Z2": {
-        'composable' : {
-            'hdmi_in': {
-                'ci': {
-                            'port': 0,
-                            'Description': 'HDMI IN frontend PL path'
-                    },
-                'pi': {
-                            'port': 0,
-                            'Description': 'HDMI IN frontend PS path'
-                }
-            },
-            'hdmi_out': {
-                'ci': {
-                            'port': 1,
-                            'Description': 'HDMI OUT frontend PS path'
-                    },
-                'pi': {
-                            'port': 1,
-                            'Description': 'HDMI OUT frontend PL path'
-                }
-            }
-        }
-    },
-    'Pynq-ZU': {
-        'composable': {
-            'hdmi_in': {
-                'ci': {
-                            'port': 0,
-                            'Description': 'HDMI IN frontend PL path'
-                    },
-                'pi': {
-                            'port': 0,
-                            'Description': 'HDMI IN frontend PS path'
-                }
-            },
-            'hdmi_out': {
-                'ci': {
-                            'port': 1,
-                            'Description': 'HDMI OUT frontend PS path'
-                    },
-                'pi': {
-                            'port': 1,
-                            'Description': 'HDMI OUT frontend PL path'
-                }
-            },
-            'mipi': {
-                'ci': {
-                            'port': 2,
-                            'Description': 'MIPI frontend PL path'
-                    },
-                'pi': {
-                            'port': 2,
-                            'Description': 'MIPI frontend PS path'
-                }
-            }
-        }
-    }
-}
 
 def _nest_level(pl: list) -> int:
     """Compute nested levels of a list iteratively"""
@@ -237,6 +176,7 @@ class Composable(DefaultHierarchy):
         self._c_dict = parser.c_dict
         self._dfx_dict = parser.dfx_dict
 
+        self._paths = dict()
         self._default_paths()
         self._switch.pi = self._sw_default
 
@@ -275,14 +215,20 @@ class Composable(DefaultHierarchy):
         return self._current_pipeline
 
     def _default_paths(self):
-        """Get default paths
+        """Get default paths from user file
 
         Generate default AXI4-Stream Switch default configuration based on the
-        user provided dictionary
-        Generate _paths dictionary
+        user provided dictionary as well as _paths dictionary
         """
+
         self._sw_default = np.ones(self._max_slots, dtype=np.int64) * -1
-        sw_default = _default_user_paths[self.description['device'].name][self._hier.replace('/','')]
+        filename = os.path.splitext(self._hwh_name)[0] + '_paths.json'
+        if not os.path.isfile(filename):
+            return
+
+        with open(filename, "r") as file:
+            jsondict = json.load(file)
+        sw_default = jsondict[self._hier.replace('/','')]
 
         for k, v in sw_default.items():
             self._sw_default[v['pi']['port']] = v['ci']['port']
