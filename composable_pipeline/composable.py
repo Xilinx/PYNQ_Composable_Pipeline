@@ -21,17 +21,66 @@ __email__ = "pynq_support@xilinx.com"
 _mem_items = ['axis_register_slice', 'axis_data_fifo', 
     'fifo_generator', 'axis_dwidth_converter', 'axis_subset_converter']
 
-_default_paths = {
-    'Pynq-Z2': {
-                    0: {'ci' : 0, 'pi' : 0}, 
-                    1: {'ci' : 1, 'pi' : 1}
-                },
-    'Pynq-ZU': {
-                    0: {'ci' : 0, 'pi' : 0}, 
-                    1: {'ci' : 1, 'pi' : 1}, 
-                    2: {'ci' : 2, 'pi' : 2}
+_default_user_paths = {
+    "Pynq-Z2": {
+        'composable' : {
+            'hdmi_in': {
+                'ci': {
+                            'port': 0,
+                            'Description': 'HDMI IN frontend PL path'
+                    },
+                'pi': {
+                            'port': 0,
+                            'Description': 'HDMI IN frontend PS path'
                 }
+            },
+            'hdmi_out': {
+                'ci': {
+                            'port': 1,
+                            'Description': 'HDMI OUT frontend PS path'
+                    },
+                'pi': {
+                            'port': 1,
+                            'Description': 'HDMI OUT frontend PL path'
+                }
+            }
+        }
+    },
+    'Pynq-ZU': {
+        'composable': {
+            'hdmi_in': {
+                'ci': {
+                            'port': 0,
+                            'Description': 'HDMI IN frontend PL path'
+                    },
+                'pi': {
+                            'port': 0,
+                            'Description': 'HDMI IN frontend PS path'
+                }
+            },
+            'hdmi_out': {
+                'ci': {
+                            'port': 1,
+                            'Description': 'HDMI OUT frontend PS path'
+                    },
+                'pi': {
+                            'port': 1,
+                            'Description': 'HDMI OUT frontend PL path'
+                }
+            },
+            'mipi': {
+                'ci': {
+                            'port': 2,
+                            'Description': 'MIPI frontend PL path'
+                    },
+                'pi': {
+                            'port': 2,
+                            'Description': 'MIPI frontend PS path'
+                }
+            }
+        }
     }
+}
 
 def _nest_level(pl: list) -> int:
     """Compute nested levels of a list iteratively"""
@@ -61,21 +110,6 @@ def _count_slots(pl: str) -> int:
             total += 1
 
     return total
-
-def _generate_switch_default(sw_default: dict, max_slots: int) -> tuple:
-    """Generate default list based on a dictionary"""
-
-    switch_conf = np.ones(max_slots, dtype=np.int64) * -1
-    initiator_list = list()
-    target_list = list()
-
-    if sw_default:
-        for i in sw_default:
-            switch_conf[sw_default[i]['pi']] = sw_default[i]['ci']
-            initiator_list.append(sw_default[i]['pi'])
-            target_list.append(sw_default[i]['ci'])
-            
-    return switch_conf, initiator_list, target_list
 
 
 def _find_index_in_list(pipeline: list, element: Type[DefaultIP]) \
@@ -192,7 +226,6 @@ class Composable(DefaultHierarchy):
         super().__init__(description)
         self._hier = description['fullpath'] + '/'
         self._dfx_dict = None
-        sw_default = _default_paths[description['device'].name]
         self._bitfile = description['device'].bitfile_name
         self._hwh_name = os.path.splitext(self._bitfile)[0] + '.hwh'
         self._pipecrtl = self.pipeline_control
@@ -200,14 +233,12 @@ class Composable(DefaultHierarchy):
         self._max_slots = self._switch.max_slots
         self._ol = description['overlay']
 
-        self._sw_default, self._default_switch_m_list, \
-            self._default_switch_s_list = \
-            _generate_switch_default(sw_default, self._max_slots)
-        self._switch.pi = self._sw_default 
-
         parser = HWHComposable(self._hwh_name, self.axis_switch._fullpath)
         self._c_dict = parser.c_dict
         self._dfx_dict = parser.dfx_dict
+
+        self._default_paths()
+        self._switch.pi = self._sw_default
 
         self._soft_reset = self._pipecrtl.channel1
         self._dfx_control = self._pipecrtl.channel2
@@ -232,11 +263,54 @@ class Composable(DefaultHierarchy):
             rootname=self._hier.replace('/',''))
 
     @property
+    def paths(self):
+        """Returns default paths"""
+
+        return ReprDict(self._paths, rootname='default_paths')
+
+    @property
     def current_pipeline(self) -> list:
         """List of IP objects in the current dataflow pipeline"""
 
         return self._current_pipeline
 
+    def _default_paths(self):
+        """Get default paths
+
+        Generate default AXI4-Stream Switch default configuration based on the
+        user provided dictionary
+        Generate _paths dictionary
+        """
+        self._sw_default = np.ones(self._max_slots, dtype=np.int64) * -1
+        sw_default = _default_user_paths[self.description['device'].name][self._hier.replace('/','')]
+
+        for k, v in sw_default.items():
+            self._sw_default[v['pi']['port']] = v['ci']['port']
+
+        paths = dict()
+        for k, v in sw_default.items():
+            for kk, vv in v.items():
+                key = k + ('_in' if kk=='ci' else '_out')
+                paths[key] = {
+                    kk : vv['port'],
+                    'Description' : vv['Description'],
+                    'fullpath' : None
+                }
+
+        for k, v in paths.items():
+            for kk, vv in self._c_dict.items():
+                ci = v.get('ci')
+                pi = v.get('pi')
+                cii = vv.get('ci')
+                pii = vv.get('pi')
+                if ci is not None and cii is not None and ci in cii:
+                    v['fullpath'] = kk
+                    break
+                elif pi is not None and pii is not None and pi in pii:
+                    v['fullpath'] = kk
+                    break
+
+        self._paths = paths
 
     def _pr_download(self, partial_region: str, partial_bit: str) -> None:
         """The method to download a partial bitstream onto PL.
