@@ -203,12 +203,6 @@ class Composable(DefaultHierarchy):
             rootname=self._hier.replace('/',''))
 
     @property
-    def paths(self):
-        """Returns default paths"""
-
-        return ReprDict(self._paths, rootname='default_paths')
-
-    @property
     def current_pipeline(self) -> list:
         """List of IP objects in the current dataflow pipeline"""
 
@@ -251,9 +245,11 @@ class Composable(DefaultHierarchy):
                 pii = vv.get('pi')
                 if ci is not None and cii is not None and ci in cii:
                     v['fullpath'] = kk
+                    vv['default'] = True
                     break
                 elif pi is not None and pii is not None and pi in pii:
                     v['fullpath'] = kk
+                    vv['default'] = True
                     break
 
         self._paths = paths
@@ -758,7 +754,7 @@ def _default_repr_composable(obj):
 
 def _add_status(node):
     if node['loaded']:
-        return ' [loaded]'
+        return ' [loaded][default]' if node.get('default') else ' [loaded]'
     else:
         return ' [unloaded]'
 
@@ -785,13 +781,13 @@ class ReprDictComposable(dict):
         self._expanded = expanded
         super().__init__(*args, **kwargs)
 
-    def _filter_by_status(self, loaded: bool) -> dict:
+    def _filter_by_status(self, key, value: bool) -> dict:
         """Returns a new dictionary that matches boolean value of 'loaded'"""
 
-        newdict = self.copy()
-        for i in self:
-            if loaded != self[i]['loaded']:
-                newdict.pop(i)
+        newdict = dict()
+        for k, v in self.items():
+            if value == v.get(key):
+                newdict[k] = v
 
         return newdict
 
@@ -799,7 +795,7 @@ class ReprDictComposable(dict):
     def loaded(self):
         """Displays only loaded IP"""
 
-        newdict =  self._filter_by_status(True)
+        newdict =  self._filter_by_status('loaded', True)
         return ReprDictComposable(newdict, expanded=self._expanded, \
                 rootname=self._rootname)
 
@@ -807,7 +803,15 @@ class ReprDictComposable(dict):
     def unloaded(self):
         """Displays only unloaded IP"""
 
-        newdict =  self._filter_by_status(False)
+        newdict =  self._filter_by_status('loaded', False)
+        return ReprDictComposable(newdict, expanded=self._expanded, \
+                rootname=self._rootname)
+
+    @property
+    def default(self):
+        """Displays only default IP"""
+
+        newdict =  self._filter_by_status('default', True)
         return ReprDictComposable(newdict, expanded=self._expanded, \
                 rootname=self._rootname)
 
