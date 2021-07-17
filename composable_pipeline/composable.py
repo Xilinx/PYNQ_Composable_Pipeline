@@ -8,8 +8,7 @@ from pynq.utils import ReprDict
 from graphviz import Digraph
 from typing import Type, Union
 import numpy as np
-import os
-import json
+import os, json
 from .switch import StreamSwitch
 from .parser import HWHComposable
 
@@ -21,17 +20,6 @@ __email__ = "pynq_support@xilinx.com"
 _mem_items = ['axis_register_slice', 'axis_data_fifo', 
     'fifo_generator', 'axis_dwidth_converter', 'axis_subset_converter']
 
-_default_paths = {
-    'Pynq-Z2': {
-                    0: {'ci' : 0, 'pi' : 0}, 
-                    1: {'ci' : 1, 'pi' : 1}
-                },
-    'Pynq-ZU': {
-                    0: {'ci' : 0, 'pi' : 0}, 
-                    1: {'ci' : 1, 'pi' : 1}, 
-                    2: {'ci' : 2, 'pi' : 2}
-                }
-    }
 
 def _nest_level(pl: list) -> int:
     """Compute nested levels of a list iteratively"""
@@ -61,21 +49,6 @@ def _count_slots(pl: str) -> int:
             total += 1
 
     return total
-
-def _generate_switch_default(sw_default: dict, max_slots: int) -> tuple:
-    """Generate default list based on a dictionary"""
-
-    switch_conf = np.ones(max_slots, dtype=np.int64) * -1
-    initiator_list = list()
-    target_list = list()
-
-    if sw_default:
-        for i in sw_default:
-            switch_conf[sw_default[i]['pi']] = sw_default[i]['ci']
-            initiator_list.append(sw_default[i]['pi'])
-            target_list.append(sw_default[i]['ci'])
-            
-    return switch_conf, initiator_list, target_list
 
 
 def _find_index_in_list(pipeline: list, element: Type[DefaultIP]) \
@@ -192,7 +165,6 @@ class Composable(DefaultHierarchy):
         super().__init__(description)
         self._hier = description['fullpath'] + '/'
         self._dfx_dict = None
-        sw_default = _default_paths[description['device'].name]
         self._bitfile = description['device'].bitfile_name
         self._hwh_name = os.path.splitext(self._bitfile)[0] + '.hwh'
         self._pipecrtl = self.pipeline_control
@@ -200,14 +172,13 @@ class Composable(DefaultHierarchy):
         self._max_slots = self._switch.max_slots
         self._ol = description['overlay']
 
-        self._sw_default, self._default_switch_m_list, \
-            self._default_switch_s_list = \
-            _generate_switch_default(sw_default, self._max_slots)
-        self._switch.pi = self._sw_default 
-
         parser = HWHComposable(self._hwh_name, self.axis_switch._fullpath)
         self._c_dict = parser.c_dict
         self._dfx_dict = parser.dfx_dict
+
+        self._paths = dict()
+        self._default_paths()
+        self._switch.pi = self._sw_default
 
         self._soft_reset = self._pipecrtl.channel1
         self._dfx_control = self._pipecrtl.channel2
@@ -237,6 +208,56 @@ class Composable(DefaultHierarchy):
 
         return self._current_pipeline
 
+    def _default_paths(self):
+        """Get default paths from user file
+
+        Generate default AXI4-Stream Switch default configuration based on the
+        user provided dictionary as well as _paths dictionary
+        """
+
+        self._default_ip = dict()
+        self._sw_default = np.ones(self._max_slots, dtype=np.int64) * -1
+        filename = os.path.splitext(self._hwh_name)[0] + '_paths.json'
+        if not os.path.isfile(filename):
+            return
+
+        with open(filename, "r") as file:
+            jsondict = json.load(file)
+        sw_default = jsondict[self._hier.replace('/','')]
+
+        for k, v in sw_default.items():
+            self._sw_default[v['pi']['port']] = v['ci']['port']
+
+        paths = dict()
+        for k, v in sw_default.items():
+            for kk, vv in v.items():
+                key = k + ('_in' if kk=='ci' else '_out')
+                paths[key] = {
+                    kk : vv['port'],
+                    'Description' : vv['Description'],
+                    'fullpath' : None
+                }
+
+        c_dict = self._c_dict.copy()
+        for k, v in paths.items():
+            for kk, vv in self._c_dict.items():
+                ci = v.get('ci')
+                pi = v.get('pi')
+                cii = vv.get('ci')
+                pii = vv.get('pi')
+                if (ci is not None and cii is not None and ci in cii) or \
+                    (pi is not None and pii is not None and pi in pii):
+                    c_dict.pop(kk)
+                    v['fullpath'] = kk
+                    c_dict[k] = vv
+                    c_dict[k]['default'] = True
+                    c_dict[k]['fullpath'] = kk
+                    self._default_ip[kk] = c_dict[k]
+                    self._default_ip[kk]['cpath'] = k
+                    break
+
+        self._c_dict = c_dict
+        self._paths = paths
 
     def _pr_download(self, partial_region: str, partial_bit: str) -> None:
         """The method to download a partial bitstream onto PL.
@@ -282,9 +303,18 @@ class Composable(DefaultHierarchy):
 
 
     def _relative_path(self, fullpath: str) -> str:
-        """For IP within the hierarchy return relative path"""
+        """For IP within the hierarchy return relative path
 
-        return fullpath.replace(self._hier,'')
+        If the IP is in the default paths, return proper name
+        """
+
+        fullpath = fullpath.replace(self._hier,'')
+        if fullpath not in self._default_ip.keys():
+            return fullpath
+
+        for k, v in self._default_ip.items():
+            if v['fullpath'] == fullpath:
+                return v['cpath']
 
     def compose(self, cle_list: list) -> None:
         """Configure design to implement required dataflow pipeline
@@ -663,6 +693,8 @@ class Composable(DefaultHierarchy):
             return super().__getattr__(name)
         elif name in self._dfx_dict:
             return PRRegion(self, name)
+        elif name in self._paths:
+            return getattr(self._ol, self._paths[name]['fullpath'])
         else:
             try:
                 attr = super().__getattr__(name)
@@ -673,7 +705,8 @@ class Composable(DefaultHierarchy):
     def __dir__(self):
         return sorted(set(super().__dir__() +
                           list(self.__dict__.keys()) + \
-                          list(self._c_dict.keys())))
+                          list(self._c_dict.keys()) + \
+                          list(self._default_ip.keys())))
 
     def _configure_switch(self, new_sw_config: dict) -> None:
         """Verify that default values are set and configure the switch"""
@@ -735,7 +768,7 @@ def _default_repr_composable(obj):
 
 def _add_status(node):
     if node['loaded']:
-        return ' [loaded]'
+        return ' [loaded][default]' if node.get('default') else ' [loaded]'
     else:
         return ' [unloaded]'
 
@@ -762,13 +795,13 @@ class ReprDictComposable(dict):
         self._expanded = expanded
         super().__init__(*args, **kwargs)
 
-    def _filter_by_status(self, loaded: bool) -> dict:
+    def _filter_by_status(self, key, value: bool) -> dict:
         """Returns a new dictionary that matches boolean value of 'loaded'"""
 
-        newdict = self.copy()
-        for i in self:
-            if loaded != self[i]['loaded']:
-                newdict.pop(i)
+        newdict = dict()
+        for k, v in self.items():
+            if value == v.get(key):
+                newdict[k] = v
 
         return newdict
 
@@ -776,7 +809,7 @@ class ReprDictComposable(dict):
     def loaded(self):
         """Displays only loaded IP"""
 
-        newdict =  self._filter_by_status(True)
+        newdict =  self._filter_by_status('loaded', True)
         return ReprDictComposable(newdict, expanded=self._expanded, \
                 rootname=self._rootname)
 
@@ -784,7 +817,15 @@ class ReprDictComposable(dict):
     def unloaded(self):
         """Displays only unloaded IP"""
 
-        newdict =  self._filter_by_status(False)
+        newdict =  self._filter_by_status('loaded', False)
+        return ReprDictComposable(newdict, expanded=self._expanded, \
+                rootname=self._rootname)
+
+    @property
+    def default(self):
+        """Displays only default IP"""
+
+        newdict =  self._filter_by_status('default', True)
         return ReprDictComposable(newdict, expanded=self._expanded, \
                 rootname=self._rootname)
 
