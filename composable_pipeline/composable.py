@@ -215,6 +215,7 @@ class Composable(DefaultHierarchy):
         user provided dictionary as well as _paths dictionary
         """
 
+        self._default_ip = dict()
         self._sw_default = np.ones(self._max_slots, dtype=np.int64) * -1
         filename = os.path.splitext(self._hwh_name)[0] + '_paths.json'
         if not os.path.isfile(filename):
@@ -238,7 +239,6 @@ class Composable(DefaultHierarchy):
                 }
 
         c_dict = self._c_dict.copy()
-        self._default_ip = dict()
         for k, v in paths.items():
             for kk, vv in self._c_dict.items():
                 ci = v.get('ci')
@@ -705,7 +705,8 @@ class Composable(DefaultHierarchy):
     def __dir__(self):
         return sorted(set(super().__dir__() +
                           list(self.__dict__.keys()) + \
-                          list(self._c_dict.keys())))
+                          list(self._c_dict.keys()) + \
+                          list(self._default_ip.keys())))
 
     def _configure_switch(self, new_sw_config: dict) -> None:
         """Verify that default values are set and configure the switch"""
