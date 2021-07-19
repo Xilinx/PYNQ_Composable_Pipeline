@@ -6,8 +6,7 @@ from pynq.lib.video import *
 from time import sleep
 import cv2
 from _thread import *
-import threading 
-
+import threading
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
@@ -17,42 +16,43 @@ __email__ = "pynq_support@xilinx.com"
 """Collection of classes to manage different video sources"""
 
 
-# Threaded
-class Webcam:
-    """Wrapper for a webcam video pipeline"""
+class VideoFile:
+    """Wrapper for a video stream pipeline"""
     
-    def __init__(self, filename: int=0, mode=VideoMode(1280,720,24,30)):
-        """ Returns a Webcam object
+    def __init__(self, filename: str, mode=VideoMode(1280,720,24,30)):
+        """ Returns a VideoFile object
         
         Parameters
         ----------
         filename : int
-            webcam filename, by default this is 0
+            video filename
 
         mode : VideoMode
-            webcam configuration
+            video configuration
         """
-        self._dev = filename
+
+        if not isinstance(filename, str):
+            raise ValueError("filename ({}) is not an string".format(filename))
+
+        self._file = filename
         self._videoIn = None
         self.mode = mode
-        self._width = mode.width
-        self._height = mode.height
         self._thread = threading.Lock()
         self._running = None
-    
+
     def _configure(self):
-        self._videoIn = cv2.VideoCapture(self._dev)
+        self._videoIn = cv2.VideoCapture(self._file)
         self._videoIn.set(cv2.CAP_PROP_FRAME_WIDTH, self.mode.width);
         self._videoIn.set(cv2.CAP_PROP_FRAME_HEIGHT, self.mode.height);
         self._videoIn.set(cv2.CAP_PROP_FPS, self.mode.fps)
     
     def start(self):
-        """Start webcam by configuring it"""
+        """Start video stream by configuring it"""
 
         self._configure()
 
     def stop(self):
-        """Stop the pipeline"""
+        """Stop the video stream"""
 
         if self._videoIn:
             self._running = False
@@ -65,7 +65,7 @@ class Webcam:
         """Pause tie"""
 
         if not self._videoIn:
-            raise SystemError("The Webcam is not started")
+            raise SystemError("The stream is not started")
 
         if self._running:
             self._running = False
@@ -76,21 +76,26 @@ class Webcam:
         self.stop()
         
     def readframe(self):
-        """Read an image from the webcam"""
+        """Read an image from the video stream"""
 
         ret, frame = self._videoIn.read()
+        if not ret:
+            print('Rewind')
+            self._configure()
+            return self.readframe()
         return frame
     
     def tie(self, output):
-        """Mirror the webcam input to an output channel
+        """Mirror the video stream input to an output channel
 
         Parameters
         ----------
         output : HDMIOut
             The output to mirror on to
         """
+
         if not self._videoIn:
-            raise SystemError("The Webcam is not started")
+            raise SystemError("The stream is not started")
         self._output = output
         self._outframe = self._output.newframe()
         self._thread.acquire()
@@ -109,3 +114,26 @@ class Webcam:
             self._output.writeframe(self._outframe)
         self._thread.release()
 
+
+class Webcam(VideoFile):
+    """Wrapper for a webcam video pipeline"""
+
+    def __init__(self, filename: int=0, mode=VideoMode(1280,720,24,30)):
+        """ Returns a Webcam object
+
+        Parameters
+        ----------
+        filename : int
+            webcam filename, by default this is 0
+        mode : VideoMode
+            webcam configuration
+        """
+
+        if not isinstance(filename, int):
+            raise ValueError("filename ({}) is not an integer".format(filename))
+
+        self._file = filename
+        self._videoIn = None
+        self.mode = mode
+        self._thread = threading.Lock()
+        self._running = None
