@@ -138,7 +138,8 @@ setup(
     python_requires=">=3.6.0",
     install_requires=[
         "pynq>=2.6.2",
-        "graphviz>=0.16"
+        "graphviz>=0.16",
+        "pytube>=10.9.2"
     ],
     entry_points={
         "pynq.notebooks": [
