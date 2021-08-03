@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from pynq.lib.video import *
+from pynq.lib.video import VideoMode
 from time import sleep
 import cv2
-from _thread import *
+from _thread import start_new_thread
 import threading
 
 __author__ = "Mario Ruiz"
@@ -18,10 +18,10 @@ __email__ = "pynq_support@xilinx.com"
 
 class VideoFile:
     """Wrapper for a video stream pipeline"""
-    
-    def __init__(self, filename: str, mode=VideoMode(1280,720,24,30)):
+
+    def __init__(self, filename: str, mode=VideoMode(1280, 720, 24, 30)):
         """ Returns a VideoFile object
-        
+
         Parameters
         ----------
         filename : int
@@ -42,10 +42,10 @@ class VideoFile:
 
     def _configure(self):
         self._videoIn = cv2.VideoCapture(self._file)
-        self._videoIn.set(cv2.CAP_PROP_FRAME_WIDTH, self.mode.width);
-        self._videoIn.set(cv2.CAP_PROP_FRAME_HEIGHT, self.mode.height);
+        self._videoIn.set(cv2.CAP_PROP_FRAME_WIDTH, self.mode.width)
+        self._videoIn.set(cv2.CAP_PROP_FRAME_HEIGHT, self.mode.height)
         self._videoIn.set(cv2.CAP_PROP_FPS, self.mode.fps)
-    
+
     def start(self):
         """Start video stream by configuring it"""
 
@@ -74,7 +74,7 @@ class VideoFile:
         """Uninitialise the drivers, stopping the pipeline beforehand"""
 
         self.stop()
-        
+
     def readframe(self):
         """Read an image from the video stream"""
 
@@ -84,7 +84,7 @@ class VideoFile:
             self._configure()
             return self.readframe()
         return frame
-    
+
     def tie(self, output):
         """Mirror the video stream input to an output channel
 
@@ -102,10 +102,10 @@ class VideoFile:
         self._running = True
         try:
             start_new_thread(self._tie, ())
-        except:
+        except Exception:
             import traceback
-            print (traceback.format_exc())
-        
+            print(traceback.format_exc())
+
     def _tie(self):
         """Threaded method to implement tie"""
 
@@ -118,7 +118,7 @@ class VideoFile:
 class Webcam(VideoFile):
     """Wrapper for a webcam video pipeline"""
 
-    def __init__(self, filename: int=0, mode=VideoMode(1280,720,24,30)):
+    def __init__(self, filename: int = 0, mode=VideoMode(1280, 720, 24, 30)):
         """ Returns a Webcam object
 
         Parameters
@@ -130,7 +130,8 @@ class Webcam(VideoFile):
         """
 
         if not isinstance(filename, int):
-            raise ValueError("filename ({}) is not an integer".format(filename))
+            raise ValueError("filename ({}) is not an integer"
+                             .format(filename))
 
         self._file = filename
         self._videoIn = None

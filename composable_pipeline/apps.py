@@ -47,7 +47,7 @@ class PipelineApp:
             raise ValueError("{} is not supported".format(source))
         elif self._ol.device.name != 'Pynq-ZU' and source != 'HDMI':
             raise ValueError("Device {} only supports {} as input source "
-                             .format(ol.device.name, vsources[0]))
+                             .format(self._ol.device.name, vsources[0]))
 
         self._video = HDMIVideo(self._ol, source)
 
