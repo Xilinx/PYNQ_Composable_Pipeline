@@ -2,13 +2,14 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from pynq import Overlay, DefaultIP, DefaultHierarchy
+from pynq import DefaultIP, DefaultHierarchy
 from pynq.lib import AxiGPIO
 from pynq.utils import ReprDict
 from graphviz import Digraph
 from typing import Type, Union
 import numpy as np
-import os, json
+import os
+import json
 from .switch import StreamSwitch
 from .parser import HWHComposable
 
@@ -17,8 +18,9 @@ __copyright__ = "Copyright 2021, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
-_mem_items = ['axis_register_slice', 'axis_data_fifo', 
-    'fifo_generator', 'axis_dwidth_converter', 'axis_subset_converter']
+_mem_items = ['axis_register_slice', 'axis_data_fifo',
+              'fifo_generator', 'axis_dwidth_converter',
+              'axis_subset_converter']
 
 
 def _nest_level(pl: list) -> int:
@@ -26,12 +28,12 @@ def _nest_level(pl: list) -> int:
 
     if not isinstance(pl, list):
         return 0
-    
     level = 0
     for item in pl:
         level = max(level, _nest_level(item))
 
     return level + 1
+
 
 def _count_slots(pl: str) -> int:
     """Returns the number of elements in a list"""
@@ -52,7 +54,7 @@ def _count_slots(pl: str) -> int:
 
 
 def _find_index_in_list(pipeline: list, element: Type[DefaultIP]) \
-    -> Union[int, tuple]:
+        -> Union[int, tuple]:
     """Return the index of the element in the pipeline"""
 
     for i, v in enumerate(pipeline):
@@ -60,21 +62,21 @@ def _find_index_in_list(pipeline: list, element: Type[DefaultIP]) \
             for ii, vv in enumerate(v):
                 for iii, vvv in enumerate(vv):
                     if vvv == element:
-                        return i,ii,iii
+                        return i, ii, iii
         elif v == element:
             return i
-    
+
     return None
 
 
 class Composable(DefaultHierarchy):
     """This class keeps track of a composable overlay
 
-    The Composable class holds the state of the logic available for run-time 
-    composition through and AXI4-Stream switch 
+    The Composable class holds the state of the logic available for run-time
+    composition through and AXI4-Stream switch
 
-    Our definition of composable overlay is: "post-bitstream configurable 
-    dataflow pipeline". Hence, this class must expose configurability through 
+    Our definition of composable overlay is: "post-bitstream configurable
+    dataflow pipeline". Hence, this class must expose configurability through
     content discovery, dataflow configuration and runtime protection.
 
     This class stores two dictionaries: c_dict and dfx_dict
@@ -99,7 +101,7 @@ class Composable(DefaultHierarchy):
     Attributes
     ----------
     c_dict : dict
-        All the IP cores connected to the AXI4-Stream Switch. Key is the name 
+        All the IP cores connected to the AXI4-Stream Switch. Key is the name
         of the IP; value is a dictionary mapping the producer and consumer to
         the switch port, whether the IP is in a dfx region and loaded
         {str: {'ci' : list, 'pi' : list, 'modtype': str,
@@ -125,30 +127,25 @@ class Composable(DefaultHierarchy):
     def __init__(self, description):
         """Return a new Composable object.
 
-        Performs a hardware discovery where the different IP cores connected 
-        to the switch are added to the c_dict and the DFX regions are added 
+        Performs a hardware discovery where the different IP cores connected
+        to the switch are added to the c_dict and the DFX regions are added
         to the dfx_dict
 
         Parameters
         ----------
-        ol : pynq.Overlay
-            Overlay object
-        name : str
-            AXI4-Stream Switch name
-        sw_default : dict (optional)
-            Default switch configuration predefined paths. For example:
-                {0: {'ci' : 0, 'pi' : 0}, 1: {'ci' : 1, 'pi' : 1}}
+        description : dict
+            Description of the hierarchy
 
         Note
         ----
         This class requires that partial bitstreams and corresponding HWH files
         to be next to bitstream file that was used to create the Overlay object
         The name convention for partial bitstreams and HWH file is
-        
+
         <bitstream_name>_<pr_region>_<pr_module_name>.{bit|hwh}
-    
+
         For instance if the main bitstream is `base.bit` and there are two DFX
-        regions with the names `pr_0` and `pr_1` each of them with the same 
+        regions with the names `pr_0` and `pr_1` each of them with the same
         two reconfigurable module, `function_1` and `function_2` the names
         should be as follow
 
@@ -159,7 +156,7 @@ class Composable(DefaultHierarchy):
             base_pr_1_function_1.bit
             base_pr_1_function_1.hwh
             base_pr_1_function_2.bit
-            base_pr_1_function_2.hwh            
+            base_pr_1_function_2.hwh
         """
 
         super().__init__(description)
@@ -200,7 +197,7 @@ class Composable(DefaultHierarchy):
         """Returns the c_dict dictionary"""
 
         return ReprDictComposable(self._c_dict,
-            rootname=self._hier.replace('/',''))
+                                  rootname=self._hier.replace('/', ''))
 
     @property
     def current_pipeline(self) -> list:
@@ -223,7 +220,7 @@ class Composable(DefaultHierarchy):
 
         with open(filename, "r") as file:
             jsondict = json.load(file)
-        sw_default = jsondict[self._hier.replace('/','')]
+        sw_default = jsondict[self._hier.replace('/', '')]
 
         for k, v in sw_default.items():
             self._sw_default[v['pi']['port']] = v['ci']['port']
@@ -231,11 +228,11 @@ class Composable(DefaultHierarchy):
         paths = dict()
         for k, v in sw_default.items():
             for kk, vv in v.items():
-                key = k + ('_in' if kk=='ci' else '_out')
+                key = k + ('_in' if kk == 'ci' else '_out')
                 paths[key] = {
-                    kk : vv['port'],
-                    'Description' : vv['Description'],
-                    'fullpath' : None
+                    kk: vv['port'],
+                    'Description': vv['Description'],
+                    'fullpath': None
                 }
 
         c_dict = self._c_dict.copy()
@@ -246,7 +243,7 @@ class Composable(DefaultHierarchy):
                 cii = vv.get('ci')
                 pii = vv.get('pi')
                 if (ci is not None and cii is not None and ci in cii) or \
-                    (pi is not None and pii is not None and pi in pii):
+                   (pi is not None and pii is not None and pi in pii):
                     c_dict.pop(kk)
                     v['fullpath'] = kk
                     c_dict[k] = vv
@@ -279,13 +276,11 @@ class Composable(DefaultHierarchy):
             The name of the partial bitstream.
         """
 
-        hwh_par = os.path.splitext(os.path.abspath(partial_bit))[0] + '.hwh'
         self._ol.pr_download(self._hier + partial_region, partial_bit)
         self._unload_region_from_ip_dict(partial_region)
-        dfx_dict = self._dfx_dict[partial_region]\
-            ['rm'][os.path.basename(partial_bit)]
+        dfx_dict = \
+            self._dfx_dict[partial_region]['rm'][os.path.basename(partial_bit)]
         self._set_loaded(dfx_dict)
-
 
     def _unload_region_from_ip_dict(self, partial_region: str) -> None:
         """Unset loaded attribute for all of the IP of provided region"""
@@ -294,13 +289,11 @@ class Composable(DefaultHierarchy):
             if partial_region in k:
                 self._c_dict[k]['loaded'] = False
 
-
     def _set_loaded(self, dfx_dict: dict) -> None:
         """Set loaded attribute in the c_dict for IP on dfx_dict"""
 
         for ip in dfx_dict:
             self._c_dict[ip]['loaded'] = True
-
 
     def _relative_path(self, fullpath: str) -> str:
         """For IP within the hierarchy return relative path
@@ -308,7 +301,7 @@ class Composable(DefaultHierarchy):
         If the IP is in the default paths, return proper name
         """
 
-        fullpath = fullpath.replace(self._hier,'')
+        fullpath = fullpath.replace(self._hier, '')
         if fullpath not in self._default_ip.keys():
             return fullpath
 
@@ -342,51 +335,51 @@ class Composable(DefaultHierarchy):
         levels = _nest_level(cle_list)
 
         if levels > 3:
-            raise SystemError("Data flow pipeline with a nest levels " 
-                "bigger than 3 is not supported. {}".format(levels))
+            raise SystemError("Data flow pipeline with a nest levels bigger "
+                              "than 3 is not supported. {}".format(levels))
         elif levels % 2 == 0:
             raise SystemError("Data flow pipeline with an even nest"
-                " levels is not supported. {}".format(levels))
+                              " levels is not supported. {}".format(levels))
 
         slots = _count_slots(cle_list)
         if slots > self._max_slots:
-            raise SystemError("Number of slots in the list is bigger than "
-                " {} which are the max slots that hardware allows"\
-                .format(self._max_slots))
+            raise SystemError("Number of slots in the list is bigger than {} "
+                              "which are the max slots that hardware allows"
+                              .format(self._max_slots))
 
         switch_conf = np.ones(self._max_slots, dtype=np.int64) * -1
 
         flat_list = list()
-        graph = Digraph( 
-            node_attr={'shape':'box'},
-            edge_attr={'color':'green'}
+        graph = Digraph(
+            node_attr={'shape': 'box'},
+            edge_attr={'color': 'green'}
             )
 
         graph.graph_attr['size'] = self.graph.graph_attr['size']
         graph.graph_attr['rankdir'] = self.graph.graph_attr['rankdir']
 
-        labelcolor = '<<font color=\"' + ('green' if self._graph_debug else \
-            'white') + '\">'
+        labelcolor = '<<font color=\"' + ('green' if self._graph_debug else
+                                          'white') + '\">'
 
         for i, l0 in enumerate(cle_list):
             if isinstance(l0, list):
                 key = self._relative_path(cle_list[i+1]._fullpath)
                 next_node = self._c_dict[key]
                 if len(l0) != len(next_node['pi']):
-                    raise SystemError("Node {} has {} input(s) and cannot "
-                        "meet pipeline requirement of {} input(s)".format(
-                        key, len(next_node['pi']), \
-                        len(l0)))
+                    raise SystemError("Node {} has {} input(s) and cannot meet"
+                                      "pipeline requirement of {} input(s)"
+                                      .format(key, len(next_node['pi']),
+                                        len(l0)))
                 for ii, l1 in enumerate(l0):
                     if not isinstance(l1, list):
                         raise SystemError("Branches must be represented as "
-                            "list of list")
+                                          "list of list")
                     for iii, l2 in enumerate(l1):
                         ip = cle_list[i][ii][iii]
                         if ip == 1:
                             continue
                         flat_list.append(ip)
-                        ci = self._c_dict[\
+                        ci = self._c_dict[
                             self._relative_path(ip._fullpath)]['ci'][0]
                         if iii == len(l1) - 1:
                             consumer = key
@@ -400,12 +393,13 @@ class Composable(DefaultHierarchy):
                             switch_conf[pi] = ci
                             label = labelcolor + 'ci=' + str(ci) + ' pi=' + \
                                 str(pi) + '</font>>'
-                            graph.edge(self._relative_path(ip._fullpath), \
-                                consumer, label=label)
+                            graph.edge(self._relative_path(ip._fullpath),
+                                       consumer, label=label)
                         else:
-                            raise SystemError("IP: {} is already being used "
-                                "in the provided pipeline. An IP instance "
-                                "can only be used once" .format(ip._fullpath))
+                            raise SystemError("IP: {} is already being used in"
+                                              " the provided pipeline. An IP "
+                                              "instance can only be used once"
+                                              .format(ip._fullpath))
             else:
                 ip = cle_list[i]
                 flat_list.append(ip)
@@ -420,17 +414,19 @@ class Composable(DefaultHierarchy):
                         switch_conf[pi[0]] = ci[0]
                         label = labelcolor + 'ci=' + str(ci[0]) + ' pi=' + \
                             str(pi[0]) + '</font>>'
-                        graph.edge(self._relative_path(ip._fullpath), key, \
-                            label = label)
+                        graph.edge(self._relative_path(ip._fullpath), key,
+                                   label=label)
                     else:
-                        raise SystemError("IP: {} is already being used "
-                            "in the provided pipeline. An IP instance "
-                            "can only be used once" .format(ip._fullpath))
+                        raise SystemError("IP: {} is already being used in the"
+                                          " provided pipeline. An IP instance "
+                                          "can only be used once"
+                                          .format(ip._fullpath))
 
                 elif len(cle_list[i+1]) != len(ci):
                     raise SystemError("Node {} has {} output(s) and cannot "
-                        "meet pipeline requirement of {} output(s)".format(
-                        l0._fullpath, len(ci), len(cle_list[i+1])))
+                                      "meet pipeline requirement of {} "
+                                      "output(s)".format(l0._fullpath, len(ci),
+                                      len(cle_list[i+1])))
                 else:
                     for j in range(len(ci)):
                         nextip = cle_list[i+1][j][0]
@@ -446,33 +442,34 @@ class Composable(DefaultHierarchy):
                             switch_conf[pi] = ci[j]
                             label = labelcolor + 'ci=' + str(ci[j]) + ' pi=' +\
                                 str(pi) + '</font>>'
-                            graph.edge(self._relative_path(ip._fullpath), \
-                                self._relative_path(nextip._fullpath),\
-                                label=label)
+                            graph.edge(self._relative_path(ip._fullpath),
+                                       self._relative_path(nextip._fullpath),
+                                       label=label)
                         else:
                             raise SystemError("IP: {} is already being used "
-                                "in the provided pipeline. An IP instance "
-                                "can only be used once" .format(ip._fullpath))
-        
+                                              "in the provided pipeline. An IP"
+                                              " instance can only be used once"
+                                              .format(ip._fullpath))
+
         if self._soft_reset is not None:
             self._soft_reset[0].write(1)
             self._soft_reset[0].write(0)
-        
+
         self._configure_switch(switch_conf)
-        
+
         for ip in flat_list:
             if "pynq.lib.video.pipeline" not in str(type(ip)):
                 if not isinstance(ip, UnloadedIP):
-                    if hasattr(ip, 'start'):  
+                    if hasattr(ip, 'start'):
                         ip.start()
                 else:
                     raise AttributeError("IP {} is not loaded, load IP before "
-                        "composing a pipeline".format(ip._fullpath))
+                                         "composing a pipeline"
+                                         .format(ip._fullpath))
 
         self._current_pipeline = cle_list
         self._current_flat_pipeline = flat_list
         self.graph = graph
-
 
     def loadIP(self, dfx_list: list) -> None:
         """Download dfx IP onto the corresponding partial regions
@@ -501,14 +498,14 @@ class Composable(DefaultHierarchy):
                     if pr not in bit_dict.keys():
                         bit_dict[pr] = dict()
                         bit_dict[pr]['bitstream'] = bitname
-                        bit_dict[pr]['loaded'] = self._c_dict[fullpath]\
-                            ['loaded']
+                        bit_dict[pr]['loaded'] = \
+                            self._c_dict[fullpath]['loaded']
                     elif bit_dict[pr]['bitstream'] != bitname:
                         raise SystemError("Two partial bitstreams cannot be "
-                            "loaded into the same DFX region. Pipeline "
-                            "requires {} and {} in dfx region {}".format(\
-                                bit_dict[pr]['bitstream'], bitname, pr))
-        
+                                          "loaded into the same DFX region. "
+                                          "Pipeline requires {} and {} in dfx"
+                                          " region {}".format(
+                                    bit_dict[pr]['bitstream'], bitname, pr))
 
         path = os.path.dirname(self._bitfile) + '/'
         for pr in bit_dict:
@@ -520,17 +517,16 @@ class Composable(DefaultHierarchy):
                         break
                     except TimeoutError:
                         if i == 4:
-                            raise TimeoutError("{} partial bitstream could" \
-                                "not be downloaded".\
-                                format(bit_dict[pr]['bitstream']))
+                            raise TimeoutError("{} partial bitstream could not"
+                                               " be downloaded".format(
+                                               bit_dict[pr]['bitstream']))
                         continue
 
                 self._dfx_control[self._dfx_dict[pr]['decouple']].write(0)
 
-
     def remove(self, iplist: list=None) -> None:
         """Remove IP object from the current pipeline
-        
+
         Parameters
         ----------
         iplist: list
@@ -547,16 +543,15 @@ class Composable(DefaultHierarchy):
 
         if iplist is None:
             raise ValueError("remove requires a list of IP object")
-        
+
         for ip in iplist:
             if ip not in pipeline:
                 raise ValueError("IP object {} does not exit in current "
-                    "pipeline {}".format(ip, iplist))
+                                 "pipeline {}".format(ip, iplist))
 
             pipeline.remove(ip)
 
         self.compose(pipeline)
-
 
     def insert(self, iptuple: tuple) -> None:
         """Insert a new IP or list of IP into current pipeline
@@ -565,7 +560,7 @@ class Composable(DefaultHierarchy):
         ----------
         iptuple: tuple
             Tuple of two items.
-            First: list of IP to be inserted 
+            First: list of IP to be inserted
             Second: index
 
             Examples:
@@ -580,8 +575,8 @@ class Composable(DefaultHierarchy):
         elif not isinstance(iptuple[1], int):
             raise ValueError("insert expects an integer as index")
         elif iptuple[1] > len(self._current_pipeline):
-            raise ValueError("index cannot be bigger than current pipeline" 
-                "length")
+            raise ValueError("index cannot be bigger than current pipeline"
+                             "length")
 
         if not isinstance(iptuple[0], list):
             newlist = [iptuple[0]]
@@ -593,7 +588,6 @@ class Composable(DefaultHierarchy):
 
         self.compose(pipeline)
 
-
     def replace(self, replaceip: tuple) -> None:
         """Replace an IP object in the current pipeline
 
@@ -601,7 +595,7 @@ class Composable(DefaultHierarchy):
         ----------
         replaceip: tuple
             Tuple of two items.
-            First: IP object to be replaced 
+            First: IP object to be replaced
             Second: new IP object
 
             Examples:
@@ -615,15 +609,15 @@ class Composable(DefaultHierarchy):
 
         pipeline = self._current_pipeline
         idx = _find_index_in_list(pipeline, replaceip[0])
-        
+
         if isinstance(idx, int):
             pipeline[idx] = replaceip[1]
         elif isinstance(idx, tuple):
             pipeline[idx[0]][idx[1]][idx[2]] = replaceip[1]
         else:
-            raise ValueError("IP {} is not in the current pipeline"\
-                .format(replaceip[0]._fullpath))
-        
+            raise ValueError("IP {} is not in the current pipeline"
+                             .format(replaceip[0]._fullpath))
+
         self.compose(pipeline)
 
     def tap(self, ip: Union[Type[DefaultIP], int]=None) -> None:
@@ -638,7 +632,7 @@ class Composable(DefaultHierarchy):
 
         Parameters
         ----------
-        ip: 
+        ip:
             Either an IP object in the current pipeline to be tapped or
             index of IP object in the current pipeline to be tapped
 
@@ -653,18 +647,17 @@ class Composable(DefaultHierarchy):
         if isinstance(ip, int):
             if ip >= len(self._current_pipeline):
                 raise ValueError("list index ({}) is out of range, supported "
-                    "indexes are integers from 0 to {}"\
-                    .format(ip, len(self._current_pipeline)-1))
+                                 "indexes are integers from 0 to {}"
+                                 .format(ip, len(self._current_pipeline)-1))
             else:
                 index = ip
         else:
             try:
                 index = self._current_pipeline.index(ip)
             except ValueError:
-                raise ValueError("{} {} does not exist in the list or "
-                    "IP is in a branch ".format(ip, 
-                    ip._fullpath if hasattr(ip, '_fullpath') else ''))
-
+                raise ValueError("{} {} does not exist in the list or IP is in"
+                                 " a branch ".format(ip, ip._fullpath
+                                 if hasattr(ip, '_fullpath') else ''))
 
         ip = self._current_pipeline[index]
         new_list = self._current_pipeline[0:index+1]
@@ -673,7 +666,7 @@ class Composable(DefaultHierarchy):
             key = self._relative_path(ip._fullpath)
             if len(self._c_dict[key]['ci']) != 1:
                 raise SystemError("tap into an IP with multiple outputs is "
-                    "not supported")
+                                  "not supported")
             new_list.append(self._current_pipeline[-1])
 
         pipeline = self._current_pipeline.copy()
@@ -704,15 +697,15 @@ class Composable(DefaultHierarchy):
 
     def __dir__(self):
         return sorted(set(super().__dir__() +
-                          list(self.__dict__.keys()) + \
-                          list(self._c_dict.keys()) + \
+                          list(self.__dict__.keys()) +
+                          list(self._c_dict.keys()) +
                           list(self._default_ip.keys())))
 
     def _configure_switch(self, new_sw_config: dict) -> None:
         """Verify that default values are set and configure the switch"""
 
         switch_conf = np.copy(new_sw_config)
-        
+
         for idx, val in enumerate(switch_conf):
             if val < 0 and self._sw_default[idx] > 0:
                 switch_conf[idx] = self._sw_default[idx]
@@ -740,7 +733,7 @@ class PRRegion:
                 return getattr(self._ol, self._parent + key)
         else:
             raise ValueError("IP \'{}\' does not exist in partial region "
-                "\'{}\'".format(name, self.key))
+                             "\'{}\'".format(name, self.key))
 
 
 class UnloadedIP:
@@ -752,11 +745,12 @@ class UnloadedIP:
     def __init__(self, path: str):
         self._fullpath = path
 
+
 class BufferIP:
     """Handles IP objects that are of buffering type
 
-    Expose fullpath attribute for buffering type IP such as a) FIFOs 
-    b) Slice registers. 
+    Expose fullpath attribute for buffering type IP such as a) FIFOs
+    b) Slice registers.
     """
 
     def __init__(self, path: str):
@@ -765,6 +759,7 @@ class BufferIP:
 
 def _default_repr_composable(obj):
     return repr(obj)
+
 
 def _add_status(node):
     if node['loaded']:
@@ -809,25 +804,25 @@ class ReprDictComposable(dict):
     def loaded(self):
         """Displays only loaded IP"""
 
-        newdict =  self._filter_by_status('loaded', True)
-        return ReprDictComposable(newdict, expanded=self._expanded, \
-                rootname=self._rootname)
+        newdict = self._filter_by_status('loaded', True)
+        return ReprDictComposable(newdict, expanded=self._expanded,
+                                  rootname=self._rootname)
 
     @property
     def unloaded(self):
         """Displays only unloaded IP"""
 
-        newdict =  self._filter_by_status('loaded', False)
-        return ReprDictComposable(newdict, expanded=self._expanded, \
-                rootname=self._rootname)
+        newdict = self._filter_by_status('loaded', False)
+        return ReprDictComposable(newdict, expanded=self._expanded,
+                                  rootname=self._rootname)
 
     @property
     def default(self):
         """Displays only default IP"""
 
-        newdict =  self._filter_by_status('default', True)
-        return ReprDictComposable(newdict, expanded=self._expanded, \
-                rootname=self._rootname)
+        newdict = self._filter_by_status('default', True)
+        return ReprDictComposable(newdict, expanded=self._expanded,
+                                  rootname=self._rootname)
 
     def _repr_json_(self):
         if 'dfx' not in self:
@@ -837,16 +832,15 @@ class ReprDictComposable(dict):
                 show_dict[new_key] = self[i]
         else:
             show_dict = self.copy()
-        return json.loads(json.dumps(show_dict, \
-            default=_default_repr_composable)), \
-            {'expanded': self._expanded, 'root': self._rootname}
+        return json.loads(json.dumps(show_dict,
+                          default=_default_repr_composable)), \
+                          {'expanded': self._expanded, 'root': self._rootname}
 
     def __getitem__(self, key):
         obj = super().__getitem__(key)
         if type(obj) is dict:
             key = key + _add_status(obj)
-            return ReprDictComposable(obj, expanded=self._expanded, \
-                rootname=key)
+            return ReprDictComposable(obj, expanded=self._expanded,
+                                      rootname=key)
         else:
             return obj
-
