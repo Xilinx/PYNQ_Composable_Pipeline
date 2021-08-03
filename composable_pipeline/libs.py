@@ -59,7 +59,8 @@ class HDMIVideo:
 
             if self._source == 'HDMI':
                 self._source_in = ol.video.hdmi_in
-                self._source_in.frontend.set_phy(ol.video.phy.vid_phy_controller)
+                self._source_in.frontend.set_phy(
+                    ol.video.phy.vid_phy_controller)
             else:
                 self._source_in = ol.mipi
 
@@ -270,44 +271,44 @@ class Filter2d(VitisVisionIP):
             raise ValueError("Kernel type unknown")
 
         self._shift = 0
-        if kernel_type is 'identity':
+        if kernel_type == 'identity':
             self._kernel = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]],
                                     dtype=np.int16)
-        elif kernel_type is 'edge_x':
+        elif kernel_type == 'edge_x':
             self._kernel = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]],
                                     dtype=np.int16)
-        elif kernel_type is 'edge_y':
+        elif kernel_type == 'edge_y':
             self._kernel = np.array([[1, 0, -1], [0, 4, 0], [-1, 0, 1]],
                                     dtype=np.int16)
-        elif kernel_type is 'edge':
+        elif kernel_type == 'edge':
             self._kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]],
                                     dtype=np.int16)
-        elif kernel_type is 'sobel_x':
+        elif kernel_type == 'sobel_x':
             self._kernel = np.array([[1, 0, -1], [2, 0, -2], [1, 0, -1]],
                                     dtype=np.int16)
-        elif kernel_type is 'sobel_y':
+        elif kernel_type == 'sobel_y':
             self._kernel = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]],
                                     dtype=np.int16)
-        elif kernel_type is 'sharpen':
+        elif kernel_type == 'sharpen':
             self._kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]],
                                     dtype=np.int16)
-        elif kernel_type is 'scharr_x':
+        elif kernel_type == 'scharr_x':
             self._kernel = np.array([[3, 0, -3], [10, 0, -10], [3, 0, -3]],
                                     dtype=np.int16)
-        elif kernel_type is 'scharr_y':
+        elif kernel_type == 'scharr_y':
             self._kernel = np.array([[3, 10, 3], [0, 0, 0], [-3, -10, -3]],
                                     dtype=np.int16)
-        elif kernel_type is 'prewitt_x':
+        elif kernel_type == 'prewitt_x':
             self._kernel = np.array([[1, 0, -1], [1, 0, -1], [1, 0, -1]],
                                     dtype=np.int16)
-        elif kernel_type is 'prewitt_y':
+        elif kernel_type == 'prewitt_y':
             self._kernel = np.array([[1, 1, 1], [0, 0, 0], [-1, -1, -1]],
                                     dtype=np.int16)
-        elif kernel_type is 'median_blur':
+        elif kernel_type == 'median_blur':
             self._kernel, self._shift = \
                 self._quantiseKernel(self._medianBlur())
             self._shift -= 1
-        elif kernel_type is 'gaussian_blur':
+        elif kernel_type == 'gaussian_blur':
             self._kernel, self._shift = \
                 self._quantiseKernel(self._gaussianBlur())
 
