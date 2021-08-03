@@ -1,3 +1,5 @@
+![license](https://img.shields.io/github/license/Xilinx/PYNQ_Composable_Pipeline) ![python](https://github.com/Xilinx/PYNQ_Composable_Pipeline/workflows/Python/badge.svg)
+
 # Composable Pipeline
 
 The Composable pipeline is an overlay with a novel and clever architecture that allow us to adapt how the data flows between a series of IP cores.
