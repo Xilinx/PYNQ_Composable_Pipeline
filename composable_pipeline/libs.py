@@ -249,7 +249,6 @@ class Filter2d(VitisVisionIP):
         self._sigma = float(sigma)
 
         if self._kernel_type in ['gaussian_blur']:
-            kernel_type = self._kernel_type
             self._kernel, self._shift = \
                 self._quantiseKernel(self._gaussianBlur())
             self._populateKernel()

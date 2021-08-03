@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from pynq import Overlay, DefaultIP, DefaultHierarchy
+from pynq import DefaultIP, DefaultHierarchy
 from pynq.lib import AxiGPIO
 from pynq.utils import ReprDict
 from graphviz import Digraph
@@ -131,13 +131,8 @@ class Composable(DefaultHierarchy):
 
         Parameters
         ----------
-        ol : pynq.Overlay
-            Overlay object
-        name : str
-            AXI4-Stream Switch name
-        sw_default : dict (optional)
-            Default switch configuration predefined paths. For example:
-                {0: {'ci' : 0, 'pi' : 0}, 1: {'ci' : 1, 'pi' : 1}}
+        description : dict
+            Description of the hierarchy
 
         Note
         ----
@@ -279,7 +274,6 @@ class Composable(DefaultHierarchy):
             The name of the partial bitstream.
         """
 
-        hwh_par = os.path.splitext(os.path.abspath(partial_bit))[0] + '.hwh'
         self._ol.pr_download(self._hier + partial_region, partial_bit)
         self._unload_region_from_ip_dict(partial_region)
         dfx_dict = self._dfx_dict[partial_region]\
