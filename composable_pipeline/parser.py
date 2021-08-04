@@ -324,7 +324,9 @@ class HWHComposable:
                 key = switch_conn[d]['fullname'].lstrip('/')
                 dictionary = static_dict
             else:
-                key = switch_conn[d]['interface']
+                key = switch_conn[d].get('interface')
+                if not key:
+                    key = switch_conn[d].get('fullname')
                 dictionary = default_dfx_dict
             key = key.replace(self._hier, '').lstrip('/')
             if key not in static_dict.keys():
@@ -407,7 +409,7 @@ class HWHComposable:
         """
 
         for r in self.dfx_dict:
-            for b in self.dfx_dict[r]['rm']:
+            for b in self.dfx_dict[r].get('rm', list()):
                 hwh_name = self._dir_name + '/' + \
                     os.path.splitext(b)[0] + '.hwh'
                 dfx_dict = _dfx_ip_discovery(r, hwh_name)
