@@ -687,7 +687,11 @@ class Composable(DefaultHierarchy):
         elif name in self._dfx_dict:
             return PRRegion(self, name)
         elif name in self._paths:
-            return getattr(self._ol, self._paths[name]['fullpath'])
+            try:
+                attr = getattr(self._ol, self._paths[name]['fullpath'])
+            except AttributeError:
+                attr = super().__getattr__(self._paths[name]['fullpath'])
+            return attr
         else:
             try:
                 attr = super().__getattr__(name)

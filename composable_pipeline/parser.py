@@ -227,7 +227,10 @@ class HWHComposable:
         """
 
         self._hwh_name = hwh_file
-        self._switch_name = switch_name
+        if switch_name.startswith('/'):
+            self._switch_name = switch_name
+        else:
+            self._switch_name = '/' + switch_name
         self._hier = switch_name.rsplit('/', 1)[0]
         self._dir_name = os.path.dirname(hwh_file)
 
@@ -252,23 +255,22 @@ class HWHComposable:
         """Discover how functions are connected to the switch"""
 
         tree = ElementTree.parse(self._hwh_name)
-        tree_root = tree.getroot()
         switch_conn = {}
         self._deep_exp = []
 
-        for mod in tree_root.iter("MODULE"):
-            mod_type = mod.get('MODTYPE')
-            if mod_type == 'axis_switch':
-                for m in mod.iter("BUSINTERFACE"):
-                    i_type = _normalize_type(m.get('TYPE'))
-                    if m.get('VLNV') == _axis_vlnv:
-                        switch_conn[m.get('NAME')] = {
-                            'busname': m.get('BUSNAME'),
-                            'type': i_type,
-                            'fullname': mod.get('FULLNAME'),
-                            'name': m.get('NAME'),
-                            'dfx':  False
-                        }
+        search_term = "MODULES/*/[@FULLNAME=\'" + self._switch_name + "\']"
+        node = tree.find(search_term)
+
+        for m in node.iter("BUSINTERFACE"):
+            i_type = _normalize_type(m.get('TYPE'))
+            if m.get('VLNV') == _axis_vlnv:
+                switch_conn[m.get('NAME')] = {
+                    'busname': m.get('BUSNAME'),
+                    'type': i_type,
+                    'fullname': node.get('FULLNAME'),
+                    'name': m.get('NAME'),
+                    'dfx':  False
+                }
 
         for s in switch_conn:
             switch_conn[s], ismem = _find_connected_node(switch_conn[s], tree)
