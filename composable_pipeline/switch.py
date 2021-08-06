@@ -87,7 +87,7 @@ class StreamSwitch(DefaultIP):
             raise TypeError("Numpy array must be np.int64 dtype")
         elif length > self.max_slots:
             raise ValueError("Provided numpy array is bigger than "
-                             "number of slots ()".format(self.max_slots))
+                             "number of slots {}".format(self.max_slots))
         elif length < 1:
             raise ValueError("Input numpy array must be at least "
                              "one element long")

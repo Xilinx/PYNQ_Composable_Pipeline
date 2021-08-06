@@ -261,6 +261,10 @@ class HWHComposable:
         search_term = "MODULES/*/[@FULLNAME=\'" + self._switch_name + "\']"
         node = tree.find(search_term)
 
+        if not node:
+            raise AttributeError("AXI4-Switch {} does not exist in the hwh "
+                                 "file".format(self._switch_name.lstrip('/')))
+
         for m in node.iter("BUSINTERFACE"):
             i_type = _normalize_type(m.get('TYPE'))
             if m.get('VLNV') == _axis_vlnv:
