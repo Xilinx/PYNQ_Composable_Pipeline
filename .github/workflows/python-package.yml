@@ -24,14 +24,15 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pyfakefs numpy cffi pynq ipywidgets graphviz
+        pip install flake8 pyfakefs pytest pytest-cov codecov ipywidgets graphviz numpy cffi
+        pip install pynq
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names
         flake8 composable_pipeline --count --select=E9,E50,E101,F63,F7,F82,F84 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 composable_pipeline --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytes
+    - name: Test with pytest
       run: |
         pytest --doctest-modules --junitxml=junit/test-results-${{ matrix.python-version }}.xml
     - name: Upload pytest test results
