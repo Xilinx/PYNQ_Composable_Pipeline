@@ -7,17 +7,16 @@ import pytest
 import hashlib
 import pickle as pkl
 import sys
-sys.path.insert(1, '../composable_pipeline')
-import parser
+from composable_pipeline import parser
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
-hwhfilename = "cv_dfx_2pipes.hwh"
-pklfile0 = "cv_dfx_2pipes_pipeline0.pkl"
-pklfile1 = "cv_dfx_2pipes_pipeline1.pkl"
+hwhfilename = "tests/cv_dfx_2pipes.hwh"
+pklfile0 = "tests/cv_dfx_2pipes_pipeline0.pkl"
+pklfile1 = "tests/cv_dfx_2pipes_pipeline1.pkl"
 
 with open(pklfile0, "rb") as file:
     _cached_digest0, _c_dict0, _dfx_dict0 = pkl.load(file)
