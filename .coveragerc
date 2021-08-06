@@ -1,8 +1,0 @@
-[run]
-branch = True
-
-[report]
-omit =
-    composable_pipeline/notebooks
-    composable_pipeline/libs.py
-    composable_pipeline/video.py
