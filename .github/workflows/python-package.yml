@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pyfakefs pytest pytest-cov codecov ipywidgets graphviz numpy cffi
+        pip install flake8 pyfakefs pytest pytest-cov codecov ipywidgets graphviz numpy cffi opencv-python
         pip install pynq
     - name: Lint with flake8
       run: |
