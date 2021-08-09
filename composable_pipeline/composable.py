@@ -458,14 +458,18 @@ class Composable(DefaultHierarchy):
         self._configure_switch(switch_conf)
 
         for ip in flat_list:
-            if "pynq.lib.video.pipeline" not in str(type(ip)):
-                if not isinstance(ip, UnloadedIP):
-                    if hasattr(ip, 'start'):
-                        ip.start()
-                else:
-                    raise AttributeError("IP {} is not loaded, load IP before "
-                                         "composing a pipeline"
-                                         .format(ip._fullpath))
+            key = self._relative_path(ip._fullpath)
+            if self._c_dict[key]["dfx"]:
+                graph.node(key,
+                           _attributes={"color": "blue", "fillcolor": "cyan",
+                                        "style": "filled"})
+            if not isinstance(ip, UnloadedIP):
+                if hasattr(ip, "start"):
+                    ip.start()
+            else:
+                raise AttributeError("IP {} is not loaded, load IP before "
+                                     "composing a pipeline"
+                                     .format(ip._fullpath))
 
         self._current_pipeline = cle_list
         self._current_flat_pipeline = flat_list
