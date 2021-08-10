@@ -3,14 +3,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from pynq import DefaultIP, DefaultHierarchy
-from pynq.lib import AxiGPIO
 from pynq.utils import ReprDict
 from graphviz import Digraph
 from typing import Type, Union
 import numpy as np
 import os
 import json
-from .switch import StreamSwitch
 from .parser import HWHComposable
 
 __author__ = "Mario Ruiz"
@@ -369,7 +367,7 @@ class Composable(DefaultHierarchy):
                     raise SystemError("Node {} has {} input(s) and cannot meet"
                                       "pipeline requirement of {} input(s)"
                                       .format(key, len(next_node['pi']),
-                                        len(l0)))
+                                              len(l0)))
                 for ii, l1 in enumerate(l0):
                     if not isinstance(l1, list):
                         raise SystemError("Branches must be represented as "
@@ -426,7 +424,7 @@ class Composable(DefaultHierarchy):
                     raise SystemError("Node {} has {} output(s) and cannot "
                                       "meet pipeline requirement of {} "
                                       "output(s)".format(l0._fullpath, len(ci),
-                                      len(cle_list[i+1])))
+                                                         len(cle_list[i+1])))
                 else:
                     for j in range(len(ci)):
                         nextip = cle_list[i+1][j][0]
@@ -505,11 +503,11 @@ class Composable(DefaultHierarchy):
                         bit_dict[pr]['loaded'] = \
                             self._c_dict[fullpath]['loaded']
                     elif bit_dict[pr]['bitstream'] != bitname:
-                        raise SystemError("Two partial bitstreams cannot be "
-                                          "loaded into the same DFX region. "
-                                          "Pipeline requires {} and {} in dfx"
-                                          " region {}".format(
-                                    bit_dict[pr]['bitstream'], bitname, pr))
+                        raise SystemError("\'{}\' and \'{}\' bitstreams cannot"
+                                          " be loaded into the same DFX "
+                                          " region \'{}\' at the same time"
+                                          .format(bit_dict[pr]['bitstream'],
+                                                  bitname, pr))
 
         path = os.path.dirname(self._bitfile) + '/'
         for pr in bit_dict:
@@ -520,11 +518,11 @@ class Composable(DefaultHierarchy):
                         self._pr_download(pr, path + bit_dict[pr]['bitstream'])
                         break
                     except TimeoutError:
-                        if i == 4:
-                            raise TimeoutError("{} partial bitstream could not"
-                                               " be downloaded".format(
-                                               bit_dict[pr]['bitstream']))
-                        continue
+                        if i != 4:
+                            continue
+                        raise TimeoutError("{} partial bitstream could not be "
+                                           "downloaded"
+                                           .format(bit_dict[pr]['bitstream']))
 
                 self._dfx_control[self._dfx_dict[pr]['decouple']].write(0)
 
@@ -660,8 +658,9 @@ class Composable(DefaultHierarchy):
                 index = self._current_pipeline.index(ip)
             except ValueError:
                 raise ValueError("{} {} does not exist in the list or IP is in"
-                                 " a branch ".format(ip, ip._fullpath
-                                 if hasattr(ip, '_fullpath') else ''))
+                                 " a branch "
+                                 .format(ip, ip._fullpath
+                                         if hasattr(ip, '_fullpath') else ''))
 
         ip = self._current_pipeline[index]
         new_list = self._current_pipeline[0:index+1]
@@ -842,7 +841,7 @@ class ReprDictComposable(dict):
             show_dict = self.copy()
         return json.loads(json.dumps(show_dict,
                           default=_default_repr_composable)), \
-                          {'expanded': self._expanded, 'root': self._rootname}
+            {'expanded': self._expanded, 'root': self._rootname}
 
     def __getitem__(self, key):
         obj = super().__getitem__(key)
