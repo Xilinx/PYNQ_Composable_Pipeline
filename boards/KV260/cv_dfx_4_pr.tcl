@@ -1971,6 +1971,9 @@ proc create_hier_cell_composable { parentCell nameHier } {
 
   # Create instance: ps_user_soft_reset, and set properties
   set ps_user_soft_reset [ create_bd_cell -type ip -vlnv xilinx.com:ip:proc_sys_reset:5.0 ps_user_soft_reset ]
+  set_property -dict [ list \
+   CONFIG.C_AUX_RESET_HIGH {1} \
+] $ps_user_soft_reset
 
   # Create instance: rgb2gray_accel, and set properties
   set rgb2gray_accel [ create_bd_cell -type ip -vlnv xilinx.com:hls:rgb2gray_accel:1.0 rgb2gray_accel ]
