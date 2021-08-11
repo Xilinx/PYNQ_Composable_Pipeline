@@ -3,10 +3,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from pynq import Overlay
-from .composable import Composable
-from .libs import *
-from ipywidgets import widgets, VBox, HBox, IntRangeSlider, FloatSlider, \
-    interact, interactive_output, IntSlider, Dropdown
+from .video import HDMIVideo
+from ipywidgets import VBox, HBox, IntRangeSlider, FloatSlider, interact, \
+    interactive_output, IntSlider, Dropdown
+from IPython.display import display
 import numpy as np
 from threading import Timer
 
@@ -386,11 +386,12 @@ class ColorDetect(PipelineApp):
         middle_box = VBox([self._s0, self._s1, self._s2])
         right_box = VBox([self._v0, self._v1, self._v2, self._noise_r])
 
-        out = interactive_output(self._play,
-            {'h0': self._h0, 'h1': self._h1, 'h2': self._h2,
-             's0': self._s0, 's1': self._s1, 's2': self._s2,
-             'v0': self._v0, 'v1': self._v1, 'v2': self._v2,
-             's': c_space, 'nr': self._noise_r})
+        out = \
+            interactive_output(self._play,
+                               {'h0': self._h0, 'h1': self._h1, 'h2': self._h2,
+                                's0': self._s0, 's1': self._s1, 's2': self._s2,
+                                'v0': self._v0, 'v1': self._v1, 'v2': self._v2,
+                                's': c_space, 'nr': self._noise_r})
 
         ui = HBox([left_box, middle_box, right_box])
         display(ui, out)

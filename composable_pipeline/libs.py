@@ -3,99 +3,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import numpy as np
-from pynq import DefaultIP, Overlay
-from pynq.lib.video import *
-from pynq.lib.video.clocks import *
+from pynq import DefaultIP
 import struct
-import time
-
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
 __email__ = "pynq_support@xilinx.com"
-
-
-class HDMIVideo:
-    """HDMI class
-
-    Handles HDMI input and output paths
-    .start: configures hdmi_in and hdmi_out starts them and tie them together
-    .stop: closes hdmi_in and hdmi_out
-
-    """
-
-    def __init__(self, ol: Overlay, source: str = 'HDMI') -> None:
-        """Return a HDMIVideo object to handle the video path
-
-        Parameters
-        ----------
-        ol : pynq.Overlay
-            Overlay object
-        source : str (optional)
-            Input video source. Valid values ['HDMI', 'MIPI']
-        """
-
-        vsources = ['HDMI', 'MIPI']
-        if source not in vsources:
-            raise ValueError("{} is not supported".format(source))
-        elif ol.device.name != 'Pynq-ZU' and source != 'HDMI':
-            raise ValueError(
-                "Device {} only supports {} as input source ".format(
-                    ol.device.name, vsources[0]
-                )
-            )
-
-        self._hdmi_out = ol.video.hdmi_out
-        self._source = source
-        self._started = None
-
-        if ol.device.name == 'Pynq-ZU':
-            # Deassert HDMI clock reset
-            ol.reset_control.channel1[0].write(1)
-            # Wait 200 ms for the clock to come out of reset
-            time.sleep(0.2)
-
-            ol.video.phy.vid_phy_controller.initialize()
-
-            if self._source == 'HDMI':
-                self._source_in = ol.video.hdmi_in
-                self._source_in.frontend.set_phy(
-                    ol.video.phy.vid_phy_controller)
-            else:
-                self._source_in = ol.mipi
-
-            self._hdmi_out.frontend.set_phy(ol.video.phy.vid_phy_controller)
-
-            dp159 = DP159(ol.HDMI_CTL_axi_iic, 0x5C)
-            si = SI_5324C(ol.HDMI_CTL_axi_iic, 0x68)
-            self._hdmi_out.frontend.clocks = [dp159, si]
-            if (ol.tx_en_out.read(0)) == 0:
-                ol.tx_en_out.write(0, 1)
-        else:
-            self._source_in = ol.video.hdmi_in
-
-    def start(self):
-        """Configure and start the HDMI"""
-        if not self._started:
-            if self._source == 'HDMI':
-                self._source_in.configure()
-            else:
-                self._source_in.configure(VideoMode(1280, 720, 24))
-
-            self._hdmi_out.configure(self._source_in.mode)
-
-            self._source_in.start()
-            self._hdmi_out.start()
-
-            self._source_in.tie(self._hdmi_out)
-            self._started = True
-
-    def stop(self):
-        """Stop the HDMI"""
-        if self._started:
-            self._hdmi_out.close()
-            self._source_in.close()
-            self._started = False
 
 
 def _float2int(value: float) -> int:
