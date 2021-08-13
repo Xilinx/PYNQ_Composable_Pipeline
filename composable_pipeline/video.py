@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+import pynq
 from pynq import Overlay
 from pynq.lib.video import VideoMode
 from pynq.lib.video.clocks import DP159, SI_5324C
@@ -130,6 +131,13 @@ class VideoFile:
         self._videoIn = cv2.VideoCapture(self._file)
         self._videoIn.set(cv2.CAP_PROP_FRAME_WIDTH, self.mode.width)
         self._videoIn.set(cv2.CAP_PROP_FRAME_HEIGHT, self.mode.height)
+        fourcc = int(self._videoIn.get(cv2.CAP_PROP_FOURCC))
+        mode = \
+            fourcc.to_bytes((fourcc.bit_length() + 7) // 8, 'little').decode()
+        if isinstance(self._file, int):
+            if mode != 'MJPG':
+                self._videoIn.set(cv2.CAP_PROP_FOURCC,
+                                  cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         self._videoIn.set(cv2.CAP_PROP_FPS, self.mode.fps)
 
     def start(self):
@@ -222,5 +230,128 @@ class Webcam(VideoFile):
         self._file = filename
         self._videoIn = None
         self.mode = mode
+        self._thread = threading.Lock()
+        self._running = None
+
+
+class FileDisplayPort(VideoFile):
+    """Wrapper for a webcam video pipeline streamed to DisplayPort"""
+
+    def __init__(self, filename: str, mode=VideoMode(1280, 720, 24, 30),
+                 vdma: pynq.lib.video.dma.AxiVDMA = None):
+        """ Returns a FileDisplayPort object
+
+        Parameters
+        ----------
+        filename : int
+            video filename
+        mode : VideoMode
+            webcam configuration
+        vdma : pynq.lib.video.dma.AxiVDMA
+            Xilinx VideoDMA IP core
+        """
+        super().__init__(filename=filename, mode=mode)
+
+        self.vdma = vdma
+        self.mode = mode
+        if self.vdma:
+            self.vdma.writechannel.mode = self.mode
+            self.vdma.readchannel.mode = self.mode
+
+        self._thread = threading.Lock()
+        self._running = None
+
+    def start(self):
+        """Start video stream by configuring it"""
+
+        self._configure()
+        if self.vdma:
+            self.vdma.writechannel.start()
+            self.vdma.readchannel.start()
+
+    def stop(self):
+        """Pause tie"""
+
+        super().stop()
+        if self.vdma:
+            self.vdma.writechannel.stop()
+            self.vdma.readchannel.stop()
+
+    def tie(self, dp: pynq.lib.video.DisplayPort):
+        """Mirror the video stream input to an output channel
+
+        Parameters
+        ----------
+        dp : pynq.lib.video.DisplayPort
+            DisplayPort object
+        """
+
+        if not self._videoIn:
+            raise SystemError("The stream is not started")
+        self._dp = dp
+
+        self._thread.acquire()
+        self._running = True
+        if self.vdma:
+            tie = self._tievdma
+        else:
+            tie = self._tienovdma
+        try:
+            start_new_thread(tie, ())
+        except Exception:
+            import traceback
+            print(traceback.format_exc())
+
+    def _tievdma(self):
+        """Threaded method to implement tie"""
+
+        while self._running:
+            fpgaframe = self.vdma.writechannel.newframe()
+            fpgaframe[:] = self.readframe()
+            self.vdma.writechannel.writeframe(fpgaframe)
+            dpframe = self._dp.newframe()
+            dpframe[:] = self.vdma.readchannel.readframe()
+            self._dp.writeframe(dpframe)
+
+        self._thread.release()
+
+    def _tienovdma(self):
+        """Threaded method to implement tie"""
+
+        while self._running:
+            dpframe = self._dp.newframe()
+            dpframe[:] = self.readframe()
+            self._dp.writeframe(dpframe)
+        self._thread.release()
+
+
+class WebcamDisplayPort(FileDisplayPort):
+    """Wrapper for a webcam video pipeline streamed to DisplayPort"""
+
+    def __init__(self, filename: int = 0, mode=VideoMode(1280, 720, 24, 30),
+                 vdma: pynq.lib.video.dma.AxiVDMA = None):
+        """ Returns a WebcamDisplayPort object
+
+        Parameters
+        ----------
+        filename : int
+            webcam filename, by default this is 0
+        mode : VideoMode
+            webcam configuration
+        vdma : pynq.lib.video.dma.AxiVDMA
+            Xilinx VideoDMA IP core
+        """
+        if not isinstance(filename, int):
+            raise ValueError("filename \'{}\' is not an integer"
+                             .format(filename))
+
+        self._file = filename
+        self._videoIn = None
+        self.vdma = vdma
+        self.mode = mode
+        if self.vdma:
+            self.vdma.writechannel.mode = self.mode
+            self.vdma.readchannel.mode = self.mode
+
         self._thread = threading.Lock()
         self._running = None
