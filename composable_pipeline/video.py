@@ -277,7 +277,7 @@ class FileDisplayPort(VideoFile):
             self.vdma.writechannel.stop()
             self.vdma.readchannel.stop()
 
-    def tie(self, dp: pynq.lib.video.DisplayPort):
+    def tie(self, dp):
         """Mirror the video stream input to an output channel
 
         Parameters
