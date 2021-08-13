@@ -1195,36 +1195,44 @@ proc create_hier_cell_video { parentCell nameHier } {
   # Create instance: pixel_pack, and set properties
   set pixel_pack [ create_bd_cell -type ip -vlnv xilinx.com:hls:pixel_pack_2:1.0 pixel_pack ]
 
-  # Create instance: pixel_reorder, and set properties
-  set pixel_reorder [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_subset_converter:1.1 pixel_reorder ]
+  # Create instance: pixel_reorder_s2mm, and set properties
+  set pixel_reorder_s2mm [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_subset_converter:1.1 pixel_reorder_s2mm ]
   set_property -dict [ list \
    CONFIG.M_TDATA_NUM_BYTES {6} \
    CONFIG.S_TDATA_NUM_BYTES {6} \
    CONFIG.TDATA_REMAP {tdata[47:40],tdata[31:24],tdata[39:32],tdata[23:16],tdata[7:0],tdata[15:8]} \
- ] $pixel_reorder
+ ] $pixel_reorder_s2mm
+
+  # Create instance: pixel_reorder_mm2s, and set properties
+  set pixel_reorder_mm2s [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_subset_converter:1.1 pixel_reorder_mm2s ]
+  set_property -dict [ list \
+   CONFIG.M_TDATA_NUM_BYTES {6} \
+   CONFIG.S_TDATA_NUM_BYTES {6} \
+   CONFIG.TDATA_REMAP {tdata[47:40],tdata[31:24],tdata[39:32],tdata[23:16],tdata[7:0],tdata[15:8]} \
+ ] $pixel_reorder_mm2s
 
   # Create instance: pixel_unpack, and set properties
   set pixel_unpack [ create_bd_cell -type ip -vlnv xilinx.com:hls:pixel_unpack_2:1.0 pixel_unpack ]
 
   # Create interface connections
   connect_bd_intf_net -intf_net Conn3 [get_bd_intf_pins M_AXIS] [get_bd_intf_pins axis_dwidth_48_24/M_AXIS]
-  connect_bd_intf_net -intf_net Conn4 [get_bd_intf_pins S_AXIS] [get_bd_intf_pins pixel_reorder/S_AXIS]
+  connect_bd_intf_net -intf_net Conn4 [get_bd_intf_pins S_AXIS] [get_bd_intf_pins pixel_reorder_s2mm/S_AXIS]
   connect_bd_intf_net -intf_net S_AXI_CPU_IN_2 [get_bd_intf_pins S_AXI_INTERCONNECT] [get_bd_intf_pins axi_interconnect_0/S00_AXI]
   connect_bd_intf_net -intf_net axi_interconnect_0_M00_AXI [get_bd_intf_pins axi_interconnect_0/M00_AXI] [get_bd_intf_pins axi_vdma/S_AXI_LITE]
   connect_bd_intf_net -intf_net axi_vdma_0_M_AXIS_MM2S [get_bd_intf_pins axi_vdma/M_AXIS_MM2S] [get_bd_intf_pins pixel_unpack/stream_in_64]
   connect_bd_intf_net -intf_net axi_vdma_0_M_AXI_MM2S [get_bd_intf_pins M_AXI_MM2S] [get_bd_intf_pins axi_vdma/M_AXI_MM2S]
   connect_bd_intf_net -intf_net axi_vdma_0_M_AXI_S2MM [get_bd_intf_pins M_AXI_S2MM] [get_bd_intf_pins axi_vdma/M_AXI_S2MM]
   connect_bd_intf_net -intf_net pixel_pack_0_stream_out_64 [get_bd_intf_pins axi_vdma/S_AXIS_S2MM] [get_bd_intf_pins pixel_pack/stream_out_64]
-  connect_bd_intf_net -intf_net pixel_reorder_M_AXIS [get_bd_intf_pins pixel_pack/stream_in_48] [get_bd_intf_pins pixel_reorder/M_AXIS]
-  connect_bd_intf_net -intf_net pixel_unpack_stream_out_48 [get_bd_intf_pins axis_dwidth_48_24/S_AXIS] [get_bd_intf_pins pixel_unpack/stream_out_48]
+  connect_bd_intf_net -intf_net pixel_reorder_M_AXIS [get_bd_intf_pins pixel_pack/stream_in_48] [get_bd_intf_pins pixel_reorder_s2mm/M_AXIS]
+  connect_bd_intf_net -intf_net pixel_unpack_stream_out_48 [get_bd_intf_pins pixel_unpack/stream_out_48] [get_bd_intf_pins pixel_reorder_mm2s/S_AXIS]
+  connect_bd_intf_net -intf_net pixel_pixel_reorder_mm2s [get_bd_intf_pins pixel_reorder_mm2s/M_AXIS] [get_bd_intf_pins axis_dwidth_48_24/S_AXIS]
   connect_bd_intf_net -intf_net s_axi_control1_1 [get_bd_intf_pins axi_interconnect_0/M02_AXI] [get_bd_intf_pins pixel_pack/s_axi_control]
   connect_bd_intf_net -intf_net s_axi_control_2 [get_bd_intf_pins axi_interconnect_0/M01_AXI] [get_bd_intf_pins pixel_unpack/s_axi_control]
-
   # Create port connections
   connect_bd_net -net axi_vdma_0_mm2s_introut [get_bd_pins mm2s_introut] [get_bd_pins axi_vdma/mm2s_introut]
   connect_bd_net -net axi_vdma_0_s2mm_introut [get_bd_pins s2mm_introut] [get_bd_pins axi_vdma/s2mm_introut]
-  connect_bd_net -net net_zynq_us_ss_0_clk_out2 [get_bd_pins clk_300MHz] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/M02_ACLK] [get_bd_pins axi_vdma/m_axi_mm2s_aclk] [get_bd_pins axi_vdma/m_axi_s2mm_aclk] [get_bd_pins axi_vdma/m_axis_mm2s_aclk] [get_bd_pins axi_vdma/s_axis_s2mm_aclk] [get_bd_pins axis_dwidth_48_24/aclk] [get_bd_pins pixel_pack/ap_clk] [get_bd_pins pixel_reorder/aclk] [get_bd_pins pixel_unpack/ap_clk]
-  connect_bd_net -net net_zynq_us_ss_0_dcm_locked [get_bd_pins clk_300MHz_aresetn] [get_bd_pins axi_interconnect_0/M01_ARESETN] [get_bd_pins axi_interconnect_0/M02_ARESETN] [get_bd_pins axis_dwidth_48_24/aresetn] [get_bd_pins pixel_pack/ap_rst_n] [get_bd_pins pixel_reorder/aresetn] [get_bd_pins pixel_unpack/ap_rst_n]
+  connect_bd_net -net net_zynq_us_ss_0_clk_out2 [get_bd_pins clk_300MHz] [get_bd_pins axi_interconnect_0/M01_ACLK] [get_bd_pins axi_interconnect_0/M02_ACLK] [get_bd_pins axi_vdma/m_axi_mm2s_aclk] [get_bd_pins axi_vdma/m_axi_s2mm_aclk] [get_bd_pins axi_vdma/m_axis_mm2s_aclk] [get_bd_pins axi_vdma/s_axis_s2mm_aclk] [get_bd_pins axis_dwidth_48_24/aclk] [get_bd_pins pixel_pack/ap_clk] [get_bd_pins pixel_reorder_s2mm/aclk] [get_bd_pins pixel_reorder_mm2s/aclk] [get_bd_pins pixel_unpack/ap_clk]
+  connect_bd_net -net net_zynq_us_ss_0_dcm_locked [get_bd_pins clk_300MHz_aresetn] [get_bd_pins axi_interconnect_0/M01_ARESETN] [get_bd_pins axi_interconnect_0/M02_ARESETN] [get_bd_pins axis_dwidth_48_24/aresetn] [get_bd_pins pixel_pack/ap_rst_n] [get_bd_pins pixel_reorder_s2mm/aresetn] [get_bd_pins pixel_reorder_mm2s/aresetn] [get_bd_pins pixel_unpack/ap_rst_n]
   connect_bd_net -net net_zynq_us_ss_0_peripheral_aresetn [get_bd_pins clk_100MHz_aresetn] [get_bd_pins axi_interconnect_0/ARESETN] [get_bd_pins axi_interconnect_0/M00_ARESETN] [get_bd_pins axi_interconnect_0/S00_ARESETN] [get_bd_pins axi_vdma/axi_resetn]
   connect_bd_net -net net_zynq_us_ss_0_s_axi_aclk [get_bd_pins clk_100MHz] [get_bd_pins axi_interconnect_0/ACLK] [get_bd_pins axi_interconnect_0/M00_ACLK] [get_bd_pins axi_interconnect_0/S00_ACLK] [get_bd_pins axi_vdma/s_axi_lite_aclk]
 
