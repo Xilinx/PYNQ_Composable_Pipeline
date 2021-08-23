@@ -4,7 +4,7 @@
 
 import pynq
 from pynq import Overlay
-from pynq.lib.video import VideoMode, DisplayPort, PIXEL_RGB
+from pynq.lib.video import *
 from pynq.lib.video.clocks import DP159, SI_5324C
 from enum import Enum, auto
 from time import sleep
