@@ -1,6 +1,6 @@
 {
     "composable": {
-        "hdmi_in": {
+        "hdmi_source": {
             "ci": {
                         "port": 0,
                         "Description": "HDMI IN frontend PL path"
@@ -10,7 +10,7 @@
                         "Description": "HDMI IN frontend PS path"
             }
         },
-        "hdmi_out": {
+        "hdmi_sink": {
             "ci": {
                         "port": 1,
                         "Description": "HDMI OUT frontend PS path"

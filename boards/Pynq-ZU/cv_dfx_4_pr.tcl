@@ -2157,7 +2157,7 @@ proc create_hier_cell_composable { parentCell nameHier } {
    CONFIG.TDATA_NUM_BYTES {6} \
    CONFIG.TDEST_WIDTH {0} \
    CONFIG.TID_WIDTH {0} \
-   CONFIG.TUSER_WIDTH {1} \
+   CONFIG.TUSER_WIDTH {6} \
  ] $axis_data_fifo_join_1
 
   # Create instance: axis_data_fifo_tx_path, and set properties
@@ -2171,7 +2171,7 @@ proc create_hier_cell_composable { parentCell nameHier } {
    CONFIG.TDATA_NUM_BYTES {6} \
    CONFIG.TDEST_WIDTH {0} \
    CONFIG.TID_WIDTH {0} \
-   CONFIG.TUSER_WIDTH {1} \
+   CONFIG.TUSER_WIDTH {6} \
  ] $axis_data_fifo_tx_path
 
   # Create instance: axis_downconv_join_0, and set properties
