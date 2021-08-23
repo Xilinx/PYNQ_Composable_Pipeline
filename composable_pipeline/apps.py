@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from pynq import Overlay
-from .video import HDMIVideo
+from .video import HDMIVideo, VSource, VSink, PSVideo
+from .libs import xvF2d, xvLut
 from ipywidgets import VBox, HBox, IntRangeSlider, FloatSlider, interact, \
     interactive_output, IntSlider, Dropdown
 from IPython.display import display
@@ -28,35 +29,59 @@ class PipelineApp:
 
     _dfx_ip = None
 
-    def __init__(self, bitfile_name, source: str = 'HDMI'):
+    def __init__(self, bitfile_name, source: VSource = VSource.HDMI,
+                 sink: VSink = VSink.HDMI, file: int = 0):
         """Return a PipelineApp object
 
         Parameters
         ----------
         bitfile_name : str
             Bitstream filename
-        source : str (optional)
-            Input video source. Valid values ['HDMI', 'MIPI']
+        source : VSource (optional)
+            Input video source. Default VSource.HDMI
+        sink : VSink (optional)
+            Output video sink. Default VSink.HDMI
+        file: int, str (optional)
+            OpenCV input stream. Default 0
+            If this argument is \'int\' the source is a webcam
+            If this argument is \'str\' the source is a file
         """
 
         self._ol = Overlay(bitfile_name)
         self._cpipe = self._ol.composable
+        device = self._ol.device.name
 
-        vsources = ['HDMI', 'MIPI']
-        if source not in vsources:
-            raise ValueError("{} is not supported".format(source))
-        elif self._ol.device.name != 'Pynq-ZU' and source != 'HDMI':
-            raise ValueError("Device {} only supports {} as input source "
-                             .format(self._ol.device.name, vsources[0]))
+        if source not in VSource:
+            raise ValueError("source {} is not supported".format(source))
+        elif (device == 'Pynq-Z2' and source == VSource.MIPI) or\
+                (device == 'KV260' and source == VSource.HDMI):
+            raise ValueError("Device {} does not support {} as input source "
+                             .format(device, source.name))
 
-        self._video = HDMIVideo(self._ol, source)
+        if sink not in VSink:
+            raise ValueError("sink {} is not supported".format(sink))
+        elif device == 'Pynq-Z2' and source == VSink.DP:
+            raise ValueError("Device {} does not support {} as output sink "
+                             .format(device, sink.name))
 
-        if source == vsources[0]:
-            self._vii = self._cpipe.video.hdmi_in.color_convert
-            self._vio = self._cpipe.video.hdmi_in.pixel_pack
-        else:
-            self._vii = self._cpipe.mipi.v_proc_sys
-            self._vio = self._cpipe.mipi.pixel_pack
+        if (source == VSource.HDMI or source == VSource.MIPI) and \
+                sink == VSink.HDMI:
+            self._video = HDMIVideo(self._ol, source)
+        elif source == VSource.OpenCV and sink == VSink.DP:
+            self._video = PSVideo(vdma=self._ol.video.axi_vdma, filename=file)
+
+        if source == VSource.HDMI:
+            self._vii = self._cpipe.hdmi_source_in
+            self._vio = self._cpipe.hdmi_source_out
+        elif source == VSource.OpenCV and device != "KV260":
+            self._vii = self._cpipe.hdmi_sink_in
+            self._vio = self._cpipe.hdmi_sink_out
+        elif source == VSource.OpenCV:
+            self._vii = self._cpipe.ps_video_in
+            self._vio = self._cpipe.ps_video_out
+        elif source == VSource.MIPI:
+            self._vii = self._cpipe.mipi_in
+            self._vio = self._cpipe.mipi_out
 
         self._fi2d0 = self._cpipe.filter2d_accel
         self._r2g = self._cpipe.rgb2gray_accel
@@ -91,9 +116,8 @@ class PipelineApp:
         self._video.start()
         self._pipeline()
         self._cpipe.compose(self._app_pipeline)
-        return self._cpipe.graph
+        return self.graph
 
-    @property
     def play(self):
         """ Exposes runtime configurations to the user
 
@@ -102,6 +126,12 @@ class PipelineApp:
         """
 
         pass
+
+    @property
+    def graph(self):
+        """Return DAG"""
+
+        return self._cpipe.graph
 
 
 class DifferenceGaussians(PipelineApp):
@@ -116,22 +146,6 @@ class DifferenceGaussians(PipelineApp):
         'pr_0/filter2d_accel'
     ]
 
-    def __init__(self, bitfile_name, source: str = 'HDMI'):
-        """Return a DifferenceGaussians object
-
-        Parameters
-        ----------
-        bitfile_name : str
-            Bitstream filename
-        source : str (optional)
-            Input video source. Valid values ['HDMI', 'MIPI']
-        """
-
-        super().__init__(bitfile_name=bitfile_name, source=source)
-
-        self.sigma0 = 0.5
-        self._fi2d0.kernel_type = 'gaussian_blur'
-
     def _pipeline(self):
         """ Logic to configure pipeline
 
@@ -142,8 +156,10 @@ class DifferenceGaussians(PipelineApp):
         self._sub = self._cpipe.pr_join.subtract_accel
         self._fi2d1 = self._cpipe.pr_0.filter2d_accel
 
+        self.sigma0 = 0.5
+        self._fi2d0.kernel_type = xvF2d.gaussian_blur
         self.sigma1 = 7
-        self._fi2d1.kernel_type = 'gaussian_blur'
+        self._fi2d1.kernel_type = xvF2d.gaussian_blur
 
         self._app_pipeline = [self._vii, self._fi2d0, self._dup,
                               [[self._fi2d1], [1]], self._sub, self._vio]
@@ -152,7 +168,6 @@ class DifferenceGaussians(PipelineApp):
         self._fi2d0.sigma = sigma0
         self._fi2d1.sigma = sigma1
 
-    @property
     def play(self):
         """ Exposes runtime configurations to the user
         Displays two sliders to change the sigma value of each Gaussian Filter
@@ -176,20 +191,7 @@ class CornerDetect(PipelineApp):
         'pr_fork/duplicate_accel',
         'pr_join/add_accel'
     ]
-
-    def __init__(self, bitfile_name, source: str = 'HDMI'):
-        """Return a CornerDetect object
-
-        Parameters
-        ----------
-        bitfile_name : str
-            Bitstream filename
-        source : str (optional)
-            Input video source. Valid values ['HDMI', 'MIPI']
-        """
-
-        super().__init__(bitfile_name=bitfile_name, source=source)
-        self._algorithm = 'Fast'
+    _algorithm = 'Fast'
 
     def _pipeline(self):
         """ Logic to configure pipeline
@@ -234,7 +236,6 @@ class CornerDetect(PipelineApp):
     _k_harris = FloatSlider(min=0, max=0.2, step=0.002, value=0.04,
                             description='\u03BA')
 
-    @property
     def play(self):
         """ Exposes runtime configurations to the user
 
@@ -259,22 +260,9 @@ class ColorDetect(PipelineApp):
         'pr_fork/duplicate_accel',
         'pr_join/bitwise_and_accel'
     ]
-
-    def __init__(self, bitfile_name, source: str = 'HDMI'):
-        """Return a ColorDetect object
-
-        Parameters
-        ----------
-        bitfile_name : str
-            Bitstream filename
-        source : str (optional)
-            Input video source. Valid values ['HDMI', 'MIPI']
-        """
-
-        super().__init__(bitfile_name=bitfile_name, source=source)
-        self._c_space = 'HSV'
-        self._output = 'Color Detect'
-        self._noise_reduction = 'Yes'
+    _c_space = 'HSV'
+    _output = 'Color Detect'
+    _noise_reduction = 'Yes'
 
     def _pipeline(self):
         """ Logic to configure pipeline
@@ -371,7 +359,6 @@ class ColorDetect(PipelineApp):
         for s in range(len(self._sliders)):
             self._sliders[s].disabled = disabled
 
-    @property
     def play(self):
         """Exposes runtime configurations to the user
 
@@ -450,7 +437,7 @@ class Filter2DApp(PipelineApp):
         """
 
         super().__init__(bitfile_name=bitfile_name, source=source)
-        self._fi2d0.kernel_type = 'identity'
+        self._fi2d0.kernel_type = xvF2d.identity
         self._buttons = self._ol.btns_gpio.channel1
         self._leds = self._ol.leds_gpio.channel1
         self._timer = InterruptTimer(0.3, self._play)
@@ -464,11 +451,10 @@ class Filter2DApp(PipelineApp):
 
     def _play(self):
         buttons = int(self._buttons.read())
-        index = buttons % len(self._fi2d0.kernel_list)
-        self._fi2d0.kernel_type = self._fi2d0.kernel_list[index]
+        index = buttons % len(xvF2d)
+        self._fi2d0.kernel_type = xvF2d(index)
         self._leds[0:4].write(index)
 
-    @property
     def play(self):
         """ Exposes runtime configurations to the user
 
@@ -497,7 +483,7 @@ class LutApp(PipelineApp):
         """
 
         super().__init__(bitfile_name=bitfile_name, source=source)
-        self._lut.kernel_type = 'negative'
+        self._lut.kernel_type = xvLut.negative
         self._switches = self._ol.switches_gpio.channel1
         self._leds = self._ol.leds_gpio.channel1
         self._timer = InterruptTimer(0.3, self._play)
@@ -511,11 +497,10 @@ class LutApp(PipelineApp):
 
     def _play(self):
         switches = int(self._switches.read())
-        index = switches % len(self._lut.kernel_list)
-        self._lut.kernel_type = self._lut.kernel_list[index]
+        index = switches % len(xvLut)
+        self._lut.kernel_type = xvLut(index)
         self._leds[0:4].write(index)
 
-    @property
     def play(self):
         """ Exposes runtime configurations to the user
 
