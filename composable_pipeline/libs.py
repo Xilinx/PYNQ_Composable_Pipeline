@@ -4,6 +4,7 @@
 
 import numpy as np
 from pynq import DefaultIP
+from pynq.ps import CPU_ARCH, ZU_ARCH
 import struct
 from enum import Enum
 
@@ -43,7 +44,7 @@ class VitisVisionIP(DefaultIP):
 
     def __init__(self, description):
         super().__init__(description=description)
-        if description['device'].name == 'Pynq-ZU':
+        if CPU_ARCH == ZU_ARCH:
             self._cols = 1920
             self._rows = 1080
         else:
