@@ -261,7 +261,7 @@ class Webcam(VideoFile):
 class FileDisplayPort(VideoFile):
     """Wrapper for a webcam video pipeline streamed to DisplayPort"""
 
-    def __init__(self, filename: str, mode=VideoMode(1280, 720, 24, 30),
+    def __init__(self, filename: str, mode=VideoMode(1280, 720, 24, 60),
                  vdma: pynq.lib.video.dma.AxiVDMA = None):
         """ Returns a FileDisplayPort object
 
@@ -356,7 +356,7 @@ class FileDisplayPort(VideoFile):
 class WebcamDisplayPort(FileDisplayPort):
     """Wrapper for a webcam video pipeline streamed to DisplayPort"""
 
-    def __init__(self, filename: int = 0, mode=VideoMode(1280, 720, 24, 30),
+    def __init__(self, filename: int = 0, mode=VideoMode(1280, 720, 24, 60),
                  vdma: pynq.lib.video.dma.AxiVDMA = None):
         """ Returns a WebcamDisplayPort object
 
@@ -393,7 +393,7 @@ class PSVideo:
     """
 
     def __init__(self, vdma: pynq.lib.video.dma.AxiVDMA,
-                 mode=VideoMode(1280, 720, 24, 30), filename: int= 0):
+                 mode=VideoMode(1280, 720, 24, 60), filename: int= 0):
         """Return a PSVideo object to handle the video path
 
         source : str (optional)
