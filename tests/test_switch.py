@@ -8,7 +8,7 @@ import sys
 import pynq
 import numpy as np
 from .mock_device import MockIPDevice, MockRegisterIP
-from composable_pipeline import switch
+from pynq_composable import switch
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"

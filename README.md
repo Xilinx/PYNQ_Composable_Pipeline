@@ -1,4 +1,4 @@
-![license](https://img.shields.io/github/license/Xilinx/PYNQ_Composable_Pipeline) ![python](https://github.com/Xilinx/PYNQ_Composable_Pipeline/workflows/Python/badge.svg)
+![license](https://img.shields.io/github/license/Xilinx/PYNQ_Composable_Pipeline?color=g) ![python](https://github.com/Xilinx/PYNQ_pynq_composable/workflows/Python/badge.svg)
 
 # Composable Pipeline
 
@@ -12,7 +12,7 @@ The combination of these two technologies plus a pythonic API, built on top of [
 
 The composable overlay architecture of a composable video overlay for the PYNQ-Z2 is shown in the image below
 
-![](./composable_pipeline/notebooks/img/cv-4pr.png)
+![](./pynq_composable/notebooks/img/cv-4pr.png)
 
 ## Clone this repository
 
@@ -24,15 +24,17 @@ Note that this project depends on the [Vitis Accelerated Libraries](https://gith
 
 ## Install composable pipeline on your board
 
-```
+```sh
 git clone https://github.com/Xilinx/PYNQ_Composable_Pipeline
 pip install PYNQ_Composable_Pipeline/
-pynq-get-notebooks composable-pipeline -p $PYNQ_JUPYTER_NOTEBOOKS
+pynq-get-notebooks pynq-composable -p $PYNQ_JUPYTER_NOTEBOOKS
 ```
 
 The notebooks will be delivered into the folder `/home/xilinx/jupyter_notebooks`
 
-Supported boards [PYNQ-Z2](https://www.tul.com.tw/ProductsPYNQ-Z2.html) and [PYNQ-ZU](https://www.tul.com.tw/ProductsPYNQ-ZU.html)
+Supported boards [PYNQ-Z2](https://www.tul.com.tw/ProductsPYNQ-Z2.html), [PYNQ-ZU](https://www.tul.com.tw/ProductsPYNQ-ZU.html) and [Kria KV260 Vision AI Starter Kit](https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html)
+
+> Note: PYNQ-Z1 is supported wiht the same composable overlay as PYNQ-Z2
 
 ## Rebuild composable pipeline from scratch
 
@@ -40,6 +42,7 @@ To rebuild the composable pipeline you need Vitis 2020.2 installed. Navigate to 
 
 * [PYNQ-Z2](boards/Pynq-Z2/README.md)
 * [PYNQ-ZU](boards/Pynq-ZU/README.md)
+* [Kria KV260](boards/KV260/README.md)
 
 ## Licenses
 

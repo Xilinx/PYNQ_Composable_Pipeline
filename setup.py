@@ -19,7 +19,7 @@ from pynq.utils import build_py
 
 
 # global variables
-module_name = "composable_pipeline"
+module_name = "pynq_composable"
 
 board = os.environ["BOARD"]
 board_folder = "boards/{}".format(board)
@@ -131,7 +131,7 @@ setup(
     ],
     entry_points={
         "pynq.notebooks": [
-            "composable-pipeline = {}.notebooks".format(
+            "pynq-composable = {}.notebooks".format(
                 module_name)
         ]
     },
