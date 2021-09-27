@@ -29,7 +29,7 @@ zip:
 	@echo "board = $$(basename "$(PWD)")" > overlay/version.txt
 	@echo "git_id = $$(git log --format="%H" -n 1)" >> overlay/version.txt
 	@echo "date  = $$(date +'%d %B %Y')" >> overlay/version.txt
-	@echo "version = $$(grep "version" ../../composable_pipeline/__init__.py | cut -d" " -f3 | tr -d \'\")" >> overlay/version.txt
+	@echo "version = $$(grep "version" ../../pynq_composable/__init__.py | cut -d" " -f3 | tr -d \'\")" >> overlay/version.txt
 	@echo "---- md5sum                       Files ----" >> overlay/version.txt
 	@echo "$$(md5sum $$(ls overlay/*bit overlay/*hwh))" >> overlay/version.txt
 	cp LICENSE overlay/LICENSE.txt

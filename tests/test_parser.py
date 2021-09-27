@@ -7,7 +7,7 @@ import pytest
 import hashlib
 import pickle as pkl
 import sys
-from composable_pipeline import parser
+from pynq_composable import parser
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
