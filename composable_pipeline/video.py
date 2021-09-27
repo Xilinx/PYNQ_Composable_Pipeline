@@ -303,6 +303,8 @@ class OpenCVPLVideo:
             self._hdmi_out.start()
             self._tie()
             self._started = True
+        elif not self._running:
+            self._tie()
 
     def stop(self):
         """Stop the video stream"""
@@ -463,7 +465,7 @@ class VideoStream:
 
     def __init__(self, ol: Overlay, source: VSource=VSource.HDMI,
                  sink: VSink=VSink.HDMI, file: int = 0,
-                 mode=VideoMode(1280, 720, 24, 60)):
+                 mode: VideoMode = None):
         """Return a HDMIVideo object to handle the video path
 
         Parameters
@@ -473,6 +475,12 @@ class VideoStream:
         source : str (optional)
             Input video source. Valid values [VSource.HDMI, VSource.MIPI]
         """
+
+        if not mode:
+            if CPU_ARCH == ZU_ARCH:
+                mode = VideoMode(1920, 1080, 24, 60)
+            else:
+                mode = VideoMode(1280, 720, 24, 60)
 
         if (source == VSource.HDMI or source == VSource.MIPI) and \
                 sink == VSink.HDMI:
@@ -493,6 +501,11 @@ class VideoStream:
     def stop(self):
         """Start the video stream"""
         self._video.stop()
+
+    def pause(self):
+        """Pause the stream"""
+        if hasattr(self._video, "pause"):
+            self._video.pause()
 
     @property
     def mode(self):
