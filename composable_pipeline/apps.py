@@ -3,13 +3,16 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from pynq import Overlay
-from .video import HDMIVideo, VSource, VSink, PSVideo
+from .video import VideoStream, VSource, VSink
 from .libs import xvF2d, xvLut
 from ipywidgets import VBox, HBox, IntRangeSlider, FloatSlider, interact, \
     interactive_output, IntSlider, Dropdown
 from IPython.display import display
 import numpy as np
 from threading import Timer
+import glob
+import os
+import warnings
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
@@ -46,8 +49,14 @@ class PipelineApp:
             If this argument is \'int\' the source is a webcam
             If this argument is \'str\' the source is a file
         """
+        dtbo = glob.glob(os.path.dirname(bitfile_name) + '/*.dtbo')
+        if len(dtbo) > 1:
+            warnings.warn("There are more than one dtbo, dtbo {} is being "
+                          "used".format(dtbo[0]))
+        elif not dtbo:
+            dtbo = [None]
 
-        self._ol = Overlay(bitfile_name)
+        self._ol = Overlay(bitfile_name, dtbo=dtbo[0])
         self._cpipe = self._ol.composable
         device = self._ol.device.name
 
@@ -60,15 +69,11 @@ class PipelineApp:
 
         if sink not in VSink:
             raise ValueError("sink {} is not supported".format(sink))
-        elif device == 'Pynq-Z2' and source == VSink.DP:
+        elif device == 'Pynq-Z2' and sink == VSink.DP:
             raise ValueError("Device {} does not support {} as output sink "
                              .format(device, sink.name))
 
-        if (source == VSource.HDMI or source == VSource.MIPI) and \
-                sink == VSink.HDMI:
-            self._video = HDMIVideo(self._ol, source)
-        elif source == VSource.OpenCV and sink == VSink.DP:
-            self._video = PSVideo(vdma=self._ol.video.axi_vdma, filename=file)
+        self._video = VideoStream(self._ol, source, sink, file)
 
         if source == VSource.HDMI:
             self._vii = self._cpipe.hdmi_source_in
@@ -90,8 +95,6 @@ class PipelineApp:
         self._ct = self._cpipe.colorthresholding_accel
         self._lut = self._cpipe.lut_accel
         self._app_pipeline = [self._vii, self._vio]
-        if self._dfx_ip:
-            self._cpipe.loadIP(self._dfx_ip)
 
     def stop(self):
         """ Stops the pipeline"""
@@ -114,6 +117,8 @@ class PipelineApp:
         """
 
         self._video.start()
+        if self._dfx_ip:
+            self._cpipe.loadIP(self._dfx_ip)
         self._pipeline()
         self._cpipe.compose(self._app_pipeline)
         return self.graph
@@ -425,7 +430,7 @@ class Filter2DApp(PipelineApp):
     expose kernel configurability through the buttons on the board
     """
 
-    def __init__(self, bitfile_name, source: str = 'HDMI'):
+    def __init__(self, bitfile_name, source: VSource = VSource.HDMI):
         """Return a Filter2DApp object
 
         Parameters
@@ -442,6 +447,7 @@ class Filter2DApp(PipelineApp):
         self._leds = self._ol.leds_gpio.channel1
         self._timer = InterruptTimer(0.3, self._play)
         self._app_pipeline = [self._vii, self._fi2d0, self._vio]
+        self._index = None
 
     def stop(self):
         """Stops the pipeline"""
@@ -452,8 +458,10 @@ class Filter2DApp(PipelineApp):
     def _play(self):
         buttons = int(self._buttons.read())
         index = buttons % len(xvF2d)
-        self._fi2d0.kernel_type = xvF2d(index)
-        self._leds[0:4].write(index)
+        if self._index != index:
+            self._fi2d0.kernel_type = xvF2d(index)
+            self._leds[0:4].write(index)
+            self._index = index
 
     def play(self):
         """ Exposes runtime configurations to the user
@@ -471,7 +479,7 @@ class LutApp(PipelineApp):
     expose kernel configurability through the switches on the board
     """
 
-    def __init__(self, bitfile_name, source: str = 'HDMI'):
+    def __init__(self, bitfile_name, source: VSource = VSource.HDMI):
         """Return a LutApp object
 
         Parameters
@@ -488,6 +496,7 @@ class LutApp(PipelineApp):
         self._leds = self._ol.leds_gpio.channel1
         self._timer = InterruptTimer(0.3, self._play)
         self._app_pipeline = [self._vii, self._lut, self._vio]
+        self._index = None
 
     def stop(self):
         """Stops the pipeline"""
@@ -498,8 +507,10 @@ class LutApp(PipelineApp):
     def _play(self):
         switches = int(self._switches.read())
         index = switches % len(xvLut)
-        self._lut.kernel_type = xvLut(index)
-        self._leds[0:4].write(index)
+        if self._index != index:
+            self._lut.kernel_type = xvLut(index)
+            self._leds[0:4].write(index)
+            self._index = index
 
     def play(self):
         """ Exposes runtime configurations to the user
