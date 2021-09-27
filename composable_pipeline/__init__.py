@@ -11,8 +11,10 @@ from .apps import CornerDetect
 from .apps import ColorDetect
 from .apps import Filter2DApp
 from .apps import LutApp
+from .video import VideoStream
+from .video import VSource
+from .video import VSink
 from .libs import *
-from .video import *
 
 
 __author__ = "Mario Ruiz"

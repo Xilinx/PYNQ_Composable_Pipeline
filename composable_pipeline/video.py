@@ -11,6 +11,7 @@ from time import sleep
 import cv2
 from _thread import start_new_thread
 import threading
+from pynq.ps import CPU_ARCH, ZU_ARCH
 
 
 __author__ = "Mario Ruiz"
@@ -34,17 +35,18 @@ class VSink(Enum):
     DP = auto()
 
 
-class HDMIVideo:
-    """HDMIVideo class
+class PLPLVideo:
+    """PLPLVideo class
 
-    Handles HDMI input and output paths
-    .start: configures hdmi_in and hdmi_out starts them and tie them together
+    Handles video streams that start in the PL and end in the PL
+    .start: configures hdmi_in| mipi and hdmi_out
+            starts them and tie them together
     .stop: closes hdmi_in and hdmi_out
 
     """
 
     def __init__(self, ol: Overlay, source: VSource = VSource.HDMI) -> None:
-        """Return a HDMIVideo object to handle the video path
+        """Return a PLVideo object to handle the video path
 
         Parameters
         ----------
@@ -67,13 +69,13 @@ class HDMIVideo:
 
         if ol.device.name == 'Pynq-ZU':
             # Deassert HDMI clock reset
-            ol.reset_control.channel1[0].write(1)
+            ol.hdmi_tx_control.channel2[0].write(1)
             # Wait 200 ms for the clock to come out of reset
             sleep(0.2)
 
             ol.video.phy.vid_phy_controller.initialize()
 
-            if self._source == 'HDMI':
+            if self._source == VSource.HDMI:
                 self._source_in = ol.video.hdmi_in
                 self._source_in.frontend.set_phy(
                     ol.video.phy.vid_phy_controller)
@@ -85,18 +87,18 @@ class HDMIVideo:
             dp159 = DP159(ol.HDMI_CTL_axi_iic, 0x5C)
             si = SI_5324C(ol.HDMI_CTL_axi_iic, 0x68)
             self._hdmi_out.frontend.clocks = [dp159, si]
-            if (ol.tx_en_out.read(0)) == 0:
-                ol.tx_en_out.write(0, 1)
+            if (ol.hdmi_tx_control.read(0)) == 0:
+                ol.hdmi_tx_control.write(0, 1)
         else:
             self._source_in = ol.video.hdmi_in
 
     def start(self):
         """Configure and start the HDMI"""
         if not self._started:
-            if self._source == 'HDMI':
+            if self._source == VSource.HDMI:
                 self._source_in.configure()
             else:
-                self._source_in.configure(VideoMode(1280, 720, 24))
+                self._source_in.configure(VideoMode(1280, 720, 24, 60))
 
             self._hdmi_out.configure(self._source_in.mode)
 
@@ -124,11 +126,122 @@ class HDMIVideo:
         return self._hdmi_out.mode
 
 
-class VideoFile:
-    """Wrapper for a video stream pipeline"""
+class PLDPVideo:
+    """Wrapper for PL Video stream sources that sink on DisplayPort
 
-    def __init__(self, filename: str, mode=VideoMode(1280, 720, 24, 30)):
-        """ Returns a VideoFile object
+    """
+
+    def __init__(self, ol: Overlay, source: VSource = VSource.HDMI) -> None:
+        """Return a PLDP object to handle the video path
+
+        Parameters
+        ----------
+        ol : pynq.Overlay
+            Overlay object
+        source : str (optional)
+            Input video source. Valid values [VSource.HDMI, VSource.MIPI]
+        """
+
+        VSourceources = [VSource.HDMI, VSource.MIPI]
+        if source not in VSourceources:
+            raise ValueError("{} is not supported".format(source))
+
+        if CPU_ARCH != ZU_ARCH:
+            raise RuntimeError("Device {} does not support DisplayPort"
+                               .format(ol.device.name))
+
+        self._source = source
+        self._started = None
+        self._pause = None
+        self._dp = DisplayPort()
+        self._thread = threading.Lock()
+        self._running = None
+
+        if self._source == 'HDMI':
+            self._source_in = ol.video.hdmi_in
+            self._source_in.frontend.set_phy(ol.video.phy.vid_phy_controller)
+        else:
+            self._source_in = ol.mipi
+
+    def start(self):
+        """Configure and start the HDMI"""
+        if not self._started:
+            if self._source == 'HDMI':
+                self._source_in.configure()
+                videomode = self._source_in.mode
+            else:
+                videomode = VideoMode(1280, 720, 24, 60)
+                self._source_in.configure(videomode)
+
+            self._dp.configure(videomode, PIXEL_RGB)
+            self._source_in.start()
+
+            self._started = True
+            sleep(0.2)
+            self._tie()
+        elif self._pause:
+            self._tie()
+            self._pause = None
+
+    def stop(self):
+        """Stop the HDMI"""
+        if self._started:
+            self._running = False
+            while self._thread.locked():
+                sleep(0.05)
+            self._source_in.close()
+            self._dp.stop()
+            self._started = False
+            self._pause = False
+
+    def _tie(self):
+        """Mirror the video stream input to an output channel"""
+
+        self._thread.acquire()
+        self._running = True
+
+        try:
+            start_new_thread(self._tievdma, ())
+        except Exception:
+            import traceback
+            print(traceback.format_exc())
+            raise ValueError("error starting new thread")
+
+    def _tievdma(self):
+        """Threaded method to implement tie"""
+        while self._running:
+            try:
+                fpgaframe = self._source_in.readframe()
+                dpframe = self._dp.newframe()
+                dpframe[:] = fpgaframe
+                self._dp.writeframe(dpframe)
+                sleep(0.10)
+            except Exception as e:
+                print('An exception occurred: {}'.format(e))
+                import traceback
+                import logging
+                logging.error(traceback.format_exc())
+                self._running = False
+
+        self._thread.release()
+
+    @property
+    def modein(self):
+        """Return input video source mode"""
+        return self._source_in.mode
+
+    @property
+    def modeout(self):
+        """Return output video sink mode"""
+        return self._dp.mode
+
+
+class OpenCVPLVideo:
+    """Wrapper for a OpenCV video stream pipeline that sinks on PL"""
+
+    def __init__(self, ol: Overlay, filename: str,
+                 mode=VideoMode(1280, 720, 24, 60)):
+        """ Returns a OpenCVPL object
 
         Parameters
         ----------
@@ -139,14 +252,33 @@ class VideoFile:
             video configuration
         """
 
-        if not isinstance(filename, str):
-            raise ValueError("filename ({}) is not an string".format(filename))
+        if not isinstance(filename, str) and not isinstance(filename, int):
+            raise ValueError("filename ({}) is not an string or integer"
+                             .format(filename))
 
         self._file = filename
+        self._hdmi_out = ol.video.hdmi_out
         self._videoIn = None
         self.mode = mode
         self._thread = threading.Lock()
         self._running = None
+        self._started = None
+
+        if ol.device.name == 'Pynq-ZU':
+            # Deassert HDMI clock reset
+            ol.hdmi_tx_control.channel2[0].write(1)
+            # Wait 200 ms for the clock to come out of reset
+            sleep(0.2)
+
+            ol.video.phy.vid_phy_controller.initialize()
+
+            self._hdmi_out.frontend.set_phy(ol.video.phy.vid_phy_controller)
+
+            dp159 = DP159(ol.HDMI_CTL_axi_iic, 0x5C)
+            si = SI_5324C(ol.HDMI_CTL_axi_iic, 0x68)
+            self._hdmi_out.frontend.clocks = [dp159, si]
+            if (ol.hdmi_tx_control.read(0)) == 0:
+                ol.hdmi_tx_control.write(0, 1)
 
     def _configure(self):
         self._videoIn = cv2.VideoCapture(self._file)
@@ -165,18 +297,24 @@ class VideoFile:
 
     def start(self):
         """Start video stream by configuring it"""
-
-        self._configure()
+        if not self._started:
+            self._configure()
+            self._hdmi_out.configure(self.mode)
+            self._hdmi_out.start()
+            self._tie()
+            self._started = True
 
     def stop(self):
         """Stop the video stream"""
 
-        if self._videoIn:
+        if self._videoIn and self._started:
             self._running = False
             while self._thread.locked():
                 sleep(0.05)
             self._videoIn.release()
+            self._hdmi_out.stop()
             self._videoIn = None
+            self._started = False
 
     def pause(self):
         """Pause tie"""
@@ -203,67 +341,36 @@ class VideoFile:
                 return frame
         raise RuntimeError("OpenCV can't rewind {}".format(self._file))
 
-    def tie(self, output):
-        """Mirror the video stream input to an output channel
-
-        Parameters
-        ----------
-        output : HDMIOut
-            The output to mirror on to
-        """
+    def _tie(self):
+        """Mirror the video stream input to an output channel"""
 
         if not self._videoIn:
             raise SystemError("The stream is not started")
-        self._output = output
-        self._outframe = self._output.newframe()
+
+        self._outframe = self._hdmi_out.newframe()
         self._thread.acquire()
         self._running = True
         try:
-            start_new_thread(self._tie, ())
+            start_new_thread(self._tievdma, ())
         except Exception:
             import traceback
             print(traceback.format_exc())
 
-    def _tie(self):
+    def _tievdma(self):
         """Threaded method to implement tie"""
 
         while self._running:
             self._outframe[:] = self.readframe()
-            self._output.writeframe(self._outframe)
+            self._hdmi_out.writeframe(self._outframe)
         self._thread.release()
 
 
-class Webcam(VideoFile):
-    """Wrapper for a webcam video pipeline"""
-
-    def __init__(self, filename: int = 0, mode=VideoMode(1280, 720, 24, 30)):
-        """ Returns a Webcam object
-
-        Parameters
-        ----------
-        filename : int
-            webcam filename, by default this is 0
-        mode : VideoMode
-            webcam configuration
-        """
-
-        if not isinstance(filename, int):
-            raise ValueError("filename ({}) is not an integer"
-                             .format(filename))
-
-        self._file = filename
-        self._videoIn = None
-        self.mode = mode
-        self._thread = threading.Lock()
-        self._running = None
-
-
-class FileDisplayPort(VideoFile):
-    """Wrapper for a webcam video pipeline streamed to DisplayPort"""
+class OpenCVDPVideo(OpenCVPLVideo):
+    """Wrapper for a webcam/file video pipeline streamed to DisplayPort"""
 
     def __init__(self, filename: str, mode=VideoMode(1280, 720, 24, 60),
                  vdma: pynq.lib.video.dma.AxiVDMA = None):
-        """ Returns a FileDisplayPort object
+        """ Returns a OpenCVDP object
 
         Parameters
         ----------
@@ -274,54 +381,55 @@ class FileDisplayPort(VideoFile):
         vdma : pynq.lib.video.dma.AxiVDMA
             Xilinx VideoDMA IP core
         """
+
+        if not vdma:
+            raise SystemError("vdma is not specified")
+
         super().__init__(filename=filename, mode=mode)
 
         self.vdma = vdma
         self.mode = mode
+        self._dp = DisplayPort()
         if self.vdma:
             self.vdma.writechannel.mode = self.mode
             self.vdma.readchannel.mode = self.mode
 
         self._thread = threading.Lock()
         self._running = None
+        self._started = None
 
     def start(self):
-        """Start video stream by configuring it"""
+        """Configure and start the video stream from/to PS"""
 
         self._configure()
-        if self.vdma:
+        if not self._started:
+            self._dp.configure(self._mode, PIXEL_RGB)
             self.vdma.writechannel.start()
             self.vdma.readchannel.start()
+            self._started = True
+            self._tie()
 
     def stop(self):
         """Stop video stream"""
 
         super().stop()
-        if self.vdma:
+        if not self._started:
             self.vdma.writechannel.stop()
             self.vdma.readchannel.stop()
+            self._dp.stop()
+            self._started = False
 
-    def tie(self, dp):
-        """Mirror the video stream input to an output channel
-
-        Parameters
-        ----------
-        dp : pynq.lib.video.DisplayPort
-            DisplayPort object
-        """
+    def _tie(self):
+        """Mirror the video stream input to an output channel"""
 
         if not self._videoIn:
             raise SystemError("The stream is not started")
-        self._dp = dp
 
         self._thread.acquire()
         self._running = True
-        if self.vdma:
-            tie = self._tievdma
-        else:
-            tie = self._tienovdma
+
         try:
-            start_new_thread(tie, ())
+            start_new_thread(self._tievdma, ())
         except Exception:
             import traceback
             print(traceback.format_exc())
@@ -343,112 +451,50 @@ class FileDisplayPort(VideoFile):
 
         self._thread.release()
 
-    def _tienovdma(self):
-        """Threaded method to implement tie"""
 
-        while self._running:
-            dpframe = self._dp.newframe()
-            dpframe[:] = self.readframe()
-            self._dp.writeframe(dpframe)
-        self._thread.release()
+class VideoStream:
+    """VideoStream class
 
-
-class WebcamDisplayPort(FileDisplayPort):
-    """Wrapper for a webcam video pipeline streamed to DisplayPort"""
-
-    def __init__(self, filename: int = 0, mode=VideoMode(1280, 720, 24, 60),
-                 vdma: pynq.lib.video.dma.AxiVDMA = None):
-        """ Returns a WebcamDisplayPort object
-
-        Parameters
-        ----------
-        filename : int
-            webcam filename, by default this is 0
-        mode : VideoMode
-            webcam configuration
-        vdma : pynq.lib.video.dma.AxiVDMA
-            Xilinx VideoDMA IP core
-        """
-        if not isinstance(filename, int):
-            raise ValueError("filename \'{}\' is not an integer"
-                             .format(filename))
-
-        self._file = filename
-        self._videoIn = None
-        self.vdma = vdma
-        self.mode = mode
-        if self.vdma:
-            self.vdma.writechannel.mode = self.mode
-            self.vdma.readchannel.mode = self.mode
-
-        self._thread = threading.Lock()
-        self._running = None
-
-
-class PSVideo:
-    """PSVideo class
-
-    Handles video sources that originate in the PS
+    Handles DisplayPort output paths
+    .start: configures hdmi_in and hdmi_out starts them and tie them together
+    .stop: closes hdmi_in and hdmi_out
 
     """
 
-    def __init__(self, vdma: pynq.lib.video.dma.AxiVDMA,
-                 mode=VideoMode(1280, 720, 24, 60), filename: int= 0):
-        """Return a PSVideo object to handle the video path
-
-        source : str (optional)
-            Input video source. Valid values [VSource.HDMI, VSource.MIPI]
+    def __init__(self, ol: Overlay, source: VSource=VSource.HDMI,
+                 sink: VSink=VSink.HDMI, file: int = 0,
+                 mode=VideoMode(1280, 720, 24, 60)):
+        """Return a HDMIVideo object to handle the video path
 
         Parameters
         ----------
-        vdma : pynq.lib.video.dma.AxiVDMA
-            Xilinx VideoDMA IP core
-        mode : VideoMode
-            OpenCV video mode. Default = VideoMode(1280, 720, 24, 30)
-        filename : \'int\', \'str\'
-            webcam filename, by default this is 0
+        ol : pynq.Overlay
+            Overlay object
+        source : str (optional)
+            Input video source. Valid values [VSource.HDMI, VSource.MIPI]
         """
 
-        if isinstance(filename, int):
-            self._source = WebcamDisplayPort(filename, mode, vdma)
-        elif isinstance(filename, str):
-            self._source = FileDisplayPort(filename, mode, vdma)
-        else:
-            raise ValueError("wrong type")
-
-        self._mode = mode
-        self._filename = filename
-        self._vdma = vdma
-        self._dp = DisplayPort()
-        self._started = None
-        self._pause = None
+        if (source == VSource.HDMI or source == VSource.MIPI) and \
+                sink == VSink.HDMI:
+            self._video = PLPLVideo(ol=ol, source=source)
+        elif (source == VSource.HDMI or source == VSource.MIPI) and \
+                sink == VSink.DP:
+            self._video = PLDPVideo(ol, source)
+        elif source == VSource.OpenCV and sink == VSink.HDMI:
+            self._video = OpenCVPLVideo(ol, file, mode)
+        elif source == VSource.OpenCV and sink == VSink.DP:
+            self._video = OpenCVDPVideo(filename=file, mode=mode,
+                                        vdma=ol.video.axi_vdma)
 
     def start(self):
-        """Configure and start the video stream from/to PS"""
-        if not self._started:
-            self._dp.configure(self._mode, PIXEL_RGB)
-            self._source.start()
-            self._source.tie(self._dp)
-            self._started = True
-
-        if self._pause:
-            self._source.tie(self._dp)
-            self._pause = None
+        """Start the video stream"""
+        self._video.start()
 
     def stop(self):
-        """Stop the video stream from/to PS"""
-        if self._started:
-            self._source.stop()
-            self._dp.stop()
-            self._started = False
-
-    def pause(self):
-        """Pause video"""
-        if self._started and not self._pause:
-            self._source.pause()
-            self._pause = True
+        """Start the video stream"""
+        self._video.stop()
 
     @property
-    def modein(self):
-        """Return input video source mode"""
-        return self._source.mode
+    def mode(self):
+        """Return mode"""
+        return self._video.mode
