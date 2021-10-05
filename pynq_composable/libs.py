@@ -96,7 +96,7 @@ class VitisVisionIP(DefaultIP):
 
 
 class xvF2d(Enum):
-    """Suported filter2D kernels"""
+    """Supported filter2D kernels"""
     identity = 0
     edge_x = 1
     edge_y = 2
@@ -517,7 +517,7 @@ class CornerHarris(VitisVisionIP):
 
 
 class xvLut(Enum):
-    """Suported LUT kernels"""
+    """Supported LUT kernels"""
     identity = 0
     negative = 1
     binary_threshold = 2
