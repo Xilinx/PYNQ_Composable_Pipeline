@@ -370,8 +370,8 @@ class OpenCVPLVideo:
 class OpenCVDPVideo(OpenCVPLVideo):
     """Wrapper for a webcam/file video pipeline streamed to DisplayPort"""
 
-    def __init__(self, filename: str, mode=VideoMode(1280, 720, 24, 60),
-                 vdma: pynq.lib.video.dma.AxiVDMA = None):
+    def __init__(self, ol: Overlay, filename: str,
+                mode=VideoMode(1280, 720, 24, 60)):
         """ Returns a OpenCVDP object
 
         Parameters
@@ -384,12 +384,8 @@ class OpenCVDPVideo(OpenCVPLVideo):
             Xilinx VideoDMA IP core
         """
 
-        if not vdma:
-            raise SystemError("vdma is not specified")
-
-        super().__init__(filename=filename, mode=mode)
-
-        self.vdma = vdma
+        self._file = filename
+        self.vdma = ol.video.axi_vdma
         self.mode = mode
         self._dp = DisplayPort()
         if self.vdma:
@@ -405,7 +401,7 @@ class OpenCVDPVideo(OpenCVPLVideo):
 
         self._configure()
         if not self._started:
-            self._dp.configure(self._mode, PIXEL_RGB)
+            self._dp.configure(self.mode, PIXEL_RGB)
             self.vdma.writechannel.start()
             self.vdma.readchannel.start()
             self._started = True
@@ -414,8 +410,10 @@ class OpenCVDPVideo(OpenCVPLVideo):
     def stop(self):
         """Stop video stream"""
 
-        super().stop()
-        if not self._started:
+        if self._started:
+            self._running = False
+            while self._thread.locked():
+                sleep(0.05)
             self.vdma.writechannel.stop()
             self.vdma.readchannel.stop()
             self._dp.stop()
@@ -491,8 +489,7 @@ class VideoStream:
         elif source == VSource.OpenCV and sink == VSink.HDMI:
             self._video = OpenCVPLVideo(ol, file, mode)
         elif source == VSource.OpenCV and sink == VSink.DP:
-            self._video = OpenCVDPVideo(filename=file, mode=mode,
-                                        vdma=ol.video.axi_vdma)
+            self._video = OpenCVDPVideo(ol=ol, filename=file, mode=mode)
 
     def start(self):
         """Start the video stream"""
