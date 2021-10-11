@@ -59,7 +59,7 @@ class PLPLVideo:
         VSourceources = [VSource.HDMI, VSource.MIPI]
         if source not in VSourceources:
             raise ValueError("{} is not supported".format(source))
-        elif ol.device.name != 'Pynq-ZU' and source != 'HDMI':
+        elif ol.device.name != 'Pynq-ZU' and source != VSource.HDMI:
             raise ValueError("Device {} only supports {} as input source "
                              .format(ol.device.name, VSource.HDMI.name))
 
