@@ -67,6 +67,13 @@ def _find_index_in_list(pipeline: list, element: Type[DefaultIP]) \
     return None
 
 
+def _edge_label(ci: int, pi: int, debug: bool) -> str:
+    """Generate edge label given"""
+
+    return '<<font color=\"' + ('green' if debug else 'white') + '\">' + \
+           'ci=' + str(ci) + ' pi=' + str(pi) + '</font>>'
+
+
 class Composable(DefaultHierarchy):
     """This class keeps track of a composable overlay
 
@@ -178,7 +185,6 @@ class Composable(DefaultHierarchy):
         self._soft_reset = self._pipecrtl.channel1
         self._dfx_control = self._pipecrtl.channel2
         self.graph = Digraph()
-        self.graph.graph_attr['size'] = '14'
         self.graph.graph_attr['rankdir'] = 'LR'
         self._graph_debug = False
         self._current_pipeline = None
@@ -350,15 +356,10 @@ class Composable(DefaultHierarchy):
         flat_list = list()
         graph = Digraph(
             node_attr={'shape': 'box'},
-            edge_attr={'color': 'green'}
+            edge_attr={'color': 'green'},
+            graph_attr={'rankdir': self.graph.graph_attr['rankdir']}
             )
-
-        graph.graph_attr['size'] = self.graph.graph_attr['size']
-        graph.graph_attr['rankdir'] = self.graph.graph_attr['rankdir']
-
-        labelcolor = '<<font color=\"' + ('green' if self._graph_debug else
-                                          'white') + '\">'
-
+        gdebug = self._graph_debug
         for i, l0 in enumerate(cle_list):
             if isinstance(l0, list):
                 key = self._relative_path(cle_list[i+1]._fullpath)
@@ -389,10 +390,9 @@ class Composable(DefaultHierarchy):
 
                         if not np.where(switch_conf == ci)[0].size:
                             switch_conf[pi] = ci
-                            label = labelcolor + 'ci=' + str(ci) + ' pi=' + \
-                                str(pi) + '</font>>'
                             graph.edge(self._relative_path(ip._fullpath),
-                                       consumer, label=label)
+                                       consumer,
+                                       label=_edge_label(ci, pi, gdebug))
                         else:
                             raise SystemError("IP: {} is already being used in"
                                               " the provided pipeline. An IP "
@@ -410,10 +410,8 @@ class Composable(DefaultHierarchy):
 
                     if not np.where(switch_conf == ci[0])[0].size:
                         switch_conf[pi[0]] = ci[0]
-                        label = labelcolor + 'ci=' + str(ci[0]) + ' pi=' + \
-                            str(pi[0]) + '</font>>'
                         graph.edge(self._relative_path(ip._fullpath), key,
-                                   label=label)
+                                   label=_edge_label(ci[0], pi[0], gdebug))
                     else:
                         raise SystemError("IP: {} is already being used in the"
                                           " provided pipeline. An IP instance "
@@ -438,11 +436,9 @@ class Composable(DefaultHierarchy):
 
                         if not np.where(switch_conf == ci[j])[0].size:
                             switch_conf[pi] = ci[j]
-                            label = labelcolor + 'ci=' + str(ci[j]) + ' pi=' +\
-                                str(pi) + '</font>>'
                             graph.edge(self._relative_path(ip._fullpath),
                                        self._relative_path(nextip._fullpath),
-                                       label=label)
+                                       label=_edge_label(ci[j], pi, gdebug))
                         else:
                             raise SystemError("IP: {} is already being used "
                                               "in the provided pipeline. An IP"
