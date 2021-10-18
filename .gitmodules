@@ -4,6 +4,6 @@
 	shallow = true
 [submodule "boards/ip"]
 	path = boards/ip
-	url = https://github.com/mariodruiz/PYNQ.git
-	branch = image_v2.7_vitis_hls
+	url = https://github.com/Xilinx/PYNQ.git
+	branch = image_v2.7
 	shallow = true
