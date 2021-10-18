@@ -178,7 +178,6 @@ class Composable(DefaultHierarchy):
         self._soft_reset = self._pipecrtl.channel1
         self._dfx_control = self._pipecrtl.channel2
         self.graph = Digraph()
-        self.graph.graph_attr['size'] = '14'
         self.graph.graph_attr['rankdir'] = 'LR'
         self._graph_debug = False
         self._current_pipeline = None
@@ -350,11 +349,9 @@ class Composable(DefaultHierarchy):
         flat_list = list()
         graph = Digraph(
             node_attr={'shape': 'box'},
-            edge_attr={'color': 'green'}
+            edge_attr={'color': 'green'},
+            graph_attr={'rankdir': self.graph.graph_attr['rankdir']}
             )
-
-        graph.graph_attr['size'] = self.graph.graph_attr['size']
-        graph.graph_attr['rankdir'] = self.graph.graph_attr['rankdir']
 
         labelcolor = '<<font color=\"' + ('green' if self._graph_debug else
                                           'white') + '\">'
