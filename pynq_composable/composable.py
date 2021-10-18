@@ -710,7 +710,8 @@ class Composable(DefaultHierarchy):
         switch_conf = np.copy(new_sw_config)
 
         for idx, val in enumerate(switch_conf):
-            if val < 0 and self._sw_default[idx] > 0:
+            if val < 0 and self._sw_default[idx] > 0 and \
+                    self._sw_default[idx] not in switch_conf:
                 switch_conf[idx] = self._sw_default[idx]
 
         self._switch.pi = switch_conf
