@@ -124,10 +124,10 @@ setup(
     package_data={
         "": data_files,
     },
-    python_requires=">=3.6.0",
+    python_requires=">=3.8.0",
     install_requires=[
-        "pynq>=2.6.2",
-        "graphviz>=0.16"
+        "pynq>=2.7.0",
+        "graphviz>=0.17"
     ],
     entry_points={
         "pynq.notebooks": [

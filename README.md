@@ -26,7 +26,7 @@ Note that this project depends on the [Vitis Accelerated Libraries](https://gith
 
 ```sh
 git clone https://github.com/Xilinx/PYNQ_Composable_Pipeline
-pip install PYNQ_Composable_Pipeline/
+python3 -m pip install PYNQ_Composable_Pipeline/ --no-build-isolation
 pynq-get-notebooks pynq-composable -p $PYNQ_JUPYTER_NOTEBOOKS
 ```
 
