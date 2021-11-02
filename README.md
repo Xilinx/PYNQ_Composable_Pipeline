@@ -35,7 +35,7 @@ The notebooks will be delivered into the folder `/home/xilinx/jupyter_notebooks`
 
 Supported boards [PYNQ-Z2](https://www.tul.com.tw/ProductsPYNQ-Z2.html), [PYNQ-ZU](https://www.tul.com.tw/ProductsPYNQ-ZU.html) and [Kria KV260 Vision AI Starter Kit](https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html)
 
-> Note: PYNQ-Z1 is supported wiht the same composable overlay as PYNQ-Z2
+> Note: PYNQ-Z1 is supported with the same composable overlay as PYNQ-Z2
 
 ## Rebuild composable pipeline from scratch
 
