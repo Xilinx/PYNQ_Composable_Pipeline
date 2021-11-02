@@ -8,3 +8,4 @@ numpy
 pynq
 graphviz
 opencv-python
+ipywidgets
