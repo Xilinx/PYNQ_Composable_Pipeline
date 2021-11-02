@@ -1,2 +1,10 @@
+# .readthedocs.yml
+# Read the Docs configuration file
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
+
 version: 2
-requirements_file: docs/requirements.txt
+
+# Declare the Python requirements required to build your docs
+python:
+   install:
+   - requirements: docs/requirements.txt
