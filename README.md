@@ -1,4 +1,5 @@
-![license](https://img.shields.io/github/license/Xilinx/PYNQ_Composable_Pipeline?color=g) ![python](https://github.com/Xilinx/PYNQ_Composable_Pipeline/workflows/Python/badge.svg)
+![license](https://img.shields.io/github/license/Xilinx/PYNQ_Composable_Pipeline?color=g) ![python](https://github.com/Xilinx/PYNQ_Composable_Pipeline/workflows/Python/badge.svg) [![docs](https://readthedocs.org/projects/pynq-composable/badge/?version=latest)](https://pynq-composable.readthedocs.io/en/latest/?badge=latest)
+
 
 # Composable Pipeline
 
