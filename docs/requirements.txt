@@ -9,3 +9,5 @@ pynq
 graphviz
 opencv-python
 ipywidgets
+ipython
+nbsphinx
