@@ -589,12 +589,16 @@ class PixelLut(VitisVisionIP):
     @property
     def threshold(self):
         """Set an retrieve threshold ndarray
+
         The first index indicates
+
             0: lower threshold
             1: upper threshold
+
         The second index indicates the channel
         The third index indicates the value
         """
+
         return self._threshold
 
     @threshold.setter

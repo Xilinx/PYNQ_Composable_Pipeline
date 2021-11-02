@@ -105,22 +105,8 @@ class Composable(DefaultHierarchy):
 
     Attributes
     ----------
-    c_dict : dict
-        All the IP cores connected to the AXI4-Stream Switch. Key is the name
-        of the IP; value is a dictionary mapping the producer and consumer to
-        the switch port, whether the IP is in a dfx region and loaded
-        {str: {'ci' : list, 'pi' : list, 'modtype': str,
-               'dfx': bool, 'loaded': bool, 'bitstream: str'}}.
-    dfx_dict : dict
-        All the DFX regions in the hierarchy. Key is the name of the dfx region
-        value is a dictionary with DFX decoupler, PS GPIO that controls the DFX
-        decoupler and partial bitstreams associated to the region
-        {str: {'decoupler' : str, 'gpio' : {'decouple' : int, 'status' : int},
-               'ip': dict}}.
     graph : Digraph
         Graphviz Digraph representation of the current dataflow pipeline
-    current_pipeline : list
-        list of the IP objects in the current dataflow pipeline
     """
 
     @staticmethod
@@ -191,14 +177,28 @@ class Composable(DefaultHierarchy):
         self._current_flat_pipeline = None
 
     @property
-    def dfx_dict(self):
-        """Returns the dfx_dict dictionary"""
+    def dfx_dict(self) -> dict:
+        """Returns the dfx_dict dictionary
+
+        All the DFX regions in the hierarchy. Key is the name of the dfx region
+        value is a dictionary with DFX decoupler, PS GPIO that controls the DFX
+        decoupler and partial bitstreams associated to the region
+        {str: {'decoupler' : str, 'gpio' : {'decouple' : int, 'status' : int},
+        ip': dict}}.
+        """
 
         return ReprDict(self._dfx_dict, rootname='dfx_dict')
 
     @property
-    def c_dict(self):
-        """Returns the c_dict dictionary"""
+    def c_dict(self) -> dict:
+        """Returns the c_dict dictionary
+
+        All the IP cores connected to the AXI4-Stream Switch. Key is the name
+        of the IP; value is a dictionary mapping the producer and consumer to
+        the switch port, whether the IP is in a dfx region and loaded
+        {str: {'ci' : list, 'pi' : list, 'modtype': str,
+        'dfx': bool, 'loaded': bool, 'bitstream: str'}}.
+        """
 
         return ReprDictComposable(self._c_dict,
                                   rootname=self._hier.replace('/', ''))
@@ -322,15 +322,20 @@ class Composable(DefaultHierarchy):
             list of the composable IP objects
             Examples:
             [a, b, c, d] yields
-                -> a -> b -> c -> d ->
+
+            .. code-block:: none
+
+                    -> a -> b -> c -> d ->
 
             [a, b, [[c,d],[e]], f, g] yields
 
-                            -> c -> d -
-                          /            \\
-                -> a -> b               f -> g ->
-                          \\            /
-                            -> e ------
+            .. code-block:: none
+
+                                -> c -> d -
+                              /            \\
+                    -> a -> b               f -> g ->
+                              \\            /
+                                ---> e ----
         """
 
         if not isinstance(cle_list, list):
@@ -477,6 +482,7 @@ class Composable(DefaultHierarchy):
         dfx_list: list
             List of IP to be downloaded onto the dfx regions. The list can
             contain either a string with the fullname or the IP object
+
             Examples:
                 [cpipe.pr_0.fast_accel, cpipe.pr_1.dilate_accel]
                 ['pr_0/fast_accel', 'pr_1/dilate_accel']
@@ -529,6 +535,7 @@ class Composable(DefaultHierarchy):
         ----------
         iplist: list
             List of IP to be removed from the current pipeline
+
             Examples:
                 [cpipe.pr_0.erode]
                 [cpipe.pr_1.filter2d, cpipe.pr_fork.duplicate]
@@ -718,7 +725,7 @@ class Composable(DefaultHierarchy):
 
 
 class PRRegion:
-    """Class that wraps attributes for IP objects on dfx regions"""
+    """Class that wraps attributes for IP objects on DFX regions"""
 
     def __init__(self, cpipe: Composable, name: str):
         self._ol = cpipe._ol
@@ -753,8 +760,11 @@ class UnloadedIP:
 class BufferIP:
     """Handles IP objects that are of buffering type
 
-    Expose fullpath attribute for buffering type IP such as a) FIFOs
-    b) Slice registers.
+    Expose fullpath attribute for buffering type IP such as:
+
+        a) FIFOs
+
+        b) Slice registers.
     """
 
     def __init__(self, path: str):

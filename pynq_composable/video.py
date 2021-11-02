@@ -2,7 +2,6 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-import pynq
 from pynq import Overlay
 from pynq.lib.video import *
 from pynq.lib.video.clocks import DP159, SI_5324C
@@ -24,6 +23,7 @@ __email__ = "pynq_support@xilinx.com"
 
 class VSource(Enum):
     """Suported input video sources"""
+
     OpenCV = auto()
     HDMI = auto()
     MIPI = auto()
@@ -31,6 +31,7 @@ class VSource(Enum):
 
 class VSink(Enum):
     """Suported output video sinks"""
+
     HDMI = auto()
     DP = auto()
 
@@ -39,10 +40,6 @@ class PLPLVideo:
     """PLPLVideo class
 
     Handles video streams that start in the PL and end in the PL
-    .start: configures hdmi_in| mipi and hdmi_out
-            starts them and tie them together
-    .stop: closes hdmi_in and hdmi_out
-
     """
 
     def __init__(self, ol: Overlay, source: VSource = VSource.HDMI) -> None:
@@ -93,7 +90,12 @@ class PLPLVideo:
             self._source_in = ol.video.hdmi_in
 
     def start(self):
-        """Configure and start the HDMI"""
+        """Configure and start the Video source
+
+        Configures hdmi_in or mipi and hdmi_out. Then starts the source and
+        sink, and finally tie them together
+        """
+
         if not self._started:
             if self._source == VSource.HDMI:
                 self._source_in.configure()
@@ -109,7 +111,8 @@ class PLPLVideo:
             self._started = True
 
     def stop(self):
-        """Stop the HDMI"""
+        """Closes source and sink"""
+
         if self._started:
             self._hdmi_out.close()
             self._source_in.close()
@@ -118,11 +121,13 @@ class PLPLVideo:
     @property
     def modein(self):
         """Return input video source mode"""
+
         return self._source_in.mode
 
     @property
     def modeout(self):
         """Return output video sink mode"""
+
         return self._hdmi_out.mode
 
 
@@ -233,6 +238,7 @@ class PLDPVideo:
     @property
     def modeout(self):
         """Return output video sink mode"""
+
         return self._dp.mode
 
 

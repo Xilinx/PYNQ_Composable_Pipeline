@@ -176,15 +176,17 @@ class HWHComposable:
         All the IP cores connected to the AXI4-Stream Switch. Key is the name
         of the IP; value is a dictionary mapping the producer and consumer to
         the switch port, whether the IP is in a dfx region and loaded
+
         {str: {'ci' : list, 'pi' : list, 'modtype': str,
-               'dfx': bool, 'loaded': bool, 'bitstream: str'}}.
+        'dfx': bool, 'loaded': bool, 'bitstream: str'}}
+
     dfx_dict : dict
         All the DFX regions in the hierarchy. Key is the name of the dfx region
         value is a dictionary with DFX decoupler, PS GPIO that controls the DFX
         decoupler and partial bitstreams associated to the region
-        {str: {'decoupler' : str, 'gpio' : {'decouple' : int, 'status' : int},
-               'ip': dict}}.
 
+        {str: {'decoupler' : str, 'gpio' : {'decouple' : int, 'status' : int},
+        'ip': dict}}
 
     Note
     ----

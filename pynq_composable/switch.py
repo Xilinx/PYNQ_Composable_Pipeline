@@ -34,7 +34,7 @@ class StreamSwitch(DefaultIP):
         self.max_slots = int(description['parameters']['C_NUM_MI_SLOTS'])
         self._pi = np.zeros(self.max_slots, dtype=np.int32)
 
-    def default(self):
+    def default(self) -> None:
         """Generate default configuration
 
         Configures the AXI4-Stream Switch to connect
@@ -45,7 +45,7 @@ class StreamSwitch(DefaultIP):
             self._pi[i] = i
         self._populateRouting()
 
-    def disable(self):
+    def disable(self) -> None:
         """Disable all connections in the AXI4-Stream Switch"""
 
         for i in range(len(self._pi)):
@@ -54,34 +54,33 @@ class StreamSwitch(DefaultIP):
 
     @property
     def pi(self):
-        """
-        getter:
-            Returns the current switch configuration
+        """ AXI4-Stream Switch configuration
 
-        setter:
-            Configure the AXI4-Stream Switch given a numpy array
-            Each element in the array controls a consumer interface selection.
-            If more than one element in the array is set to the same consumer
-            interface, then the lower producer interface wins.
-            Parameters
-            ----------
-            conf_array : numpy array (dtype=np.int32)
-                An array with the mapping of consumer to producer interfaces
-                The index in the array is the producer interface and
-                the value is the consumer interface slot
-                The length of the array can vary from 1 to max slots
-                Use negative values to indicate that a producer is disabled
-                For instance, given this input [-1, 2, 1, 0]
-                    Consumer 2 will be routed to Producer 1
-                    Consumer 1 will be routed to Producer 2
-                    Consumer 0 will be routed to Producer 3
-                    Producer 0 is disabled
+        Configure the AXI4-Stream Switch given a numpy array
+        Each element in the array controls a consumer interface selection.
+        If more than one element in the array is set to the same consumer
+        interface, then the lower producer interface wins.
+
+        Parameters
+        ----------
+        conf_array : numpy array (dtype=np.int64)
+            An array with the mapping of consumer to producer interfaces
+            The index in the array is the producer interface and
+            the value is the consumer interface slot
+            The length of the array can vary from 1 to max slots
+            Use negative values to indicate that a producer is disabled
+
+            For instance, given this input [-1, 2, 1, 0]
+                Consumer 2 will be routed to Producer 1
+                Consumer 1 will be routed to Producer 2
+                Consumer 0 will be routed to Producer 3
+                Producer 0 is disabled
         """
 
         return self._pi
 
     @pi.setter
-    def pi(self, conf_array):
+    def pi(self, conf_array: np.dtype(np.int64)):
         length = len(conf_array)
         if conf_array.dtype is not np.dtype(np.int64):
             raise TypeError("Numpy array must be np.int64 dtype")
