@@ -14,3 +14,4 @@ overlay.zip
 .coverage
 junit/
 __pycache__/
+docs/build/
