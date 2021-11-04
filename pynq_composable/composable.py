@@ -74,6 +74,16 @@ def _edge_label(ci: int, pi: int, debug: bool) -> str:
            'ci=' + str(ci) + ' pi=' + str(pi) + '</font>>'
 
 
+def _get_ip_name_by_vlnv(description: str, vlnv: str) -> str:
+    """Search IP by its VLNV and return its name"""
+
+    for k, v in description['ip'].items():
+        ip_vlnv = v.get('type')
+        if ip_vlnv == vlnv:
+            return k
+    return None
+
+
 class Composable(DefaultHierarchy):
     """This class keeps track of a composable overlay
 
@@ -111,9 +121,10 @@ class Composable(DefaultHierarchy):
 
     @staticmethod
     def checkhierarchy(description):
-        return (
-            'axis_switch' in description['ip'] and
-            'pipeline_control' in description['ip'])
+        if _get_ip_name_by_vlnv(description, 'xilinx.com:ip:axis_switch:1.1'):
+            return True
+
+        return False
 
     def __init__(self, description):
         """Return a new Composable object.
@@ -155,10 +166,21 @@ class Composable(DefaultHierarchy):
         self._dfx_dict = None
         self._bitfile = description['device'].bitfile_name
         self._hwh_name = os.path.splitext(self._bitfile)[0] + '.hwh'
-        self._pipecrtl = self.pipeline_control
-        self._switch = self.axis_switch
-        self._max_slots = self._switch.max_slots
         self._ol = description['overlay']
+
+        switch_name = \
+            _get_ip_name_by_vlnv(description, 'xilinx.com:ip:axis_switch:1.1')
+        self._switch = getattr(self._ol, self._hier + switch_name)
+        self._max_slots = self._switch.max_slots
+        pipelinecrt = \
+            _get_ip_name_by_vlnv(description, 'xilinx.com:ip:axi_gpio:2.0')
+        if pipelinecrt:
+            self._pipecrtl = getattr(self._ol, self._hier + pipelinecrt)
+            self._soft_reset = self._pipecrtl.channel1
+            self._dfx_control = self._pipecrtl.channel2
+        else:
+            self._soft_reset = None
+            self._dfx_control = None
 
         parser = HWHComposable(self._hwh_name, self.axis_switch._fullpath)
         self._c_dict = parser.c_dict
@@ -168,8 +190,6 @@ class Composable(DefaultHierarchy):
         self._default_paths()
         self._switch.pi = self._sw_default
 
-        self._soft_reset = self._pipecrtl.channel1
-        self._dfx_control = self._pipecrtl.channel2
         self.graph = Digraph()
         self.graph.graph_attr['rankdir'] = 'LR'
         self._graph_debug = False
@@ -450,7 +470,7 @@ class Composable(DefaultHierarchy):
                                               " instance can only be used once"
                                               .format(ip._fullpath))
 
-        if self._soft_reset is not None:
+        if self._soft_reset:
             self._soft_reset[0].write(1)
             self._soft_reset[0].write(0)
 
@@ -514,7 +534,8 @@ class Composable(DefaultHierarchy):
         path = os.path.dirname(self._bitfile) + '/'
         for pr in bit_dict:
             if not bit_dict[pr]['loaded']:
-                self._dfx_control[self._dfx_dict[pr]['decouple']].write(1)
+                if self._dfx_control:
+                    self._dfx_control[self._dfx_dict[pr]['decouple']].write(1)
                 for i in range(5):
                     try:
                         self._pr_download(pr, path + bit_dict[pr]['bitstream'])
@@ -526,7 +547,8 @@ class Composable(DefaultHierarchy):
                                            "downloaded"
                                            .format(bit_dict[pr]['bitstream']))
 
-                self._dfx_control[self._dfx_dict[pr]['decouple']].write(0)
+                if self._dfx_control:
+                    self._dfx_control[self._dfx_dict[pr]['decouple']].write(0)
 
     def remove(self, iplist: list=None) -> None:
         """Remove IP object from the current pipeline
