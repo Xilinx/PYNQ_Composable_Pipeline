@@ -162,7 +162,7 @@ class PLDPVideo:
         self._thread = threading.Lock()
         self._running = None
 
-        if self._source == 'HDMI':
+        if self._source == VSource.HDMI:
             self._source_in = ol.video.hdmi_in
             self._source_in.frontend.set_phy(ol.video.phy.vid_phy_controller)
         else:
@@ -171,7 +171,7 @@ class PLDPVideo:
     def start(self):
         """Configure and start the HDMI"""
         if not self._started:
-            if self._source == 'HDMI':
+            if self._source == VSource.HDMI:
                 self._source_in.configure()
                 videomode = self._source_in.mode
             else:
