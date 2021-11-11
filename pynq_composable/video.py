@@ -287,6 +287,9 @@ class OpenCVPLVideo:
                 ol.hdmi_tx_control.write(0, 1)
 
     def _configure(self):
+        """Add cv2.CAP_V4L2 to make sure V4L2 libraries are used"""
+        if isinstance(self._file, int):
+            self._file += cv2.CAP_V4L2
         self._videoIn = cv2.VideoCapture(self._file)
         if not self._videoIn:
             raise RuntimeError("OpenCV can't open {}".format(self._file))
