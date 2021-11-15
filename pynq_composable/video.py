@@ -9,7 +9,6 @@ from pynq.lib.video.clocks import *
 from enum import Enum, auto
 from time import sleep
 import cv2
-from _thread import start_new_thread
 import threading
 from pynq.ps import CPU_ARCH, ZU_ARCH
 
@@ -186,7 +185,6 @@ class PLDPVideo:
         self._started = None
         self._pause = None
         self._dp = _DisplayPort()
-        self._thread = threading.Lock()
         self._running = None
 
         if self._source == VSource.HDMI:
@@ -219,7 +217,7 @@ class PLDPVideo:
         """Stop the HDMI"""
         if self._started:
             self._running = False
-            while self._thread.locked():
+            while self._thread.is_alive():
                 sleep(0.05)
             self._source_in.close()
             self._dp.stop()
@@ -229,11 +227,11 @@ class PLDPVideo:
     def _tie(self):
         """Mirror the video stream input to an output channel"""
 
-        self._thread.acquire()
+        self._thread = threading.Thread(target=self._tievdma, daemon=True)
         self._running = True
 
         try:
-            start_new_thread(self._tievdma, ())
+            self._thread.start()
         except Exception:
             import traceback
             print(traceback.format_exc())
@@ -243,19 +241,16 @@ class PLDPVideo:
         """Threaded method to implement tie"""
         while self._running:
             try:
-                fpgaframe = self._source_in.readframe()
                 dpframe = self._dp.newframe()
-                dpframe[:] = fpgaframe
+                dpframe[:] = self._source_in.readframe()
                 self._dp.writeframe(dpframe)
-                sleep(0.10)
+                sleep(0.05)
             except Exception as e:
                 print('An exception occurred: {}'.format(e))
                 import traceback
                 import logging
                 logging.error(traceback.format_exc())
                 self._running = False
-
-        self._thread.release()
 
     @property
     def modein(self):
@@ -293,7 +288,6 @@ class OpenCVPLVideo:
         self._hdmi_out = ol.video.hdmi_out
         self._videoIn = None
         self.mode = mode
-        self._thread = threading.Lock()
         self._running = None
         self._started = None
 
@@ -347,7 +341,7 @@ class OpenCVPLVideo:
 
         if self._videoIn and self._started:
             self._running = False
-            while self._thread.locked():
+            while self._thread.is_alive():
                 sleep(0.05)
             self._videoIn.release()
             self._hdmi_out.stop()
@@ -386,10 +380,10 @@ class OpenCVPLVideo:
             raise SystemError("The stream is not started")
 
         self._outframe = self._hdmi_out.newframe()
-        self._thread.acquire()
+        self._thread = threading.Thread(target=self._tievdma, daemon=True)
         self._running = True
         try:
-            start_new_thread(self._tievdma, ())
+            self._thread.start()
         except Exception:
             import traceback
             print(traceback.format_exc())
@@ -400,7 +394,6 @@ class OpenCVPLVideo:
         while self._running:
             self._outframe[:] = self.readframe()
             self._hdmi_out.writeframe(self._outframe)
-        self._thread.release()
 
 
 class OpenCVDPVideo(OpenCVPLVideo):
@@ -428,7 +421,6 @@ class OpenCVDPVideo(OpenCVPLVideo):
             self.vdma.writechannel.mode = self.mode
             self.vdma.readchannel.mode = self.mode
 
-        self._thread = threading.Lock()
         self._running = None
         self._started = None
 
@@ -448,7 +440,7 @@ class OpenCVDPVideo(OpenCVPLVideo):
 
         if self._started:
             self._running = False
-            while self._thread.locked():
+            while self._thread.is_alive():
                 sleep(0.05)
             self.vdma.writechannel.stop()
             self.vdma.readchannel.stop()
@@ -461,11 +453,11 @@ class OpenCVDPVideo(OpenCVPLVideo):
         if not self._videoIn:
             raise SystemError("The stream is not started")
 
-        self._thread.acquire()
+        self._thread = threading.Thread(target=self._tievdma, daemon=True)
         self._running = True
 
         try:
-            start_new_thread(self._tievdma, ())
+            self._thread.start()
         except Exception:
             import traceback
             print(traceback.format_exc())
@@ -484,8 +476,6 @@ class OpenCVDPVideo(OpenCVPLVideo):
                 self._dp.writeframe(dpframe)
             except RuntimeError:
                 raise RuntimeError("Can't start thread")
-
-        self._thread.release()
 
 
 class VideoStream:
