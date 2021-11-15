@@ -2,13 +2,13 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+from enum import Enum
 import numpy as np
+import json
+import os
 from pynq import DefaultIP
 from pynq.ps import CPU_ARCH, ZU_ARCH
 import struct
-from enum import Enum
-import os
-import json
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
