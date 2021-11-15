@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import asyncio
+import cv2
+from enum import Enum, auto
 from pynq import Overlay
 from pynq.lib.video import *
 from pynq.lib.video.clocks import *
-from enum import Enum, auto
-from time import sleep
-import cv2
-import threading
 from pynq.ps import CPU_ARCH, ZU_ARCH
+from time import sleep
+import threading
 
 
 __author__ = "Mario Ruiz"
