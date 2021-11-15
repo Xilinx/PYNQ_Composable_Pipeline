@@ -8,7 +8,7 @@ from enum import Enum, auto
 import json
 import os
 from pynq import Overlay
-from pynq.lib.video import *
+from pynq.lib.video import DrmDriver, VideoMode, PIXEL_RGB
 from pynq.lib.video.clocks import *
 from pynq.ps import CPU_ARCH, ZU_ARCH
 from time import sleep
@@ -38,8 +38,16 @@ class VSink(Enum):
     DP = auto()
 
 
-class _DisplayPort(pynq.lib.video.DisplayPort):
+class _DisplayPort(DrmDriver):
     """Subclass of DisplayPort that works in a thread"""
+
+    def __init__(self):
+        """Create a new driver instance bound to card0 which
+        should always be the hardened DisplayPort
+        """
+
+        super().__init__('/dev/dri/card0')
+
     def writeframe(self, frame):
         """Write a frame to the display.
 
