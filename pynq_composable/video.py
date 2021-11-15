@@ -38,7 +38,7 @@ class VSink(Enum):
     DP = auto()
 
 
-class _DisplayPort(DisplayPort):
+class _DisplayPort(pynq.lib.video.DisplayPort):
     """Subclass of DisplayPort that works in a thread"""
     def writeframe(self, frame):
         """Write a frame to the display.
