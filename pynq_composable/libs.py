@@ -7,6 +7,8 @@ from pynq import DefaultIP
 from pynq.ps import CPU_ARCH, ZU_ARCH
 import struct
 from enum import Enum
+import os
+import json
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
@@ -16,6 +18,14 @@ __email__ = "pynq_support@xilinx.com"
 def _float2int(value: float) -> int:
     """Pack a single precision floating point into a 32-bit integer"""
     return int.from_bytes(struct.pack('f', np.single(value)), 'little')
+
+
+if CPU_ARCH == ZU_ARCH:
+    _cols = 1920
+    _rows = 1080
+else:
+    _cols = 1280
+    _rows = 720
 
 
 class VitisVisionIP(DefaultIP):
@@ -44,15 +54,16 @@ class VitisVisionIP(DefaultIP):
 
     def __init__(self, description):
         super().__init__(description=description)
-        if CPU_ARCH == ZU_ARCH:
-            self._cols = 1920
-            self._rows = 1080
-        else:
-            self._cols = 1280
-            self._rows = 720
 
     def start(self):
         """Populate the image resolution and start the IP"""
+        file = "/tmp/resolution.json"
+        if os.path.exists(file):
+            with open(file, "r", encoding='utf8') as f:
+                reso = json.load(f)
+                self._cols, self._rows = reso["width"], reso["height"]
+        else:
+            self._cols, self._rows = _cols, _rows
         self.write(self._rows_offset, int(self._rows))
         self.write(self._cols_offset, int(self._cols))
         self.write(0x00, 0x81)

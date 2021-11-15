@@ -5,6 +5,8 @@
 import asyncio
 import cv2
 from enum import Enum, auto
+import json
+import os
 from pynq import Overlay
 from pynq.lib.video import *
 from pynq.lib.video.clocks import *
@@ -517,12 +519,18 @@ class VideoStream:
         elif source == VSource.OpenCV and sink == VSink.DP:
             self._video = OpenCVDPVideo(ol=ol, filename=file, mode=mode)
 
+        reso = {"width": mode.width, "height": mode.height, "fps": mode.fps}
+        with open("/tmp/resolution.json", "w", encoding="utf-8") as f:
+            json.dump(reso, f)
+
     def start(self):
         """Start the video stream"""
         self._video.start()
 
     def stop(self):
         """Start the video stream"""
+
+        os.remove("/tmp/resolution.json")
         self._video.stop()
 
     def pause(self):
