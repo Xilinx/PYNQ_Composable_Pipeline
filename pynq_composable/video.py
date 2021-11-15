@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+import asyncio
 from pynq import Overlay
 from pynq.lib.video import *
 from pynq.lib.video.clocks import *
@@ -34,6 +35,32 @@ class VSink(Enum):
 
     HDMI = auto()
     DP = auto()
+
+
+class _DisplayPort(DisplayPort):
+    """Subclass of DisplayPort that works in a thread"""
+    def writeframe(self, frame):
+        """Write a frame to the display.
+
+        Raises an exception if the operation fails and blocks until a
+        page-flip if there is already a frame scheduled to be displayed.
+
+        Parameters
+        ----------
+        frame : pynq.ContiguousArray
+            Frame to write - must have been created by `newframe`
+        """
+
+        ret = self._videolib.pynqvideo_frame_write(
+            self._device, frame.pointer)
+        if ret == -1:
+            self._loop.run_until_complete(
+                asyncio.ensure_future(self.writeframe_async(frame)))
+        elif ret > 0:
+            raise OSError(ret, "Can't write frame")
+        else:
+            # Frame should no longer be disposed
+            frame.pointer = None
 
 
 class PLPLVideo:
@@ -158,7 +185,7 @@ class PLDPVideo:
         self._source = source
         self._started = None
         self._pause = None
-        self._dp = DisplayPort()
+        self._dp = _DisplayPort()
         self._thread = threading.Lock()
         self._running = None
 
@@ -380,7 +407,7 @@ class OpenCVDPVideo(OpenCVPLVideo):
     """Wrapper for a webcam/file video pipeline streamed to DisplayPort"""
 
     def __init__(self, ol: Overlay, filename: str,
-                mode=VideoMode(1280, 720, 24, 60)):
+                 mode=VideoMode(1280, 720, 24, 60)):
         """ Returns a OpenCVDP object
 
         Parameters
@@ -396,7 +423,7 @@ class OpenCVDPVideo(OpenCVPLVideo):
         self._file = filename
         self.vdma = ol.video.axi_vdma
         self.mode = mode
-        self._dp = DisplayPort()
+        self._dp = _DisplayPort()
         if self.vdma:
             self.vdma.writechannel.mode = self.mode
             self.vdma.readchannel.mode = self.mode
