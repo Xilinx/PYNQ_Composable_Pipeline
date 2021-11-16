@@ -55,3 +55,4 @@ The Composable Overlays Overview
    getting_started
    video_pipeline
    pynq_composable
+   default_paths
