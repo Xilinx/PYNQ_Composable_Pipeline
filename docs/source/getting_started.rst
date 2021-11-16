@@ -26,7 +26,7 @@ the easiest way to get started is to pip install the composable video pipeline.
 
     python3 -m pip install pynq_composable
 
-Once the installation is done, you can deliver the notebooks running
+Once the installation is done, you can deliver the notebooks by running
 
 .. code-block:: bash
 
@@ -36,4 +36,11 @@ Get Help
 ========
 
 You can get help in the `PYNQ support forum <https://discuss.pynq.io/>`_. Or by
-open an `issue on GitHub <https://github.com/Xilinx/PYNQ_Composable_Pipeline/issues>`_
+opening an `issue on GitHub <https://github.com/Xilinx/PYNQ_Composable_Pipeline/issues>`_
+
+Contribute
+==========
+
+We welcome contributions, please review the
+`contributing guidelines <https://github.com/Xilinx/PYNQ_Composable_Pipeline/CONTRIBUTING.md>`_
+to contribute.
