@@ -42,5 +42,5 @@ Contribute
 ==========
 
 We welcome contributions, please review the
-`contributing guidelines <https://github.com/Xilinx/PYNQ_Composable_Pipeline/CONTRIBUTING.md>`_
+`contributing guidelines <https://github.com/Xilinx/PYNQ_Composable_Pipeline/blob/main/CONTRIBUTING.md>`_
 to contribute.
