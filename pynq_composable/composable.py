@@ -144,21 +144,22 @@ class Composable(DefaultHierarchy):
         to be next to bitstream file that was used to create the Overlay object
         The name convention for partial bitstreams and HWH file is
 
-        <bitstream_name>_<pr_region>_<pr_module_name>.{bit|hwh}
+        <bitstream_name>_<hierarchy>_<pr_region>_<pr_module_name>.{bit|hwh}
 
         For instance if the main bitstream is `base.bit` and there are two DFX
         regions with the names `pr_0` and `pr_1` each of them with the same
         two reconfigurable module, `function_1` and `function_2` the names
         should be as follow
 
-            base_pr_0_function_1.bit
-            base_pr_0_function_1.hwh
-            base_pr_0_function_2.bit
-            base_pr_0_function_2.hwh
-            base_pr_1_function_1.bit
-            base_pr_1_function_1.hwh
-            base_pr_1_function_2.bit
-            base_pr_1_function_2.hwh
+            base_composable_pr_0_function_1.bit
+            base_composable_pr_0_function_1.hwh
+            base_composable_pr_0_function_2.bit
+            base_composable_pr_0_function_2.hwh
+            base_composable_pr_1_function_1.bit
+            base_composable_pr_1_function_1.hwh
+            base_composable_pr_1_function_2.bit
+            base_composable_pr_1_function_2.hwh
+
         """
 
         super().__init__(description)
