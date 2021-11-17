@@ -10,7 +10,7 @@ import os
 from pynq import Overlay
 from pynq.lib.video import DrmDriver, VideoMode, PIXEL_RGB
 from pynq.lib.video.clocks import *
-from pynq.ps import CPU_ARCH, ZU_ARCH
+from pynq.ps import CPU_ARCH, ZU_ARCH, ZYNQ_ARCH
 from time import sleep
 import threading
 
@@ -511,10 +511,10 @@ class VideoStream:
         """
 
         if not mode:
-            if CPU_ARCH == ZU_ARCH:
-                mode = VideoMode(1920, 1080, 24, 60)
-            else:
+            if CPU_ARCH == ZYNQ_ARCH or source == VSource.MIPI:
                 mode = VideoMode(1280, 720, 24, 60)
+            else:
+                mode = VideoMode(1920, 1080, 24, 60)
 
         if (source == VSource.HDMI or source == VSource.MIPI) and \
                 sink == VSink.HDMI:
