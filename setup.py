@@ -66,6 +66,33 @@ def copy_notebooks(board_folder, module_name):
                 shutil.copy(src, dst)
 
 
+def update_notebooks_display_port(module_name):
+    """Update notebooks for KV260
+
+    Search for HDMI and replace it with Display Port.
+    Make sure sink is set to VSink.DP
+
+    """
+    if board != "KV260":
+        return
+    for (dirpath, dirnames, filenames) in os.walk(module_name):
+        for filename in filenames:
+            if filename.endswith(".ipynb"):
+                with open(os.sep.join([dirpath, filename]), 'r') as file :
+                    filedata = file.read()
+
+                filedata = filedata.replace("HDMI", "DisplayPort")
+                filedata = filedata.replace("VideoStream(ol, source=VSource.MIPI)",
+                    "VideoStream(ol, source=VSource.MIPI, vsink=VSink.DP)")
+                filedata = filedata.replace("VideoStream(ol, source=VSource.OpenCV)",
+                    "video = VideoStream(ol, source=VSource.OpenCV, vsink=VSink.DP)")
+                filedata = filedata.replace("VideoStream(ol)",
+                    "video = VideoStream(ol, source=VSource.OpenCV, vsink=VSink.DP)")
+
+                with open(os.sep.join([dirpath, filename]), 'w') as file:
+                    file.write(filedata)
+
+
 overlay = {
     "Pynq-Z2": {
                     "url": "https://www.xilinx.com/bin/public/openDownload?filename=composable-pipeline-Pynq-Z2-0_9_0.zip",
@@ -110,6 +137,7 @@ def download_overlay(board, overlay_dest):
 copy_notebooks(board_folder, module_name)
 download_overlay(board, overlay_dest)
 extend_package(module_name)
+update_notebooks_display_port(module_name + '/notebooks/')
 pkg_version = find_version("{}/__init__.py".format(module_name))
 
 setup(
