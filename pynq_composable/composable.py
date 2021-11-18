@@ -2,15 +2,15 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from pynq import DefaultIP, DefaultHierarchy
-from pynq.utils import ReprDict
 from graphviz import Digraph
-from typing import Type, Union
+import json
 import numpy as np
 import os
-import json
 from .parser import HWHComposable
+from pynq import DefaultIP, DefaultHierarchy
+from pynq.utils import ReprDict
 from .repr_dict import ReprDictComposable
+from typing import Type, Union
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
