@@ -715,7 +715,7 @@ class Composable(DefaultHierarchy):
         if self._dfx_dict is None:
             return super().__getattr__(name)
         elif name in self._dfx_dict:
-            return PRRegion(self, name)
+            return DFXRegion(self, name)
         elif name in self._paths:
             try:
                 attr = getattr(self._ol, self._paths[name]['fullpath'])
@@ -748,7 +748,7 @@ class Composable(DefaultHierarchy):
         self._switch.pi = switch_conf
 
 
-class PRRegion:
+class DFXRegion:
     """Class that wraps attributes for IP objects on DFX regions"""
 
     def __init__(self, cpipe: Composable, name: str):
