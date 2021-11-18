@@ -32,7 +32,7 @@ class StreamSwitch(DefaultIP):
     def __init__(self, description: dict):
         super().__init__(description=description)
         self.max_slots = int(description['parameters']['C_NUM_MI_SLOTS'])
-        self._pi = np.zeros(self.max_slots, dtype=np.int32)
+        self._pi = np.zeros(self.max_slots, dtype=np.int64)
 
     def default(self) -> None:
         """Generate default configuration
@@ -49,7 +49,7 @@ class StreamSwitch(DefaultIP):
         """Disable all connections in the AXI4-Stream Switch"""
 
         for i in range(len(self._pi)):
-            self._pi[i] = np.uint32(0x80000000)
+            self._pi[i] = np.uint64(0x80000000)
         self._populateRouting()
 
     @property
