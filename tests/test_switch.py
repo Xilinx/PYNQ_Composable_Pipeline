@@ -3,12 +3,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 
-import pytest
-import sys
-import pynq
-import numpy as np
 from .mock_device import MockIPDevice, MockRegisterIP
+import numpy as np
+import pynq
 from pynq_composable import switch
+import pytest
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
@@ -30,7 +29,12 @@ test_data = [(np.arange(desc["parameters"]["C_NUM_MI_SLOTS"], dtype=np.int64),
                '0': 2}),
              (np.array([7, 3, 4, 2, 1, 0, 5, 6], dtype=np.int64),
               {'64': 7, '68': 3, '72': 4, '76': 2, '80': 1, '84': 0, '88': 5,
-               '92': 6, '0': 2})]
+               '92': 6, '0': 2}),
+             {'64': 0, '68': 1, '72': 2, '76': 3, '80': 4, '84': 5, '88': 6,
+              '92': 7, '0': 2},
+             {'64': 1 << 31, '68': 1 << 31, '72': 1 << 31, '76': 1 << 31,
+              '80': 1 << 31, '84': 1 << 31, '88': 1 << 31, '92': 1 << 31,
+              '0': 2}]
 
 
 @pytest.fixture
@@ -92,3 +96,22 @@ def test_data_disable1(ipdevice):
     sw = switch.StreamSwitch(desc)
     sw.pi = test_data[3][0]
     assert ipdevice.ip.memory == test_data[3][1]
+
+
+def test_data_default(ipdevice):
+    sw = switch.StreamSwitch(desc)
+    sw.default()
+    assert ipdevice.ip.memory == test_data[4]
+
+
+def test_data_all_disabled(ipdevice):
+    sw = switch.StreamSwitch(desc)
+    sw.disable()
+    assert ipdevice.ip.memory == test_data[5]
+
+
+def test_data_return(ipdevice):
+    sw = switch.StreamSwitch(desc)
+    tvector = np.arange(desc["parameters"]["C_NUM_MI_SLOTS"], dtype=np.int64)
+    sw.pi = tvector
+    assert np.array_equal(sw.pi, tvector)
