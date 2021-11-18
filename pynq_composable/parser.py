@@ -349,7 +349,7 @@ class HWHComposable:
             dictionary[key][k] = port
             dictionary[key]['dfx'] = switch_conn[d]['dfx']
             dictionary[key]['loaded'] = not switch_conn[d]['dfx']
-            dictionary[key]['modtype'] = switch_conn[d]['modtype']
+            dictionary[key]['modtype'] = switch_conn[d].get('modtype')
             if switch_conn[d]['dfx']:
                 dictionary[key]['decoupler'] = switch_conn[d]['decoupler']
 
