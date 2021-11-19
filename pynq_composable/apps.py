@@ -237,9 +237,6 @@ class CornerDetect(PipelineApp):
             self._k_harris.disabled = False
             self._harr.k = k_harris
 
-    _thr = IntSlider(min=0, max=255, step=1, value=20)
-    _k_harris = FloatSlider(min=0, max=0.2, step=0.002, value=0.04,
-                            description='\u03BA')
 
     def play(self):
         """ Exposes runtime configurations to the user
@@ -248,7 +245,9 @@ class CornerDetect(PipelineApp):
         It also displays two sliders to change the the threshold and K value
         for the algorithms.
         """
-
+        self._thr = IntSlider(min=0, max=255, step=1, value=20)
+        self._k_harris = FloatSlider(min=0, max=0.2, step=0.002, value=0.04,
+                                description='\u03BA')
         interact(self._play, algorithm=['Fast', 'Harris'],
                  threshold=self._thr, k_harris=self._k_harris)
 
