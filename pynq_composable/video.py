@@ -335,6 +335,14 @@ class OpenCVPLVideo:
                                   cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
         self._videoIn.set(cv2.CAP_PROP_FPS, self.mode.fps)
 
+        f_reso = (int(self._videoIn.get(cv2.CAP_PROP_FRAME_WIDTH)),
+                  int(self._videoIn.get(cv2.CAP_PROP_FRAME_HEIGHT)))
+        v_reso = (self.mode.width, self.mode.height)
+
+        if f_reso != v_reso:
+            raise RuntimeError("Source {} and sink {} resolution do not match"
+                               .format(f_reso, v_reso))
+
     def start(self):
         """Start video stream by configuring it"""
         if not self._started:
