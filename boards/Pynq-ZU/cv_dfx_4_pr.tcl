@@ -41,6 +41,9 @@
 # 2.10  mr   24/09/2021 Use a different clock domain in MIPI hierarchy, combine GPIO
 #                       to reduce the number of IP
 #
+# 2.20  mr   25/11/2021 Use a different clock domain in MIPI hierarchy, combine GPIO
+#                       to reduce the number of IP
+#
 # </pre>
 #
 ###############################################################################
@@ -521,6 +524,14 @@ proc create_hier_cell_hdmi_out { parentCell nameHier } {
    CONFIG.M_TDATA_NUM_BYTES {6} \
    CONFIG.S_TDATA_NUM_BYTES {6} \
    CONFIG.TDATA_REMAP {tdata[47:40],tdata[31:24],tdata[39:32],tdata[23:16],tdata[7:0],tdata[15:8]} \
+   CONFIG.S_HAS_TSTRB {0} \
+   CONFIG.S_HAS_TKEEP {0} \
+   CONFIG.M_HAS_TSTRB {0} \
+   CONFIG.M_HAS_TKEEP {0} \
+   CONFIG.M_HAS_TLAST {1} \
+   CONFIG.S_HAS_TLAST {1} \
+   CONFIG.TKEEP_REMAP {1'b0} \
+   CONFIG.TSTRB_REMAP {1'b0} \
  ] $pixel_reorder
 
   # Create instance: pixel_unpack, and set properties
@@ -530,6 +541,10 @@ proc create_hier_cell_hdmi_out { parentCell nameHier } {
   set tx_video_axis_reg_slice [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_register_slice:1.1 tx_video_axis_reg_slice ]
   set_property -dict [ list \
    CONFIG.REG_CONFIG {8} \
+   CONFIG.HAS_TKEEP {0} \
+   CONFIG.HAS_TLAST {1} \
+   CONFIG.HAS_TSTRB {0} \
+   CONFIG.TUSER_WIDTH {1} \
  ] $tx_video_axis_reg_slice
 
   # Create interface connections
@@ -1716,10 +1731,10 @@ proc create_hier_cell_video { parentCell nameHier } {
    CONFIG.c_m_axi_mm2s_data_width {128} \
    CONFIG.c_m_axi_s2mm_data_width {128} \
    CONFIG.c_m_axis_mm2s_tdata_width {64} \
-   CONFIG.c_mm2s_linebuffer_depth {4096} \
+   CONFIG.c_mm2s_linebuffer_depth {2048} \
    CONFIG.c_mm2s_max_burst_length {256} \
    CONFIG.c_num_fstores {4} \
-   CONFIG.c_s2mm_linebuffer_depth {4096} \
+   CONFIG.c_s2mm_linebuffer_depth {2048} \
    CONFIG.c_s2mm_max_burst_length {256} \
  ] $axi_vdma
 
@@ -1898,7 +1913,7 @@ proc create_hier_cell_mipi { parentCell nameHier } {
    CONFIG.c_mm2s_max_burst_length {8} \
    CONFIG.c_num_fstores {4} \
    CONFIG.c_s2mm_genlock_mode {2} \
-   CONFIG.c_s2mm_linebuffer_depth {4096} \
+   CONFIG.c_s2mm_linebuffer_depth {2048} \
    CONFIG.c_s2mm_max_burst_length {256} \
  ] $axi_vdma
 
@@ -1969,8 +1984,8 @@ proc create_hier_cell_mipi { parentCell nameHier } {
   # Create instance: demosaic, and set properties
   set demosaic [ create_bd_cell -type ip -vlnv xilinx.com:ip:v_demosaic:1.1 demosaic ]
   set_property -dict [ list \
-   CONFIG.MAX_COLS {3840} \
-   CONFIG.MAX_ROWS {2160} \
+   CONFIG.MAX_COLS {1920} \
+   CONFIG.MAX_ROWS {1080} \
    CONFIG.SAMPLES_PER_CLOCK {2} \
    CONFIG.USE_URAM {1} \
  ] $demosaic
@@ -1978,8 +1993,8 @@ proc create_hier_cell_mipi { parentCell nameHier } {
   # Create instance: gamma_lut, and set properties
   set gamma_lut [ create_bd_cell -type ip -vlnv xilinx.com:ip:v_gamma_lut:1.1 gamma_lut ]
   set_property -dict [ list \
-   CONFIG.MAX_COLS {3840} \
-   CONFIG.MAX_ROWS {2160} \
+   CONFIG.MAX_COLS {1920} \
+   CONFIG.MAX_ROWS {1080} \
    CONFIG.SAMPLES_PER_CLOCK {2} \
  ] $gamma_lut
 
@@ -2031,9 +2046,9 @@ proc create_hier_cell_mipi { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.C_COLORSPACE_SUPPORT {2} \
    CONFIG.C_CSC_ENABLE_WINDOW {false} \
-   CONFIG.C_MAX_COLS {3840} \
+   CONFIG.C_MAX_COLS {1920} \
    CONFIG.C_MAX_DATA_WIDTH {8} \
-   CONFIG.C_MAX_ROWS {2160} \
+   CONFIG.C_MAX_ROWS {1080} \
    CONFIG.C_TOPOLOGY {3} \
  ] $v_proc_sys
 
@@ -2169,7 +2184,7 @@ proc create_hier_cell_composable { parentCell nameHier } {
   # Create instance: axis_data_fifo_join_0, and set properties
   set axis_data_fifo_join_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_join_0 ]
   set_property -dict [ list \
-   CONFIG.FIFO_DEPTH {8192} \
+   CONFIG.FIFO_DEPTH {16384} \
    CONFIG.FIFO_MEMORY_TYPE {ultra} \
    CONFIG.HAS_TKEEP {0} \
    CONFIG.HAS_TLAST {1} \
@@ -3775,6 +3790,8 @@ create_run child_2_impl_1 -parent_run impl_1 -flow {Vivado Implementation 2020} 
 # Change global implementation strategy
 set_property strategy Performance_Explore [get_runs impl_1]
 set_property report_strategy {UltraFast Design Methodology Reports} [get_runs impl_1]
+
+set_property STEPS.SYNTH_DESIGN.ARGS.FLATTEN_HIERARCHY none [get_runs synth_1]
 
 launch_runs impl_1 -to_step write_bitstream -jobs 4
 wait_on_run impl_1
