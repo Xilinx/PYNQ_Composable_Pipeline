@@ -41,8 +41,8 @@
 # 2.10  mr   24/09/2021 Use a different clock domain in MIPI hierarchy, combine GPIO
 #                       to reduce the number of IP
 #
-# 2.20  mr   25/11/2021 Use a different clock domain in MIPI hierarchy, combine GPIO
-#                       to reduce the number of IP
+# 2.20  mr   25/11/2021 Use equal size FIFOs for the branch. Reduce buffering to support
+#                       up to 1080p.
 #
 # </pre>
 #
