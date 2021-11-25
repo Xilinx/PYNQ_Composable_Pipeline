@@ -4,7 +4,7 @@
 
 overlay_name := cv_dfx_4_pr
 
-all: vision_ip pynq_hls project
+all: vision_ip pynq_hls project version
 	@echo
 	@tput setaf 2 ; echo "Built $(overlay_name) successfully!"; tput sgr0;
 	@echo
@@ -32,5 +32,7 @@ zip:
 	@echo "version = $$(grep "version" ../../pynq_composable/__init__.py | cut -d" " -f3 | tr -d \'\")" >> overlay/version.txt
 	@echo "---- md5sum                       Files ----" >> overlay/version.txt
 	@echo "$$(md5sum $$(ls overlay/*bit overlay/*hwh))" >> overlay/version.txt
+
+zip:
 	cp LICENSE overlay/LICENSE.txt
 	zip -r overlay.zip overlay/
