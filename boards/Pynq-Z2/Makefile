@@ -4,7 +4,7 @@
 
 overlay_name := cv_dfx_4_pr
 
-all: vision_ip pynq_hls project version
+all: vision_ip pynq_hls project dict version
 	@echo
 	@tput setaf 2 ; echo "Built $(overlay_name) successfully!"; tput sgr0;
 	@echo
@@ -36,3 +36,6 @@ zip:
 zip:
 	cp LICENSE overlay/LICENSE.txt
 	zip -r overlay.zip overlay/
+
+dict:
+	python3 ../../pynq_composable/parser.py --hwh overlay/$(overlay_name).hwh
