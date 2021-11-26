@@ -21,6 +21,9 @@
 #
 # 1.20a mr   9/12/2021 Enable MIPI, add IIC and merge soft reset IP cores
 #
+# 1.30  mr   11/26/2021 Reduce buffering in the MIPI hierarchy, use equal size FIFO
+#                       in the branch.
+#
 # </pre>
 #
 ###############################################################################
@@ -1382,8 +1385,8 @@ proc create_hier_cell_mipi { parentCell nameHier } {
   # Create instance: demosaic, and set properties
   set demosaic [ create_bd_cell -type ip -vlnv xilinx.com:ip:v_demosaic:1.1 demosaic ]
   set_property -dict [ list \
-   CONFIG.MAX_COLS {3840} \
-   CONFIG.MAX_ROWS {2160} \
+   CONFIG.MAX_COLS {1920} \
+   CONFIG.MAX_ROWS {1080} \
    CONFIG.SAMPLES_PER_CLOCK {2} \
    CONFIG.USE_URAM {1} \
  ] $demosaic
@@ -1391,8 +1394,8 @@ proc create_hier_cell_mipi { parentCell nameHier } {
   # Create instance: gamma_lut, and set properties
   set gamma_lut [ create_bd_cell -type ip -vlnv xilinx.com:ip:v_gamma_lut:1.1 gamma_lut ]
   set_property -dict [ list \
-   CONFIG.MAX_COLS {3840} \
-   CONFIG.MAX_ROWS {2160} \
+   CONFIG.MAX_COLS {1920} \
+   CONFIG.MAX_ROWS {1080} \
    CONFIG.SAMPLES_PER_CLOCK {2} \
  ] $gamma_lut
 
@@ -1450,7 +1453,7 @@ proc create_hier_cell_mipi { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.C_COLORSPACE_SUPPORT {2} \
    CONFIG.C_CSC_ENABLE_WINDOW {false} \
-   CONFIG.C_MAX_COLS {3840} \
+   CONFIG.C_MAX_COLS {1920} \
    CONFIG.C_MAX_DATA_WIDTH {8} \
    CONFIG.C_MAX_ROWS {2160} \
    CONFIG.C_TOPOLOGY {3} \
@@ -1814,7 +1817,7 @@ proc create_hier_cell_composable { parentCell nameHier } {
   # Create instance: axis_data_fifo_join_0, and set properties
   set axis_data_fifo_join_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_join_0 ]
   set_property -dict [ list \
-   CONFIG.FIFO_DEPTH {8192} \
+   CONFIG.FIFO_DEPTH {16384} \
    CONFIG.FIFO_MEMORY_TYPE {ultra} \
    CONFIG.HAS_TKEEP {0} \
    CONFIG.HAS_TLAST {1} \
