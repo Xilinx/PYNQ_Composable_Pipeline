@@ -100,6 +100,7 @@ class PipelineApp:
         """ Stops the pipeline"""
 
         self._video.stop()
+        self._ol.free()
 
     def _pipeline(self):
         """ Logic to configure pipeline
