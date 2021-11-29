@@ -4,7 +4,7 @@
 
 overlay_name := cv_dfx_4_pr
 
-all: vision_ip pynq_hls project dict version
+all: vision_ip pynq_hls project dtbo dict version
 	@echo
 	@tput setaf 2 ; echo "Built $(overlay_name) successfully!"; tput sgr0;
 	@echo
@@ -18,6 +18,10 @@ pynq_hls:
 project:
 	vivado -mode batch -source $(overlay_name).tcl -notrace
 	cp default_paths.json overlay/$(overlay_name)_paths.json
+
+dtbo:
+	make -C dts/
+	cp dts/mipi.dtbo overlay/$(overlay_name).dtbo
 
 clean:
 	rm -rf *.jou *.log NA *.str .Xil/
