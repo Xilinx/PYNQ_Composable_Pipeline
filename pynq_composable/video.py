@@ -504,6 +504,7 @@ class VideoStream:
     .stop: closes hdmi_in and hdmi_out
 
     """
+    _fres = "/tmp/resolution.json"
 
     def __init__(self, ol: Overlay, source: VSource=VSource.HDMI,
                  sink: VSink=VSink.HDMI, file: int = 0,
@@ -536,7 +537,7 @@ class VideoStream:
             self._video = OpenCVDPVideo(ol=ol, filename=file, mode=mode)
 
         reso = {"width": mode.width, "height": mode.height, "fps": mode.fps}
-        with open("/tmp/resolution.json", "w", encoding="utf-8") as f:
+        with open(self._fres, "w", encoding="utf-8") as f:
             json.dump(reso, f)
 
     def start(self):
@@ -546,8 +547,8 @@ class VideoStream:
     def stop(self):
         """Stop the video stream"""
 
-        if os.path.exists("/tmp/resolution.json"):
-            os.remove("/tmp/resolution.json")
+        if os.path.exists(self._fres):
+            os.remove(self._fres)
         self._video.stop()
 
     def pause(self):
