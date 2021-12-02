@@ -270,7 +270,7 @@ class Composable(DefaultHierarchy):
                 pii = vv.get('pi')
                 if (ci is not None and cii is not None and ci in cii) or \
                    (pi is not None and pii is not None and pi in pii):
-                    if kk in c_dict.items():
+                    if kk in c_dict.keys():
                         c_dict.pop(kk)
                     v['fullpath'] = kk
                     c_dict[k] = vv
