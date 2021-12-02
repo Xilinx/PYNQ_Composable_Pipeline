@@ -544,9 +544,10 @@ class VideoStream:
         self._video.start()
 
     def stop(self):
-        """Start the video stream"""
+        """Stop the video stream"""
 
-        os.remove("/tmp/resolution.json")
+        if os.path.exists("/tmp/resolution.json"):
+            os.remove("/tmp/resolution.json")
         self._video.stop()
 
     def pause(self):
