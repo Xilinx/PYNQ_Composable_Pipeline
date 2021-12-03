@@ -10,6 +10,13 @@ __copyright__ = "Copyright 2021, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
+def _mux_mi_gen(ports: int) -> tuple:
+    """Generates index and address for AXI4-Stream Switch MI Mux Registers"""
+
+    for i in range(ports):
+        yield i, 0x40 + 4 * i
+
+
 class StreamSwitch(DefaultIP):
     """AXI4-Stream Switch python driver
 
@@ -76,8 +83,10 @@ class StreamSwitch(DefaultIP):
                 Consumer 0 will be routed to Producer 3
                 Producer 0 is disabled
         """
-
-        return self._pi
+        pi = np.zeros(self.max_slots, dtype=np.int64)
+        for idx, offset in _mux_mi_gen(self.max_slots):
+            pi[idx] = self.read(offset)
+        return pi
 
     @pi.setter
     def pi(self, conf_array: np.dtype(np.int64)):
