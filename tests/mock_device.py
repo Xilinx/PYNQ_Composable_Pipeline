@@ -25,7 +25,7 @@ class MockIPBase:
         self.memory[str(address)] = data
 
     def read_register(self, address):
-        return self.memory.get(address)
+        return self.memory.get(str(address))
 
 
 class MockRegisterIP(MockIPBase):
