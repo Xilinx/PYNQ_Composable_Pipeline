@@ -123,6 +123,6 @@ class StreamSwitch(DefaultIP):
         interfaces are held in reset.
         """
 
-        for i in range(len(self._pi)):
-            self.write(self._pi_offset + 4 * i, int(self._pi[i]))
+        for idx, offset in _mux_mi_gen(self.max_slots):
+            self.write(offset, int(self._pi[idx]))
         self.write(self._control_reg, self._reg_update)
