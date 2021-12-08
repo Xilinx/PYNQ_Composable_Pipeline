@@ -83,11 +83,11 @@ def update_notebooks_display_port(module_name):
 
                 filedata = filedata.replace("HDMI", "DisplayPort")
                 filedata = filedata.replace("VideoStream(ol, source=VSource.MIPI)",
-                    "VideoStream(ol, source=VSource.MIPI, vsink=VSink.DP)")
+                    "VideoStream(ol, source=VSource.MIPI, sink=VSink.DP)")
                 filedata = filedata.replace("VideoStream(ol, source=VSource.OpenCV)",
-                    "video = VideoStream(ol, source=VSource.OpenCV, vsink=VSink.DP)")
+                    "video = VideoStream(ol, source=VSource.OpenCV, sink=VSink.DP)")
                 filedata = filedata.replace("VideoStream(ol)",
-                    "video = VideoStream(ol, source=VSource.OpenCV, vsink=VSink.DP)")
+                    "video = VideoStream(ol, source=VSource.OpenCV, sink=VSink.DP)")
 
                 with open(os.sep.join([dirpath, filename]), 'w') as file:
                     file.write(filedata)
