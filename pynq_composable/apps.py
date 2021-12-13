@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from pynq import Overlay
+from pynq.lib.video import VideoMode
 from .video import VideoStream, VSource, VSink
 from .libs import xvF2d, xvLut
 from ipywidgets import VBox, HBox, IntRangeSlider, FloatSlider, interact, \
@@ -33,7 +34,8 @@ class PipelineApp:
     _dfx_ip = None
 
     def __init__(self, bitfile_name, source: VSource = VSource.HDMI,
-                 sink: VSink = VSink.HDMI, file: int = 0):
+                 sink: VSink = VSink.HDMI, file: int = 0,
+                 videomode: VideoMode = None):
         """Return a PipelineApp object
 
         Parameters
@@ -73,7 +75,7 @@ class PipelineApp:
             raise ValueError("Device {} does not support {} as output sink "
                              .format(device, sink.name))
 
-        self._video = VideoStream(self._ol, source, sink, file)
+        self._video = VideoStream(self._ol, source, sink, file, videomode)
 
         if source == VSource.HDMI:
             self._vii = self._cpipe.hdmi_source_in
@@ -247,7 +249,7 @@ class CornerDetect(PipelineApp):
         """
         self._thr = IntSlider(min=0, max=255, step=1, value=20)
         self._k_harris = FloatSlider(min=0, max=0.2, step=0.002, value=0.04,
-                                description='\u03BA')
+                                     description='\u03BA')
         interact(self._play, algorithm=['Fast', 'Harris'],
                  threshold=self._thr, k_harris=self._k_harris)
 
