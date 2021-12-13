@@ -506,8 +506,8 @@ class VideoStream:
     """
     _fres = "/tmp/resolution.json"
 
-    def __init__(self, ol: Overlay, source: VSource=VSource.HDMI,
-                 sink: VSink=VSink.HDMI, file: int = 0,
+    def __init__(self, ol: Overlay, source: VSource = VSource.HDMI,
+                 sink: VSink = VSink.HDMI, file: int = 0,
                  mode: VideoMode = None):
         """Return a HDMIVideo object to handle the video path
 

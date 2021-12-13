@@ -238,7 +238,6 @@ class CornerDetect(PipelineApp):
             self._k_harris.disabled = False
             self._harr.k = k_harris
 
-
     def play(self):
         """ Exposes runtime configurations to the user
 

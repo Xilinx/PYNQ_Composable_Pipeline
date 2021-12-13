@@ -553,7 +553,7 @@ class Composable(DefaultHierarchy):
                 if self._dfx_control:
                     self._dfx_control[self._dfx_dict[pr]['decouple']].write(0)
 
-    def remove(self, iplist: list=None) -> None:
+    def remove(self, iplist: list = None) -> None:
         """Remove IP object from the current pipeline
 
         Parameters
@@ -650,7 +650,7 @@ class Composable(DefaultHierarchy):
 
         self.compose(pipeline)
 
-    def tap(self, ip: Union[Type[DefaultIP], int]=None) -> None:
+    def tap(self, ip: Union[Type[DefaultIP], int] = None) -> None:
         """Observe the output of an IP object in the current pipeline
 
         Tap into the output of any of the IP cores in the current pipeline
