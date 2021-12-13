@@ -723,6 +723,8 @@ class Composable(DefaultHierarchy):
             except AttributeError:
                 attr = super().__getattr__(self._paths[name]['fullpath'])
             return attr
+        elif (key := self._hier + name) not in self._ol.ip_dict.keys():
+            return StreamingIP(key)
         else:
             try:
                 attr = super().__getattr__(name)
@@ -770,6 +772,13 @@ class DFXRegion:
         else:
             raise ValueError("IP \'{}\' does not exist in partial region "
                              "\'{}\'".format(name, self.key))
+
+
+class StreamingIP:
+    """Handles Streaming only IP"""
+
+    def __init__(self, name: str):
+        self._fullpath = name
 
 
 class UnloadedIP:
