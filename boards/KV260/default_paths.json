@@ -10,23 +10,13 @@
                         "Description": "PS Video output path"
             }
         },
-        "ias": {
-            "ci": {
-                        "port": 1,
-                        "Description": "IAS frontend PL path"
-                },
-            "pi": {
-                        "port": 1,
-                        "Description": "IAS frontend PS path"
-            }
-        },
         "mipi": {
             "ci": {
-                        "port": 2,
+                        "port": 1,
                         "Description": "MIPI frontend PL path"
                 },
             "pi": {
-                        "port": 2,
+                        "port": 1,
                         "Description": "MIPI frontend PS path"
             }
         }
