@@ -22,6 +22,8 @@ The composable overlay architecture of a composable video overlay for the PYNQ-Z
 * [PYNQ-ZU](boards/Pynq-ZU/README.md)
 * [Kria KV260](boards/KV260/README.md), Vitis and Vivado 2020.2.2 are required.
 
+> Note: PYNQ-Z1 is supported with the same composable overlay as PYNQ-Z2
+
 To rebuild the composable pipeline you need Vitis and Vivado 2020.2. Navigate to one of the supported boards folder and run `make`, only steps for Linux are provided.
 
 ## Clone this repository
@@ -41,10 +43,6 @@ pynq-get-notebooks pynq-composable -p $PYNQ_JUPYTER_NOTEBOOKS
 ```
 
 The notebooks will be delivered into the folder `/home/xilinx/jupyter_notebooks`
-
-Supported boards [PYNQ-Z2](https://www.tul.com.tw/ProductsPYNQ-Z2.html), [PYNQ-ZU](https://www.tul.com.tw/ProductsPYNQ-ZU.html) and [Kria KV260 Vision AI Starter Kit](https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html)
-
-> Note: PYNQ-Z1 is supported with the same composable overlay as PYNQ-Z2
 
 ## Documentation
 
