@@ -38,8 +38,9 @@ version:
 	@echo "$$(md5sum $$(ls overlay/*bit overlay/*hwh))" >> overlay/version.txt
 
 zip:
+	$(eval ver := $(shell grep "version" ../../pynq_composable/__init__.py | cut -d" " -f3 | tr -d \'\" | tr . _))
 	cp LICENSE overlay/LICENSE.txt
-	zip -r overlay.zip overlay/
+	zip -r composable-video-pipeline-Pynq-Z2-v$(ver).zip overlay/
 
 dict:
 	python3 ../../pynq_composable/parser.py --hwh overlay/$(overlay_name).hwh
