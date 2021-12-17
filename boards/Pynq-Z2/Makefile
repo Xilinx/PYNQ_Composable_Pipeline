@@ -25,7 +25,7 @@ clean:
 distclean: clean
 	rm -rf $(overlay_name) *.zip
 
-zip:
+version:
 	@echo "board = $$(basename "$(PWD)")" > overlay/version.txt
 	@echo "git_id = $$(git log --format="%H" -n 1)" >> overlay/version.txt
 	@echo "date  = $$(date +'%d %B %Y')" >> overlay/version.txt
