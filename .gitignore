@@ -15,3 +15,5 @@ overlay.zip
 junit/
 __pycache__/
 docs/build/
+*.dtbo
+*.zip
