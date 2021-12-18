@@ -40,7 +40,7 @@ version:
 zip:
 	$(eval ver := $(shell grep "version" ../../pynq_composable/__init__.py | cut -d" " -f3 | tr -d \'\" | tr . _))
 	cp LICENSE overlay/LICENSE.txt
-	zip -r composable-video-pipeline-Pynq-Z2-v$(ver).zip overlay/
+	zip -r composable-video-pipeline-KV260-v$(ver).zip overlay/
 
 dict:
 	python3 ../../pynq_composable/parser.py --hwh overlay/$(overlay_name).hwh
