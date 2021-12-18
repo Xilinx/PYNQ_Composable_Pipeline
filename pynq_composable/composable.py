@@ -276,8 +276,12 @@ class Composable(DefaultHierarchy):
                     c_dict[k] = vv
                     c_dict[k]['default'] = True
                     c_dict[k]['fullpath'] = kk
-                    self._default_ip[kk] = c_dict[k]
-                    self._default_ip[kk]['cpath'] = k
+                    if kk not in self._default_ip.keys():
+                        self._default_ip[kk] = c_dict[k].copy()
+                    if 'cpath' not in self._default_ip[kk].keys():
+                        self._default_ip[kk]['cpath'] = dict()
+                    key = 'pi' if pi is not None else 'ci'
+                    self._default_ip[kk]['cpath'][key] = k
                     break
 
         self._c_dict = c_dict
@@ -322,8 +326,8 @@ class Composable(DefaultHierarchy):
         for ip in dfx_dict:
             self._c_dict[ip]['loaded'] = True
 
-    def _relative_path(self, fullpath: str) -> str:
-        """For IP within the hierarchy return relative path
+    def _relative_path(self, fullpath: str, port: str = 'ci') -> str:
+        """Return relative path of an IP within the hierarchy
 
         If the IP is in the default paths, return proper name
         """
@@ -334,7 +338,7 @@ class Composable(DefaultHierarchy):
 
         for k, v in self._default_ip.items():
             if v['fullpath'] == fullpath:
-                return v['cpath']
+                return v['cpath'][port]
 
     def compose(self, cle_list: list) -> None:
         """Configure design to implement required dataflow pipeline
@@ -431,14 +435,16 @@ class Composable(DefaultHierarchy):
                 flat_list.append(ip)
                 if i == len(cle_list) - 1:
                     break
-                ci = self._c_dict[self._relative_path(ip._fullpath)]['ci']
+                ci = self._c_dict[(path := self._relative_path(ip._fullpath,
+                                                               'ci'))]['ci']
                 if not isinstance(cle_list[i+1], list):
-                    key = self._relative_path(cle_list[i+1]._fullpath)
-                    pi = self._c_dict[key]['pi']
+                    pi = self._c_dict[(key :=
+                                      self._relative_path(
+                                        cle_list[i+1]._fullpath, 'pi'))]['pi']
 
                     if not np.where(switch_conf == ci[0])[0].size:
                         switch_conf[pi[0]] = ci[0]
-                        graph.edge(self._relative_path(ip._fullpath), key,
+                        graph.edge(path, key,
                                    label=_edge_label(ci[0], pi[0], gdebug))
                     else:
                         raise SystemError("IP: {} is already being used in the"
@@ -479,8 +485,9 @@ class Composable(DefaultHierarchy):
 
         self._configure_switch(switch_conf)
 
-        for ip in flat_list:
-            key = self._relative_path(ip._fullpath)
+        for idx, ip in enumerate(flat_list):
+            port = 'pi' if idx == len(flat_list)-1 else 'ci'
+            key = self._relative_path(ip._fullpath, port)
             if self._c_dict[key]["dfx"]:
                 graph.node(key,
                            _attributes={"color": "blue", "fillcolor": "cyan",
