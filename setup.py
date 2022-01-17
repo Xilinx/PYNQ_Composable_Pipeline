@@ -99,17 +99,24 @@ def update_notebooks_display_port(module_name):
 
 overlay = {
     "Pynq-Z2": {
-                    "url": "https://www.xilinx.com/bin/public/openDownload?filename=composable-pipeline-Pynq-Z2-0_9_0.zip",
-                    "md5sum": "eb118d9bb74e46675484d9c0bb18942a",
+                    "url": "https://www.xilinx.com/bin/public/openDownload?filename=composable-video-pipeline-Pynq-Z2-v1_0_0.zip",
+                    "md5sum": "45421bd8844749a219fd7147af17e9d6",
                     "format": "zip"
                 },
     "Pynq-ZU": {
-                    "url": "https://www.xilinx.com/bin/public/openDownload?filename=composable-pipeline-Pynq-ZU-0_9_0.zip",
-                    "md5sum": "b42a122ad9f77535947bf9ab24520468",
+                    "url": "https://www.xilinx.com/bin/public/openDownload?filename=composable-video-pipeline-Pynq-ZU-v1_0_0.zip",
+                    "md5sum": "0ad2da3dfda6d3392d4845f18404dc3c",
+                    "format": "zip"
+                },
+    "KV260": {
+                    "url": "https://www.xilinx.com/bin/public/openDownload?filename=composable-video-pipeline-KV260-v1_0_0.zip",
+                    "md5sum": "262de1a9614d9c4018cdb982e3023531",
                     "format": "zip"
                 }
 }
 
+"""PYNQ-Z1 is supported with the same overlay as PYNQ-Z2"""
+overlay["Pynq-Z1"] = overlay["Pynq-Z2"]
 
 def download_overlay(board, overlay_dest):
     """Download precompiled overlay from the Internet"""
