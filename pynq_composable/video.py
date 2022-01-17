@@ -254,7 +254,7 @@ class PLDPVideo:
                 dpframe = self._dp.newframe()
                 dpframe[:] = self._source_in.readframe()
                 self._dp.writeframe(dpframe)
-                sleep(0.05)
+                sleep(0.07)
             except Exception as e:
                 print('An exception occurred: {}'.format(e))
                 import traceback
