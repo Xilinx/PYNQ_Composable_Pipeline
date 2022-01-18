@@ -13,6 +13,7 @@ from pynq.lib.video.clocks import *
 from pynq.ps import CPU_ARCH, ZU_ARCH, ZYNQ_ARCH
 from time import sleep
 import threading
+from typing import Union
 
 
 __author__ = "Mario Ruiz"
@@ -277,13 +278,13 @@ class PLDPVideo:
 class OpenCVPLVideo:
     """Wrapper for a OpenCV video stream pipeline that sinks on PL"""
 
-    def __init__(self, ol: Overlay, filename: str,
+    def __init__(self, ol: Overlay, filename: Union[int, str],
                  mode=VideoMode(1280, 720, 24, 60)):
         """ Returns a OpenCVPL object
 
         Parameters
         ----------
-        filename : int
+        filename : [int, str]
             video filename
 
         mode : VideoMode
@@ -420,13 +421,13 @@ class OpenCVPLVideo:
 class OpenCVDPVideo(OpenCVPLVideo):
     """Wrapper for a webcam/file video pipeline streamed to DisplayPort"""
 
-    def __init__(self, ol: Overlay, filename: str,
+    def __init__(self, ol: Overlay, filename: Union[int, str],
                  mode=VideoMode(1280, 720, 24, 60)):
         """ Returns a OpenCVDP object
 
         Parameters
         ----------
-        filename : int
+        filename : [int, str]
             video filename
         mode : VideoMode
             webcam configuration
