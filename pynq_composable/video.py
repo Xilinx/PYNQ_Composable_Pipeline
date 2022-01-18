@@ -294,6 +294,9 @@ class OpenCVPLVideo:
             raise ValueError("filename ({}) is not an string or integer"
                              .format(filename))
 
+        if isinstance(filename, str) and not os.path.exists(filename):
+            raise RuntimeError("File {} does not exists".format(filename))
+
         self._file = filename
         self._hdmi_out = ol.video.hdmi_out
         self._videoIn = None
@@ -430,6 +433,13 @@ class OpenCVDPVideo(OpenCVPLVideo):
         vdma : pynq.lib.video.dma.AxiVDMA
             Xilinx VideoDMA IP core
         """
+
+        if not isinstance(filename, str) and not isinstance(filename, int):
+            raise ValueError("filename ({}) is not an string or integer"
+                             .format(filename))
+
+        if isinstance(filename, str) and not os.path.exists(filename):
+            raise RuntimeError("File {} does not exists".format(filename))
 
         self._file = filename
         self.vdma = ol.video.axi_vdma
