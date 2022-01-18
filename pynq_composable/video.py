@@ -531,7 +531,8 @@ class VideoStream:
         """
 
         if not mode:
-            if CPU_ARCH == ZYNQ_ARCH or source == VSource.MIPI:
+            if CPU_ARCH == ZYNQ_ARCH or source == VSource.MIPI \
+                    or (source == VSource.OpenCV and isinstance(file, int)):
                 mode = VideoMode(1280, 720, 24, 60)
             else:
                 mode = VideoMode(1920, 1080, 24, 60)
