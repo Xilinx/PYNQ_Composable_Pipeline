@@ -18,7 +18,8 @@ __email__ = "pynq_support@xilinx.com"
 _m_type = ['MASTER', 'INITIATOR']
 _s_type = ['SLAVE', 'TARGET']
 _mem_items = ['axis_register_slice', 'axis_data_fifo', 'fifo_generator',
-              'axis_dwidth_converter', 'axis_subset_converter']
+              'axis_dwidth_converter', 'axis_subset_converter',
+              'axis_clock_converter']
 
 _dfx_item = ['dfx_decoupler']
 _axis_vlnv = 'xilinx.com:interface:axis:1.0'
