@@ -56,3 +56,4 @@ The Composable Overlays Overview
    video_pipeline
    pynq_composable
    default_paths
+   CHANGELOG
