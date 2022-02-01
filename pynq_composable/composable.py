@@ -542,10 +542,11 @@ class Composable(DefaultHierarchy):
                                                   bitname, pr))
 
         path = os.path.dirname(self._bitfile) + '/'
+        decoupler = self._dfx_control[self._dfx_dict[pr]['decouple']]
         for pr in bit_dict:
             if not bit_dict[pr]['loaded']:
-                if self._dfx_control:
-                    self._dfx_control[self._dfx_dict[pr]['decouple']].write(1)
+                if self._dfx_control and decoupler:
+                    decoupler.write(1)
                 for i in range(5):
                     try:
                         self._pr_download(pr, path + bit_dict[pr]['bitstream'])
@@ -557,8 +558,8 @@ class Composable(DefaultHierarchy):
                                            "downloaded"
                                            .format(bit_dict[pr]['bitstream']))
 
-                if self._dfx_control:
-                    self._dfx_control[self._dfx_dict[pr]['decouple']].write(0)
+                if self._dfx_control and decoupler:
+                    decoupler.write(0)
 
     def remove(self, iplist: list = None) -> None:
         """Remove IP object from the current pipeline
