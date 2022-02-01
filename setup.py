@@ -24,7 +24,7 @@ module_name = "pynq_composable"
 board = os.environ["BOARD"]
 board_folder = "boards/{}".format(board)
 notebooks_dir = os.environ["PYNQ_JUPYTER_NOTEBOOKS"]
-overlay_dest = "{}/notebooks/".format(module_name)
+overlay_dest = "{}/".format(module_name)
 data_files = []
 cwd = os.getcwd()
 
@@ -170,8 +170,10 @@ setup(
     ],
     entry_points={
         "pynq.notebooks": [
-            "pynq-composable = {}.notebooks".format(
-                module_name)
+            "pynq-composable = {}.notebooks".format(module_name)
+        ],
+        "pynq.overlays": [
+            "{} = {}.overlay".format(module_name, module_name)
         ]
     },
     cmdclass={"build_py": build_py},
