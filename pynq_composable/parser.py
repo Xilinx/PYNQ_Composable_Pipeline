@@ -424,9 +424,10 @@ class HWHComposable:
             for b in self.dfx_dict[r].get('rm', list()):
                 hwh_name = self._dir_name + '/' + \
                     os.path.splitext(b)[0] + '.hwh'
-                dfx_dict = _dfx_ip_discovery(r, hwh_name)
-                self.dfx_dict[r]['rm'][b] = dfx_dict
-                self._update_ip_dict_with_dfx(r, dfx_dict)
+                if os.path.exists(hwh_name):
+                    dfx_dict = _dfx_ip_discovery(r, hwh_name)
+                    self.dfx_dict[r]['rm'][b] = dfx_dict
+                    self._update_ip_dict_with_dfx(r, dfx_dict)
 
     def _update_ip_dict_with_dfx(self, partial_region: str,
                                  dfx_dict: dict) -> None:
