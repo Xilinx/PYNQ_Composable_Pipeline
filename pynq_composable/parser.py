@@ -70,7 +70,7 @@ def _dfx_get_oposite_port(port: str) -> str:
     return 's' + port[2::] if 'rp' in port else 'rp' + port[1::]
 
 
-def _get_slice_gpio_pin(signame: str,
+def _get_dfxdecoupler_decouple_gpio_pin(signame: str,
                         tree: ElementTree) -> Union[int, None]:
     """Find the gpio pins that controls the DFX decoupler pin"""
 
@@ -90,13 +90,12 @@ def _get_slice_gpio_pin(signame: str,
     return None
 
 
-def _get_decouple_status_gpio_pin(signame: str,
+def _get_dfxdecoupler_status_gpio_pin(signame: str,
                                   tree: ElementTree) -> Union[int, None]:
     """Find the gpio pins that gets the DFX status pin"""
 
     search_term = "MODULES/*PORTS/*/[@SIGNAME=\'" + signame + "\']"
     node = tree.findall(search_term)
-
     for m in node:
         if m.get('DIR') == 'I':
             return int(re.findall(r'\d+', m.get('NAME'))[0])
@@ -385,9 +384,9 @@ class HWHComposable:
             decoupler = dfx_dict[d]['decoupler']
             search_term = "MODULES/*/[@FULLNAME=\'" + decoupler + "\']"
             node = tree.find(search_term)
-            dfx_dict[d]['decouple'] = _get_slice_gpio_pin(
+            dfx_dict[d]['decouple'] = _get_dfxdecoupler_decouple_gpio_pin(
                 node.find("./PORTS/*[@NAME='decouple']").get('SIGNAME'), tree)
-            dfx_dict[d]['status'] = _get_decouple_status_gpio_pin(
+            dfx_dict[d]['status'] = _get_dfxdecoupler_status_gpio_pin(
                 node.find("./PORTS/*[@NAME='decouple_status']")
                 .get('SIGNAME'), tree)
 
