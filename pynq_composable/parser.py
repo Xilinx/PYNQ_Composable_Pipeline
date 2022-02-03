@@ -71,13 +71,14 @@ def _dfx_get_oposite_port(port: str) -> str:
 
 
 def _get_dfxdecoupler_decouple_gpio_pin(signame: str,
-                        tree: ElementTree) -> Union[int, None]:
+                        tree: ElementTree,
+                        module: ElementTree.Element=None) -> Union[int, None]:
     """Find the gpio pins that controls the DFX decoupler pin"""
 
     search_term = "MODULES/*PORTS/*/[@SIGNAME=\'" + signame + "\']....."
     node = tree.findall(search_term)
     for m in node:
-        if m.get('VLNV') == 'xilinx.com:ip:xlslice:1.0':
+        if 'xilinx.com:ip:xlslice' in m.get('VLNV'):
 
             din_from = int(m.find("./PARAMETERS/*[@NAME='DIN_FROM']")
                            .get('VALUE'))
@@ -87,6 +88,9 @@ def _get_dfxdecoupler_decouple_gpio_pin(signame: str,
                 raise ValueError("{} cannot be more than 1-bit wide"
                                  .format(signame))
             return din_to
+        elif 'xilinx.com:ip:xpm_cdc_gen' in m.get('VLNV') and m != module:
+            return _get_dfxdecoupler_decouple_gpio_pin(
+                m.find("./PORTS/*[@NAME='src_in']").get('SIGNAME'), tree, m)
     return None
 
 
