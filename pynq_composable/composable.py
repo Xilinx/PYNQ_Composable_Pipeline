@@ -273,14 +273,16 @@ class Composable(DefaultHierarchy):
                     if kk in c_dict.keys():
                         c_dict.pop(kk)
                     v['fullpath'] = kk
-                    c_dict[k] = vv
+                    c_dict[k] = vv.copy()
                     c_dict[k]['default'] = True
                     c_dict[k]['fullpath'] = kk
                     if kk not in self._default_ip.keys():
                         self._default_ip[kk] = c_dict[k].copy()
                     if 'cpath' not in self._default_ip[kk].keys():
                         self._default_ip[kk]['cpath'] = dict()
-                    key = 'pi' if pi is not None else 'ci'
+                    key, delkey = ('pi', 'ci') if pi else ('ci', 'pi')
+                    if c_dict[k].get(delkey):
+                        c_dict[k].pop(delkey)
                     self._default_ip[kk]['cpath'][key] = k
                     break
 
