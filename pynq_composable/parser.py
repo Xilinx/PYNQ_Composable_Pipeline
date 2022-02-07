@@ -309,8 +309,10 @@ class HWHComposable:
                 if mod_type in _mem_items and port_type == b_type and \
                         busname != switch_conn[port]['busname']:
                     switch_conn[port]['busname'] = busname
-                    switch_conn[port], ismem = \
-                        _find_connected_node(switch_conn[port], tree)
+                    conn, ismem = _find_connected_node(switch_conn[port], tree)
+
+                    if 'axis_switch' not in conn['modtype']:
+                        switch_conn[port] = conn
                     if not ismem:
                         del deep_exp[0]
                     break
