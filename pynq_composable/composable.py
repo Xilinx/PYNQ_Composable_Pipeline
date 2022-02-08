@@ -280,7 +280,7 @@ class Composable(DefaultHierarchy):
                         self._default_ip[kk] = c_dict[k].copy()
                     if 'cpath' not in self._default_ip[kk].keys():
                         self._default_ip[kk]['cpath'] = dict()
-                    key, delkey = ('pi', 'ci') if pi else ('ci', 'pi')
+                    key, delkey = ('ci', 'pi') if pi is None else ('pi', 'ci')
                     if c_dict[k].get(delkey):
                         c_dict[k].pop(delkey)
                     self._default_ip[kk]['cpath'][key] = k
