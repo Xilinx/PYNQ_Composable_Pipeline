@@ -1,7 +1,3 @@
-[submodule "Vitis_Libraries"]
-	path = Vitis_Libraries
-	url = https://github.com/mariodruiz/Vitis_Libraries.git
-	shallow = true
 [submodule "boards/ip"]
 	path = boards/ip
 	url = https://github.com/Xilinx/PYNQ.git
