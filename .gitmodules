@@ -6,3 +6,5 @@
 [submodule "Vitis_Libraries"]
 	path = Vitis_Libraries
 	url = https://github.com/mariodruiz/Vitis_Libraries_1.git
+	branch = v2021.2_composable
+	shallow = true
