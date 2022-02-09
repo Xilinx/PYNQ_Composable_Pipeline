@@ -1,7 +1,7 @@
 [submodule "boards/ip"]
 	path = boards/ip
-	url = https://github.com/Xilinx/PYNQ.git
-	branch = image_v2.7
+	url = https://github.com/mariodruiz/PYNQ.git
+	branch = image_v2.8.vitis2022_1
 	shallow = true
 [submodule "Vitis_Libraries"]
 	path = Vitis_Libraries
