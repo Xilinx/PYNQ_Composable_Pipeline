@@ -3,3 +3,6 @@
 	url = https://github.com/Xilinx/PYNQ.git
 	branch = image_v2.7
 	shallow = true
+[submodule "Vitis_Libraries"]
+	path = Vitis_Libraries
+	url = https://github.com/mariodruiz/Vitis_Libraries_1.git
