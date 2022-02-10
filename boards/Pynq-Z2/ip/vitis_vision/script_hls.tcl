@@ -22,7 +22,7 @@ open_project ${proj_name}.vhlsprj
 
 #Add source file, set top, set FPGA part, set clock period and name solution
 set_top ${proj_name}_accel
-add_files ../../../../src/${proj_name}/${proj_name}.cpp -cflags "-I${vitis_lib_include} -D__XF__AXI_SDATA__ -D${device_macro}"
+add_files ../../../../src/${proj_name}/${proj_name}.cpp -cflags "-I${vitis_lib_include} -D${device_macro}"
 open_solution "solution1" -flow_target vivado
 set_part ${fpga_part}
 create_clock -period ${period} -name default
