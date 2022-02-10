@@ -190,7 +190,7 @@ xilinx.com:ip:axis_switch:1.1\
 xilinx.com:hls:colorthresholding_accel:1.0\
 xilinx.com:hls:filter2d_accel:1.0\
 xilinx.com:hls:gray2rgb_accel:1.0\
-xilinx.com:hls:LUT_accel:1.0\
+xilinx.com:hls:lut_accel:1.0\
 xilinx.com:ip:axi_gpio:2.0\
 xilinx.com:hls:rgb2gray_accel:1.0\
 xilinx.com:hls:rgb2hsv_accel:1.0\
@@ -1657,7 +1657,7 @@ proc create_hier_cell_composable { parentCell nameHier } {
   set gray2rgb_accel [ create_bd_cell -type ip -vlnv xilinx.com:hls:gray2rgb_accel:1.0 gray2rgb_accel ]
 
   # Create instance: lut_accel, and set properties
-  set lut_accel [ create_bd_cell -type ip -vlnv xilinx.com:hls:LUT_accel:1.0 lut_accel ]
+  set lut_accel [ create_bd_cell -type ip -vlnv xilinx.com:hls:lut_accel:1.0 lut_accel ]
 
   # Create instance: pipeline_control, and set properties
   set pipeline_control [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 pipeline_control ]
@@ -1700,7 +1700,7 @@ proc create_hier_cell_composable { parentCell nameHier } {
  ] $smartconnect
 
   # Create interface connections
-  connect_bd_intf_net -intf_net LUT_accel_stream_out [get_bd_intf_pins axis_switch/S03_AXIS] [get_bd_intf_pins lut_accel/stream_out]
+  connect_bd_intf_net -intf_net lut_accel_stream_out [get_bd_intf_pins axis_switch/S03_AXIS] [get_bd_intf_pins lut_accel/stream_out]
   connect_bd_intf_net -intf_net S00_AXI_1 [get_bd_intf_pins S00_AXI] [get_bd_intf_pins axi_register_slice/S_AXI]
   connect_bd_intf_net -intf_net S01_AXIS_1 [get_bd_intf_pins S01_AXIS] [get_bd_intf_pins axis_switch/S01_AXIS]
   connect_bd_intf_net -intf_net S_AXIS_VIDEO_IN_1 [get_bd_intf_pins S00_AXIS] [get_bd_intf_pins axis_switch/S00_AXIS]
