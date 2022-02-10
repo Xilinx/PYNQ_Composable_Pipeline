@@ -20,8 +20,8 @@ typedef ap_axiu<DATA_WIDTH,1,1,1> interface_t;
 typedef hls::stream<interface_t> stream_t;
 
 //https://xilinx.github.io/Vitis_Libraries/vision/2020.2/api-reference.html#look-up-table
-void LUT_accel(stream_t& stream_in, 
-               stream_t& stream_out, 
+void lut_accel(stream_t& stream_in, 
+               stream_t& stream_out,
                unsigned char lut[256*3],
                unsigned int rows,
                unsigned int cols)
