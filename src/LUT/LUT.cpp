@@ -16,7 +16,7 @@
 
 #define INTYPE XF_8UC3
 
-typedef xf::cv::ap_axiu<DATA_WIDTH,1,1,1> interface_t;
+typedef ap_axiu<DATA_WIDTH,1,1,1> interface_t;
 typedef hls::stream<interface_t> stream_t;
 
 //https://xilinx.github.io/Vitis_Libraries/vision/2020.2/api-reference.html#look-up-table
