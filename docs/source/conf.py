@@ -57,7 +57,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
-    'nbsphinx'
+    'nbsphinx',
+    'myst_parser'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

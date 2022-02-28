@@ -11,3 +11,4 @@ opencv-python
 ipywidgets
 ipython
 nbsphinx
+myst_parser

@@ -45,9 +45,6 @@ The Composable Overlays Overview
        </div>
     </embed>
 
-
-
-
 .. toctree::
    :maxdepth: 2
    :hidden:
@@ -57,3 +54,10 @@ The Composable Overlays Overview
    pynq_composable
    default_paths
    CHANGELOG
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorial
+   :hidden:
+
+   tutorial/composable_overlay.md
