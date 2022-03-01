@@ -11,6 +11,8 @@ On top of that, the composable overlay includes Dynamic Function eXchange [DFX](
 
 The combination of these two technologies plus a pythonic API, built on top of [pynq](http://www.pynq.io/), provide an unprecedented flexibility.
 
+![](./docs/source/images/layers.png)
+
 The composable overlay architecture of a composable video overlay for the PYNQ-Z2 is shown in the image below
 
 ![](./pynq_composable/notebooks/img/cv-4pr.png)
