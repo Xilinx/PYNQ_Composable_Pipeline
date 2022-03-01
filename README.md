@@ -58,7 +58,7 @@ We welcome contributions, please review the [contributing](CONTRIBUTING.md) guid
 
 ## Licenses
 
-Copyright (C) 2021 Xilinx, Inc
+Copyright (C) 2021-2022 Xilinx, Inc
 
 [SPDX-License-Identifier: BSD-3-Clause](LICENSE.md)
 
@@ -71,4 +71,4 @@ Pre-compiled binary files are not provided under an OSI-approved open source lic
 Binary files are provided under the following [license](boards/Pynq-Z2/LICENSE)
 
 ------------------------------------------------------
-<p align="center">Copyright&copy; 2021 Xilinx</p>
+<p align="center">Copyright&copy; 2021-2022 Xilinx</p>
