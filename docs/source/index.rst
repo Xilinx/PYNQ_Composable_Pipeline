@@ -61,3 +61,4 @@ The Composable Overlays Overview
    :hidden:
 
    tutorial/composable_overlay.md
+   tutorial/tutorial.ipynb

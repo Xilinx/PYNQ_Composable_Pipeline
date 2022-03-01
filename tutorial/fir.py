@@ -5,19 +5,20 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
+from scipy.fft import fft, fftfreq
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2022, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
+fs = 44_100
 
 class FIR:
     coef = []
-    fs = 44100
     _type = ""
     
     def __init__(self):
-        self.w, self.h = signal.freqz(self.coef, fs= self.fs)
+        self.w, self.h = signal.freqz(self.coef, fs= fs)
         self.taps = len(self.coef)
         self.group_delay = (self.taps-1)//2
 
@@ -89,3 +90,18 @@ class Filters:
         axs[1, 1].tick_params(axis='x', rotation=30)
         plt.xlim([0, 22050])
         fig.tight_layout()
+
+def plot_fft(data):
+    """ Returns a plot with the frequency response of data"""
+    yf = fft(data)
+    samples = len(data)
+    xf = fftfreq(samples, 1/fs)[:samples//2]
+
+    plt.figure(figsize=(20, 5));
+    plt.plot(xf, 2.0/samples * np.abs(yf[0:samples//2]), 'r');
+    plt.grid()
+    plt.title("Frequency Response", fontsize = 18);
+    plt.xlabel("Frequency (Hz)", fontsize = 14);
+    plt.ylabel("Amplitude", fontsize = 14);
+    plt.xlim([0, 22050]);
+    plt.xticks(np.arange(0, 22050, 1000), rotation=30);

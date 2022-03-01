@@ -344,6 +344,8 @@ Finally, get the composable overlay files onto the board. You need to copy
 * fir_paths.json
 * tutorial.ipynb
 
+These files can be found [here](https://github.com/Xilinx/PYNQ_Composable_Pipeline/tree/main/tutorial)
+
 This step assumes that you have PYNQ up and running on the Kria KV260 Vision 
 AI Starter Kit. if this is not the case,
 [follow the these instructions](https://github.com/Xilinx/Kria-PYNQ#installation).
