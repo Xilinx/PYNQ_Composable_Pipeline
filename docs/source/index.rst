@@ -24,6 +24,9 @@ hardware composability. It is based on three pillars:
 * A Python API, built on top of pynq, that exposes the functionality to control
   the composable overlay in a pythonic way. 
 
+.. image:: images/layers.png
+  :height: 250
+  :align: center
 
 The AXI4-Stream Switch is cornerstone in achieving composability, its runtime
 configuration allows us to modify our design without redesigning the overlay,
