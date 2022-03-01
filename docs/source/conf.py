@@ -34,7 +34,7 @@ import pynq_composable
 # -- Project information -----------------------------------------------------
 
 project = 'PYNQ Composable Overlays'
-copyright = '2021, Xilinx'
+copyright = '2022, Xilinx'
 author = 'Xilinx'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -110,6 +110,8 @@ html_static_path = []
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
 #html_additional_pages = {}
+
+html_logo='images/layers.png'
 
 # If false, no module index is generated.
 html_domain_indices = False
