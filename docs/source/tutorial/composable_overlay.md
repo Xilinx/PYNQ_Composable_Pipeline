@@ -308,7 +308,6 @@ at the initialization.
     "filter": {
         "ps": {
             "ci": {
-
                         "port": 3,
                         "Description": "Stream In"
                 },
