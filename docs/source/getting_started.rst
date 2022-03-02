@@ -20,17 +20,19 @@ Get the Composable Video Pipeline
 =================================
 
 If you have one of the supported boards with ``pynq 2.7`` up and running,
-the easiest way to get started is to pip install the composable video pipeline.
+install the composable video pipeline by executing the following code in a
+Jupyter lab terminal
 
 .. code-block:: bash
 
-    python3 -m pip install pynq_composable
+  git clone https://github.com/Xilinx/PYNQ_Composable_Pipeline
+  python3 -m pip install PYNQ_Composable_Pipeline/ --no-build-isolation
 
 Once the installation is done, you can deliver the notebooks by running
 
 .. code-block:: bash
 
-    pynq-get-notebooks pynq-composable -p $PYNQ_JUPYTER_NOTEBOOKS
+  pynq-get-notebooks pynq-composable -p $PYNQ_JUPYTER_NOTEBOOKS
 
 Get Help
 ========
