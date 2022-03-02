@@ -23,7 +23,7 @@ module_name = "pynq_composable"
 
 board = os.environ.get("BOARD")
 board_folder = "boards/{}".format(board)
-notebooks_dir = os.environ["PYNQ_JUPYTER_NOTEBOOKS"]
+notebooks_dir = os.environ.get("PYNQ_JUPYTER_NOTEBOOKS")
 overlay_dest = "{}/".format(module_name)
 data_files = []
 cwd = os.getcwd()
