@@ -11,3 +11,9 @@ NA/
 cv_dfx_4_pr/
 overlay/
 overlay.zip
+.coverage
+junit/
+__pycache__/
+docs/build/
+*.dtbo
+*.zip

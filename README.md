@@ -1,3 +1,6 @@
+![license](https://img.shields.io/github/license/Xilinx/PYNQ_Composable_Pipeline?color=g) ![python](https://github.com/Xilinx/PYNQ_Composable_Pipeline/workflows/Python/badge.svg) [![docs](https://readthedocs.org/projects/pynq-composable/badge/?version=latest)](https://pynq-composable.readthedocs.io/en/latest/?badge=latest)
+
+
 # Composable Pipeline
 
 The Composable pipeline is an overlay with a novel and clever architecture that allow us to adapt how the data flows between a series of IP cores.
@@ -8,9 +11,24 @@ On top of that, the composable overlay includes Dynamic Function eXchange [DFX](
 
 The combination of these two technologies plus a pythonic API, built on top of [pynq](http://www.pynq.io/), provide an unprecedented flexibility.
 
+<p align="center">
+<img src="./docs/source/images/layers.png" width="220"/>
+</p>
+
 The composable overlay architecture of a composable video overlay for the PYNQ-Z2 is shown in the image below
 
-![](./composable_pipeline/notebooks/img/cv-4pr.png)
+![](./pynq_composable/notebooks/img/cv-4pr.png)
+
+## Supported Boards
+
+* [PYNQ-Z1](boards/Pynq-Z1/README.md)
+* [PYNQ-Z2](boards/Pynq-Z2/README.md)
+* [PYNQ-ZU](boards/Pynq-ZU/README.md)
+* [Kria KV260](boards/KV260/README.md), Vitis and Vivado 2020.2.2 are required.
+
+> Note: PYNQ-Z1 is supported with the same composable overlay as PYNQ-Z2
+
+To rebuild the composable pipeline you need Vitis and Vivado 2020.2. Navigate to one of the supported boards folder and run `make`, only steps for Linux are provided.
 
 ## Clone this repository
 
@@ -22,26 +40,25 @@ Note that this project depends on the [Vitis Accelerated Libraries](https://gith
 
 ## Install composable pipeline on your board
 
-```
+```sh
 git clone https://github.com/Xilinx/PYNQ_Composable_Pipeline
-pip install PYNQ_Composable_Pipeline/
-pynq-get-notebooks composable-pipeline -p $PYNQ_JUPYTER_NOTEBOOKS
+python3 -m pip install PYNQ_Composable_Pipeline/ --no-build-isolation
+pynq-get-notebooks pynq-composable -p $PYNQ_JUPYTER_NOTEBOOKS
 ```
 
 The notebooks will be delivered into the folder `/home/xilinx/jupyter_notebooks`
 
-Supported boards [PYNQ-Z2](https://www.tul.com.tw/ProductsPYNQ-Z2.html) and [PYNQ-ZU](https://www.tul.com.tw/ProductsPYNQ-ZU.html)
+## Documentation
 
-## Rebuild composable pipeline from scratch
+Find out more [documentation on Read The Docs](https://pynq-composable.readthedocs.io/en/latest/).
 
-To rebuild the composable pipeline you need Vitis 2020.2 installed. Navigate to one of the supported boards folder and run make, only steps for Linux are provided.
+## Contributing
 
-* [PYNQ-Z2](boards/Pynq-Z2/README.md)
-* [PYNQ-ZU](boards/Pynq-ZU/README.md)
+We welcome contributions, please review the [contributing](CONTRIBUTING.md) guidelines to contribute.
 
 ## Licenses
 
-Copyright (C) 2021 Xilinx, Inc
+Copyright (C) 2021-2022 Xilinx, Inc
 
 [SPDX-License-Identifier: BSD-3-Clause](LICENSE.md)
 
@@ -54,4 +71,4 @@ Pre-compiled binary files are not provided under an OSI-approved open source lic
 Binary files are provided under the following [license](boards/Pynq-Z2/LICENSE)
 
 ------------------------------------------------------
-<p align="center">Copyright&copy; 2021 Xilinx</p>
+<p align="center">Copyright&copy; 2021-2022 Xilinx</p>

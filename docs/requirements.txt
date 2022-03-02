@@ -1,0 +1,14 @@
+# Copyright (C) 2021 Xilinx, Inc
+#
+# SPDX-License-Identifier: BSD-3-Clause
+
+# docs requirements file
+
+numpy
+pynq
+graphviz
+opencv-python
+ipywidgets
+ipython
+nbsphinx
+myst_parser
