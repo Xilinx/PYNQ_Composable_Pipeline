@@ -77,10 +77,10 @@ class StreamSwitch(DefaultIP):
             The length of the array can vary from 1 to max slots
             Use negative values to indicate that a producer is disabled
 
-            For instance, given this input [-1, 2, 1, 0]
-                Consumer 2 will be routed to Producer 1
-                Consumer 1 will be routed to Producer 2
-                Consumer 0 will be routed to Producer 3
+            For instance, given this input [-1, 2, 1, 0]\n
+                Consumer 2 will be routed to Producer 1\n
+                Consumer 1 will be routed to Producer 2\n
+                Consumer 0 will be routed to Producer 3\n
                 Producer 0 is disabled
         """
         pi = np.zeros(self.max_slots, dtype=np.int64)
