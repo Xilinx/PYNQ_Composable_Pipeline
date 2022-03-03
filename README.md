@@ -11,6 +11,10 @@ On top of that, the composable overlay includes Dynamic Function eXchange [DFX](
 
 The combination of these two technologies plus a pythonic API, built on top of [pynq](http://www.pynq.io/), provide an unprecedented flexibility.
 
+<p align="center">
+<img src="./docs/source/images/layers.png" width="220"/>
+</p>
+
 The composable overlay architecture of a composable video overlay for the PYNQ-Z2 is shown in the image below
 
 ![](./pynq_composable/notebooks/img/cv-4pr.png)
@@ -54,7 +58,7 @@ We welcome contributions, please review the [contributing](CONTRIBUTING.md) guid
 
 ## Licenses
 
-Copyright (C) 2021 Xilinx, Inc
+Copyright (C) 2021-2022 Xilinx, Inc
 
 [SPDX-License-Identifier: BSD-3-Clause](LICENSE.md)
 
@@ -67,4 +71,4 @@ Pre-compiled binary files are not provided under an OSI-approved open source lic
 Binary files are provided under the following [license](boards/Pynq-Z2/LICENSE)
 
 ------------------------------------------------------
-<p align="center">Copyright&copy; 2021 Xilinx</p>
+<p align="center">Copyright&copy; 2021-2022 Xilinx</p>

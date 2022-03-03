@@ -1,0 +1,14 @@
+{
+    "filter": {
+        "ps": {
+            "ci": {
+                        "port": 3,
+                        "Description": "Stream In"
+                },
+            "pi": {
+                        "port": 1,
+                        "Description": "Stream Out"
+            }
+        }
+    }
+}

@@ -24,6 +24,9 @@ hardware composability. It is based on three pillars:
 * A Python API, built on top of pynq, that exposes the functionality to control
   the composable overlay in a pythonic way. 
 
+.. image:: images/layers.png
+  :height: 250
+  :align: center
 
 The AXI4-Stream Switch is cornerstone in achieving composability, its runtime
 configuration allows us to modify our design without redesigning the overlay,
@@ -45,9 +48,6 @@ The Composable Overlays Overview
        </div>
     </embed>
 
-
-
-
 .. toctree::
    :maxdepth: 2
    :hidden:
@@ -55,5 +55,14 @@ The Composable Overlays Overview
    getting_started
    video_pipeline
    pynq_composable
+   composable_methodology
    default_paths
    CHANGELOG
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Tutorial
+   :hidden:
+
+   tutorial/composable_overlay.md
+   tutorial/tutorial.ipynb

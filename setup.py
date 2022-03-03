@@ -21,9 +21,9 @@ from pynq.utils import build_py
 # global variables
 module_name = "pynq_composable"
 
-board = os.environ["BOARD"]
+board = os.environ.get("BOARD")
 board_folder = "boards/{}".format(board)
-notebooks_dir = os.environ["PYNQ_JUPYTER_NOTEBOOKS"]
+notebooks_dir = os.environ.get("PYNQ_JUPYTER_NOTEBOOKS")
 overlay_dest = "{}/".format(module_name)
 data_files = []
 cwd = os.getcwd()
@@ -144,9 +144,9 @@ def download_overlay(board, overlay_dest):
 
     shutil.unpack_archive(tmp_file, overlay_dest, archive_format)
 
-
-copy_notebooks(board_folder, module_name)
-download_overlay(board, overlay_dest)
+if board:
+    copy_notebooks(board_folder, module_name)
+    download_overlay(board, overlay_dest)
 extend_package(module_name)
 update_notebooks_display_port(module_name + '/notebooks/')
 pkg_version = find_version("{}/__init__.py".format(module_name))

@@ -119,11 +119,11 @@ class PipelineApp:
         Start the HDMI, compose the pipeline and return the graph
         """
 
-        self._video.start()
         if self._dfx_ip:
             self._cpipe.loadIP(self._dfx_ip)
         self._pipeline()
         self._cpipe.compose(self._app_pipeline)
+        self._video.start()
         return self.graph
 
     def play(self):
