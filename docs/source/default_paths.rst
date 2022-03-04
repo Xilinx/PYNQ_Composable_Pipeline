@@ -21,11 +21,11 @@ The structure of this dictionary is as follows:
 
 * The first level key indicates the hierarchy
 * The second level key provides an arbitrary name for the path.
-* The third level key defines the ci (Subordinate) and pi (Manager) interfaces on
+* The third level key defines the si (Subordinate) and mi (Manager) interfaces on
   the AXI4-Stream Switch that the path is connected to.
 
 The default paths appear in the ``c_dict`` by appending the second level key
-with ``in``, for `ci` ports and ``out`` for `pi` ports.
+with ``in``, for `si` ports and ``out`` for `mi` ports.
 
 The default paths are also added as attribute to the ``Composable`` object and
 are a handy way to compose your pipeline. For instance
@@ -41,21 +41,21 @@ An example json file to define default paths can be found below.
     {
         "video": {
             "hdmi_source": {
-                "ci": {
+                "si": {
                             "port": 0,
                             "Description": "HDMI IN frontend PL path"
                     },
-                "pi": {
+                "mi": {
                             "port": 0,
                             "Description": "HDMI IN frontend PS path"
                 }
             },
             "hdmi_sink": {
-                "ci": {
+                "si": {
                             "port": 1,
                             "Description": "HDMI OUT frontend PS path"
                     },
-                "pi": {
+                "mi": {
                             "port": 1,
                             "Description": "HDMI OUT frontend PL path"
                 }
@@ -63,21 +63,21 @@ An example json file to define default paths can be found below.
         }
         "audio": {
             "mic": {
-                "ci": {
+                "si": {
                             "port": 0,
                             "Description": "Microphone frontend PL path"
                     },
-                "pi": {
+                "mi": {
                             "port": 0,
                             "Description": "Microphone frontend PS path"
                 }
             },
             "speaker": {
-                "ci": {
+                "si": {
                             "port": 5,
                             "Description": "Speaker frontend PS path"
                     },
-                "pi": {
+                "mi": {
                             "port": 5,
                             "Description": "Speaker frontend PL path"
                 }

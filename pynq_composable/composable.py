@@ -68,11 +68,11 @@ def _find_index_in_list(pipeline: list, element: Type[DefaultIP]) \
     return None
 
 
-def _edge_label(ci: int, pi: int, debug: bool) -> str:
+def _edge_label(si: int, mi: int, debug: bool) -> str:
     """Generate edge label given"""
 
     return '<<font color=\"' + ('green' if debug else 'white') + '\">' + \
-           'ci=' + str(ci) + ' pi=' + str(pi) + '</font>>'
+           'si=' + str(si) + ' mi=' + str(mi) + '</font>>'
 
 
 def _get_ip_name_by_vlnv(description: str, vlnv: str) -> str:
@@ -98,10 +98,10 @@ class Composable(DefaultHierarchy):
     This class stores two dictionaries: c_dict and dfx_dict
 
     Each entry of the Composable dictionary (c_dict) is a mapping:
-    'name' -> {ci, pi, modtype, dfx, loaded, bitstream}, where
+    'name' -> {si, mi, modtype, dfx, loaded, bitstream}, where
     name (str) is the key of the entry.
-    ci (list) list of physical port in the switch the IP is connected to
-    pi (list) list of physical port in the switch the IP is connected from
+    si (list) list of physical port in the switch the IP is connected to
+    mi (list) list of physical port in the switch the IP is connected from
     modtype(str) IP type
     dfx (bool) IP is located in a DFX region
     loaded (bool) IP is loaded
@@ -190,7 +190,7 @@ class Composable(DefaultHierarchy):
 
         self._paths = dict()
         self._default_paths()
-        self._switch.pi = self._sw_default
+        self._switch.mi = self._sw_default
 
         self.graph = Digraph()
         self.graph.graph_attr['rankdir'] = 'LR'
@@ -218,7 +218,7 @@ class Composable(DefaultHierarchy):
         All the IP cores connected to the AXI4-Stream Switch. Key is the name
         of the IP; value is a dictionary mapping the producer and consumer to
         the switch port, whether the IP is in a dfx region and loaded
-        {str: {'ci' : list, 'pi' : list, 'modtype': str,
+        {str: {'si' : list, 'mi' : list, 'modtype': str,
         'dfx': bool, 'loaded': bool, 'bitstream: str'}}.
         """
 
@@ -249,12 +249,12 @@ class Composable(DefaultHierarchy):
         sw_default = jsondict[self._hier.replace('/', '')]
 
         for k, v in sw_default.items():
-            self._sw_default[v['pi']['port']] = v['ci']['port']
+            self._sw_default[v['mi']['port']] = v['si']['port']
 
         paths = dict()
         for k, v in sw_default.items():
             for kk, vv in v.items():
-                key = k + ('_in' if kk == 'ci' else '_out')
+                key = k + ('_in' if kk == 'si' else '_out')
                 paths[key] = {
                     kk: vv['port'],
                     'Description': vv['Description'],
@@ -264,12 +264,12 @@ class Composable(DefaultHierarchy):
         c_dict = self._c_dict.copy()
         for k, v in paths.items():
             for kk, vv in self._c_dict.items():
-                ci = v.get('ci')
-                pi = v.get('pi')
-                cii = vv.get('ci')
-                pii = vv.get('pi')
-                if (ci is not None and cii is not None and ci in cii) or \
-                   (pi is not None and pii is not None and pi in pii):
+                si = v.get('si')
+                mi = v.get('mi')
+                cii = vv.get('si')
+                pii = vv.get('mi')
+                if (si is not None and cii is not None and si in cii) or \
+                   (mi is not None and pii is not None and mi in pii):
                     if kk in c_dict.keys():
                         c_dict.pop(kk)
                     v['fullpath'] = kk
@@ -280,7 +280,7 @@ class Composable(DefaultHierarchy):
                         self._default_ip[kk] = c_dict[k].copy()
                     if 'cpath' not in self._default_ip[kk].keys():
                         self._default_ip[kk]['cpath'] = dict()
-                    key, delkey = ('ci', 'pi') if pi is None else ('pi', 'ci')
+                    key, delkey = ('si', 'mi') if mi is None else ('mi', 'si')
                     if c_dict[k].get(delkey):
                         c_dict[k].pop(delkey)
                     self._default_ip[kk]['cpath'][key] = k
@@ -328,7 +328,7 @@ class Composable(DefaultHierarchy):
         for ip in dfx_dict:
             self._c_dict[ip]['loaded'] = True
 
-    def _relative_path(self, fullpath: str, port: str = 'ci') -> str:
+    def _relative_path(self, fullpath: str, port: str = 'si') -> str:
         """Return relative path of an IP within the hierarchy
 
         If the IP is in the default paths, return proper name
@@ -398,10 +398,10 @@ class Composable(DefaultHierarchy):
             if isinstance(l0, list):
                 key = self._relative_path(cle_list[i+1]._fullpath)
                 next_node = self._c_dict[key]
-                if len(l0) != len(next_node['pi']):
+                if len(l0) != len(next_node['mi']):
                     raise SystemError("Node {} has {} input(s) and cannot meet"
                                       "pipeline requirement of {} input(s)"
-                                      .format(key, len(next_node['pi']),
+                                      .format(key, len(next_node['mi']),
                                               len(l0)))
                 for ii, l1 in enumerate(l0):
                     if not isinstance(l1, list):
@@ -412,21 +412,21 @@ class Composable(DefaultHierarchy):
                         if ip == 1:
                             continue
                         flat_list.append(ip)
-                        ci = self._c_dict[
-                            self._relative_path(ip._fullpath)]['ci'][0]
+                        si = self._c_dict[
+                            self._relative_path(ip._fullpath)]['si'][0]
                         if iii == len(l1) - 1:
                             consumer = key
-                            pi = self._c_dict[consumer]['pi'][ii]
+                            mi = self._c_dict[consumer]['mi'][ii]
                         else:
                             consumer = self._relative_path(
                                 cle_list[i][ii][iii+1]._fullpath)
-                            pi = self._c_dict[consumer]['pi'][0]
+                            mi = self._c_dict[consumer]['mi'][0]
 
-                        if not np.where(switch_conf == ci)[0].size:
-                            switch_conf[pi] = ci
+                        if not np.where(switch_conf == si)[0].size:
+                            switch_conf[mi] = si
                             graph.edge(self._relative_path(ip._fullpath),
                                        consumer,
-                                       label=_edge_label(ci, pi, gdebug))
+                                       label=_edge_label(si, mi, gdebug))
                         else:
                             raise SystemError("IP: {} is already being used in"
                                               " the provided pipeline. An IP "
@@ -437,44 +437,44 @@ class Composable(DefaultHierarchy):
                 flat_list.append(ip)
                 if i == len(cle_list) - 1:
                     break
-                ci = self._c_dict[(path := self._relative_path(ip._fullpath,
-                                                               'ci'))]['ci']
+                si = self._c_dict[(path := self._relative_path(ip._fullpath,
+                                                               'si'))]['si']
                 if not isinstance(cle_list[i+1], list):
-                    pi = self._c_dict[(key :=
+                    mi = self._c_dict[(key :=
                                       self._relative_path(
-                                        cle_list[i+1]._fullpath, 'pi'))]['pi']
+                                        cle_list[i+1]._fullpath, 'mi'))]['mi']
 
-                    if not np.where(switch_conf == ci[0])[0].size:
-                        switch_conf[pi[0]] = ci[0]
+                    if not np.where(switch_conf == si[0])[0].size:
+                        switch_conf[mi[0]] = si[0]
                         graph.edge(path, key,
-                                   label=_edge_label(ci[0], pi[0], gdebug))
+                                   label=_edge_label(si[0], mi[0], gdebug))
                     else:
                         raise SystemError("IP: {} is already being used in the"
                                           " provided pipeline. An IP instance "
                                           "can only be used once"
                                           .format(ip._fullpath))
 
-                elif len(cle_list[i+1]) != len(ci):
+                elif len(cle_list[i+1]) != len(si):
                     raise SystemError("Node {} has {} output(s) and cannot "
                                       "meet pipeline requirement of {} "
-                                      "output(s)".format(l0._fullpath, len(ci),
+                                      "output(s)".format(l0._fullpath, len(si),
                                                          len(cle_list[i+1])))
                 else:
-                    for j in range(len(ci)):
+                    for j in range(len(si)):
                         nextip = cle_list[i+1][j][0]
                         if nextip != 1:
                             nextkey = self._relative_path(nextip._fullpath)
-                            pi = self._c_dict[nextkey]['pi'][0]
+                            mi = self._c_dict[nextkey]['mi'][0]
                         else:
                             nextip = cle_list[i+2]
                             nextkey = self._relative_path(nextip._fullpath)
-                            pi = self._c_dict[nextkey]['pi'][j]
+                            mi = self._c_dict[nextkey]['mi'][j]
 
-                        if not np.where(switch_conf == ci[j])[0].size:
-                            switch_conf[pi] = ci[j]
+                        if not np.where(switch_conf == si[j])[0].size:
+                            switch_conf[mi] = si[j]
                             graph.edge(self._relative_path(ip._fullpath),
                                        self._relative_path(nextip._fullpath),
-                                       label=_edge_label(ci[j], pi, gdebug))
+                                       label=_edge_label(si[j], mi, gdebug))
                         else:
                             raise SystemError("IP: {} is already being used "
                                               "in the provided pipeline. An IP"
@@ -488,7 +488,7 @@ class Composable(DefaultHierarchy):
         self._configure_switch(switch_conf)
 
         for idx, ip in enumerate(flat_list):
-            port = 'pi' if idx == len(flat_list)-1 else 'ci'
+            port = 'mi' if idx == len(flat_list)-1 else 'si'
             key = self._relative_path(ip._fullpath, port)
             if self._c_dict[key]["dfx"]:
                 graph.node(key,
@@ -705,7 +705,7 @@ class Composable(DefaultHierarchy):
 
         if index < len(self._current_pipeline)-1:
             key = self._relative_path(ip._fullpath)
-            if len(self._c_dict[key]['ci']) != 1:
+            if len(self._c_dict[key]['si']) != 1:
                 raise SystemError("tap into an IP with multiple outputs is "
                                   "not supported")
             new_list.append(self._current_pipeline[-1])
@@ -758,7 +758,7 @@ class Composable(DefaultHierarchy):
                     self._sw_default[idx] not in switch_conf:
                 switch_conf[idx] = self._sw_default[idx]
 
-        self._switch.pi = switch_conf
+        self._switch.mi = switch_conf
 
 
 class DFXRegion:

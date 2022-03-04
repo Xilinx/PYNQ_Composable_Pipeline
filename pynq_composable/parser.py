@@ -185,7 +185,7 @@ class HWHComposable:
         of the IP; value is a dictionary mapping the producer and consumer to
         the switch port, whether the IP is in a dfx region and loaded
 
-        {str: {'ci' : list, 'pi' : list, 'modtype': str,
+        {str: {'si' : list, 'mi' : list, 'modtype': str,
         'dfx': bool, 'loaded': bool, 'bitstream: str'}}
 
     dfx_dict : dict
@@ -337,7 +337,7 @@ class HWHComposable:
                 continue
             p = int(re.findall(r'\d+', d)[0])
             port_type = switch_conn[d]['type']
-            k = 'pi' if port_type == 'INITIATOR' else 'ci'
+            k = 'mi' if port_type == 'INITIATOR' else 'si'
             if not switch_conn[d]['dfx']:
                 key = switch_conn[d]['fullname'].lstrip('/')
                 dictionary = static_dict
@@ -445,17 +445,17 @@ class HWHComposable:
             updated_dict[k] = dict()
             for i in dfx_dict[k]['interface']:
                 key = i.lstrip('/')
-                if 'pi' in self._default_dfx_dict[key].keys():
-                    if 'pi' not in updated_dict[k].keys():
+                if 'mi' in self._default_dfx_dict[key].keys():
+                    if 'mi' not in updated_dict[k].keys():
                         port = list()
 
-                    port.append(self._default_dfx_dict[key]['pi'][0])
-                    updated_dict[k]['pi'] = port
+                    port.append(self._default_dfx_dict[key]['mi'][0])
+                    updated_dict[k]['mi'] = port
                 else:
-                    if 'ci' not in updated_dict[k].keys():
+                    if 'si' not in updated_dict[k].keys():
                         port = list()
-                    port.append(self._default_dfx_dict[key]['ci'][0])
-                    updated_dict[k]['ci'] = port
+                    port.append(self._default_dfx_dict[key]['si'][0])
+                    updated_dict[k]['si'] = port
 
             updated_dict[k]['modtype'] = dfx_dict[k]['modtype']
             updated_dict[k]['bitstream'] = dfx_dict[k]['bitstream']

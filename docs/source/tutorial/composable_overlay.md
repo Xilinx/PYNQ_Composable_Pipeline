@@ -309,11 +309,11 @@ at the initialization.
 {
     "filter": {
         "ps": {
-            "ci": {
+            "si": {
                         "port": 3,
                         "Description": "Stream In"
                 },
-            "pi": {
+            "mi": {
                         "port": 1,
                         "Description": "Stream Out"
             }
