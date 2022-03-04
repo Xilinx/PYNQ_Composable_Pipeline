@@ -102,16 +102,17 @@ interface GPIO2 is dedicated to the DFX Decoupler IP.
 You will configure the GPIO width of GPIO2 with the double of DFX Decoupler IP
 present in your design. 
 
-  1. Connect the *gpio2_io_t* pin to an Slice IP (configure it properly),
-  the output of the Slice IP will be connected to the *decouple* pin of the
-  DFX Decoupler IP.
+  1. Connect the AXI GPIO ``gpio2_io_o`` pin to an Slice IP (configure it
+  properly), the output of the Slice IP will be connected to the ``decouple``
+  pin of the DFX Decoupler IP.
 
   2. Repeat step 1 for the rest of DFX Decoupler IP. Do **not reuse** the same
-  bit for different DFX Decoupler IP.
+  bit index for different DFX Decoupler IP.
 
   3. Connect all the *decouple_status* pin of the DFX Decoupler IP to a Concat
-  IP. Avoid reusing the bit used for the status pin.
+  IP. Avoid reusing the bit index used for the status pin.
 
+  4. Connect the Concat ``dout`` pin to the AXI GPIO ``gpio2_io_i`` pin.
 
 You can see an example of these connection in the image below.
 

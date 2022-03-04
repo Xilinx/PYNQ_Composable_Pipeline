@@ -4,7 +4,7 @@
   SPDX-License-Identifier: BSD-3-Clause
 
 .. 
-  PYNQ: Composable Overlays documentation master file, created by
+  PYNQ: Composable Overlays documentation main file, created by
   sphinx-quickstart on Tue Nov  2 09:09:13 2021.
   You can adapt this file completely to your liking, but it should at least
   contain the root `toctree` directive.

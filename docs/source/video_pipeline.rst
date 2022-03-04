@@ -3,7 +3,7 @@
   
   SPDX-License-Identifier: BSD-3-Clause
 
-.. video-pipeline:
+.. _video-pipeline:
 
 *****************************
 The Composable Video Pipeline
@@ -66,15 +66,51 @@ The composable overlay also provides 12 dynamic functions implemented across
    * - subtract
      - pr_join 
 
-You can rebuild the video pipeline by running ``make`` in the 
-`Pynq-Z2 <https://github.com/Xilinx/PYNQ_Composable_Pipeline/tree/main/boards/Pynq-Z2>`_
-folder
+Rebuild Composable Video Pipeline
+=================================
 
-You can also rebuild the composable overlay for 
+To rebuild the composable video pipeline, you will have to clone the
+repository recursively (to pull submodules).
+
+.. code-block:: bash
+
+  git clone https://github.com/Xilinx/PYNQ_Composable_Pipeline --recursive
+
+You also need Vitis and Vivado ``2020.2.2`` installed.
+
+Then to rebuild the video pipeline you can run ``make`` in the
+`boards/Pynq-Z2 <https://github.com/Xilinx/PYNQ_Composable_Pipeline/tree/main/boards/Pynq-Z2>`_
+folder.
+You can also rebuild the composable overlay for the
 `Pynq-ZU <https://github.com/Xilinx/PYNQ_Composable_Pipeline/tree/main/boards/Pynq-ZU>`_ 
 and 
 `Kria KV260 <https://github.com/Xilinx/PYNQ_Composable_Pipeline/tree/main/boards/KV260>`_
 
+
+The build process is scripted using a Makefile, when you run ``make`` the build
+process will do the following steps
+
+1. Vision IP will be generated
+
+2. PYNQ HLS IP will be generated
+
+3. The Vivado project is created along with the IPI design
+
+4. The bitstream generation is launched
+
+5. The bitstreams and hwh files are copied to the ``overlay`` folder
+
+6. A cached dictionary is created
+
+7. Files are versioned
+
+Note that you do not need to rebuild the project to use the composable
+video pipeline, we provide a pre-built design. This is deliver when you
+install the ``pynq_composable`` package on your board, please refer to
+:ref:`composable-video-pipeline`.
+
+If you are interested in building your own composable overlay, check out the
+tutorial :ref:`composable-overlay-tutorial`
 
 The Composable Video Pipeline also uses the following python modules:
 

@@ -21,7 +21,7 @@ The structure of this dictionary is as follows:
 
 * The first level key indicates the hierarchy
 * The second level key provides an arbitrary name for the path.
-* The third level key defines the ci (Slave) and pi (Master) interfaces on 
+* The third level key defines the ci (Subordinate) and pi (Manager) interfaces on
   the AXI4-Stream Switch that the path is connected to.
 
 The default paths appear in the ``c_dict`` by appending the second level key

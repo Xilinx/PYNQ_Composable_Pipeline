@@ -1,3 +1,5 @@
+(composable-overlay-tutorial)=
+
 # Create Composable Overlays (hw)
 
 This tutorial will show how to create a composable overlay from scratch using
@@ -156,8 +158,8 @@ The instructions below describe the steps to accomplish this.
    ![](images/7_add_axis_switch.png)
 
 1. Double click on the **AXI4-Stream Switch** module to configure it
-1. Set the *Number of slave interfaces* to 6 (a)
-1. Set the *Number of master interfaces* to 6 (b)
+1. Set the *Number of subordinate interfaces* to 6 (a)
+1. Set the *Number of manager interfaces* to 6 (b)
 1. Set *Use control register routing* to Yes (c)
 1. In the *Signal Properties* section, enable *TREADY* and *TLAST*,
 disable *TSTRB* and *TKEEP*, set *TDATA Width (bytes)* to 4 (d)
