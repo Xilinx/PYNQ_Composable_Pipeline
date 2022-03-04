@@ -3,6 +3,7 @@
   
   SPDX-License-Identifier: BSD-3-Clause
 
+.. _getting-started:
 
 ***************
 Getting Started
@@ -15,6 +16,9 @@ Supported Boards
 * `Pynq-Z2 <https://www.tul.com.tw/ProductsPYNQ-Z2.html>`_
 * `Pynq-ZU <https://www.tul.com.tw/ProductsPYNQ-ZU.html>`_
 * `KV260 <https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html>`_
+
+
+.. _composable-video-pipeline:
 
 Get the Composable Video Pipeline
 =================================
