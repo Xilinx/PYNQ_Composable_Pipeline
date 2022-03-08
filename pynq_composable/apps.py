@@ -390,6 +390,67 @@ class ColorDetect(PipelineApp):
         display(ui, out)
 
 
+class EdgeDetect(PipelineApp):
+    """ Edge detect video pipeline application
+    This class wraps the functionality to implement an edge detect
+    video pipeline application
+    """
+
+    _dfx_ip = [
+        'pr_fork/duplicate_accel',
+        'pr_join/add_accel'
+    ]
+
+    _mask = 'Edges'
+
+    def _pipeline(self):
+        """Logic to configure pipeline"""
+
+        self._di0 = self._cpipe.pr_0.dilate_accel
+        self._di1 = self._cpipe.pr_1.dilate_accel
+        self._add = self._cpipe.pr_join.add_accel
+        self._dup = self._cpipe.pr_fork.duplicate_accel
+        self._fi2d0.kernel_type = xvF2d.scharr_y
+
+        self._app_pipeline = [self._vii, self._r2g, self._fi2d0, self._ct,
+                              self._g2r, self._vio]
+        self._app_pipeline1 = [self._vii, self._dup, [[self._r2g, self._fi2d0,
+                               self._ct, self._g2r], [1]], self._add,
+                               self._vio]
+
+    def _play(self, thres, e, o):
+        lower_thr = np.ones((3, 3), dtype=np.uint8) * np.uint8(thres)
+        upper_thr = np.ones((3, 3), dtype=np.uint8) * 255
+        self._ct.lower_thr = lower_thr
+        self._ct.upper_thr = upper_thr
+        self._fi2d0.kernel_type = e
+        if o != self._mask:
+            if o == 'Edges':
+                self._cpipe.compose(self._app_pipeline)
+            else:
+                self._cpipe.compose(self._app_pipeline1)
+            self._mask = o
+
+    def play(self):
+        """Exposes runtime configurations to the user
+
+        Displays threshold slider to change the intensity threshold
+        """
+        edge = Dropdown(options=[xvF2d.edge_x, xvF2d.sobel_x, xvF2d.sobel_y,
+                                 xvF2d.scharr_x, xvF2d.scharr_y,
+                                 xvF2d.prewitt_y], value=xvF2d.scharr_y,
+                        description='Kernel')
+        output = Dropdown(options=['Edges', 'Edges on video'],
+                          value='Edges', description='Output Video')
+        threshold = IntSlider(value=100, min=1, max=255,
+                              description='Threshold')
+
+        out = interactive_output(self._play,
+                                 {'thres': threshold, 'e': edge, 'o': output})
+        ui = HBox([edge, threshold, output])
+        display(ui, out)
+
+
 class InterruptTimer(object):
     """ Threaded interrupt
 

@@ -11,6 +11,7 @@ from .apps import CornerDetect
 from .apps import ColorDetect
 from .apps import Filter2DApp
 from .apps import LutApp
+from .apps import EdgeDetect
 from .video import VideoStream
 from .video import VSource
 from .video import VSink
