@@ -151,6 +151,16 @@ extend_package(module_name)
 update_notebooks_display_port(module_name + '/notebooks/')
 pkg_version = find_version("{}/__init__.py".format(module_name))
 
+# Declare the overlay entry points only if the overlay can be downloaded
+entry_points = {
+    "pynq.notebooks": [
+        "{} = {}.notebooks".format(module_name, module_name)
+    ]
+}
+if board in overlay.keys():
+    entry_points['pynq.overlays'] =\
+        ["{} = {}.overlay".format(module_name, module_name)]
+
 setup(
     name=module_name,
     version=pkg_version,
@@ -168,14 +178,7 @@ setup(
         "pynq>=2.7.0",
         "graphviz>=0.17"
     ],
-    entry_points={
-        "pynq.notebooks": [
-            "pynq-composable = {}.notebooks".format(module_name)
-        ],
-        "pynq.overlays": [
-            "{} = {}.overlay".format(module_name, module_name)
-        ]
-    },
+    entry_points=entry_points,
     cmdclass={"build_py": build_py},
     platforms=[board]
 )
