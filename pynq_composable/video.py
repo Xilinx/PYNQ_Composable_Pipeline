@@ -471,6 +471,7 @@ class OpenCVDPVideo(OpenCVPLVideo):
             self._running = False
             while self._thread.is_alive():
                 sleep(0.05)
+            self._videoIn.release()
             self.vdma.writechannel.stop()
             self.vdma.readchannel.stop()
             self._dp.stop()
