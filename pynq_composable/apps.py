@@ -168,13 +168,20 @@ class DifferenceGaussians(PipelineApp):
         self._fi2d0.kernel_type = xvF2d.gaussian_blur
         self.sigma1 = 7
         self._fi2d1.kernel_type = xvF2d.gaussian_blur
+        self._lut.kernel_type = xvLut.threshold
+        self._play(0.5, 2, 20)
 
         self._app_pipeline = [self._vii, self._fi2d0, self._dup,
-                              [[self._fi2d1], [1]], self._sub, self._vio]
+                              [[self._fi2d1], [1]], self._sub, self._lut,
+                              self._vio]
 
-    def _play(self, sigma0, sigma1):
+    def _play(self, sigma0, sigma1, thres):
+        val = np.ones((2, 3, 3), dtype=np.uint8)
+        val[0][:] = thres
+        val[1][:] = 255
         self._fi2d0.sigma = sigma0
         self._fi2d1.sigma = sigma1
+        self._lut.threshold = val
 
     def play(self):
         """ Exposes runtime configurations to the user
@@ -183,9 +190,12 @@ class DifferenceGaussians(PipelineApp):
 
         sigma0 = FloatSlider(min=0.1, max=10, value=0.5,
                              description='\u03C3\u2080')
-        sigma1 = FloatSlider(min=0.1, max=10, value=7,
+        sigma1 = FloatSlider(min=0.3, max=10, value=2,
                              description='\u03C3\u2081')
-        interact(self._play, sigma0=sigma0, sigma1=sigma1)
+        thres = IntSlider(min=1, max=254, value=20,
+                          description='Threshold')
+
+        interact(self._play, sigma0=sigma0, sigma1=sigma1, thres=thres)
 
 
 class CornerDetect(PipelineApp):
