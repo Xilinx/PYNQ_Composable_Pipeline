@@ -231,7 +231,7 @@ class PLDPVideo:
             while self._thread.is_alive():
                 sleep(0.05)
             self._source_in.close()
-            self._dp.stop()
+            self._dp.close()
             self._started = False
             self._pause = False
 
@@ -474,7 +474,7 @@ class OpenCVDPVideo(OpenCVPLVideo):
             self._videoIn.release()
             self.vdma.writechannel.stop()
             self.vdma.readchannel.stop()
-            self._dp.stop()
+            self._dp.close()
             self._started = False
 
     def _tie(self):
