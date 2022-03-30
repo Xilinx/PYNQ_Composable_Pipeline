@@ -541,7 +541,7 @@ class xvLut(Enum):
 class PixelLut(VitisVisionIP):
     """Lut IP"""
 
-    bindto = ['xilinx.com:hls:LUT_accel:1.0']
+    bindto = ['xilinx.com:hls:LUT_accel:1.0', 'xilinx.com:hls:lut_accel:1.0']
 
     def __init__(self, description):
         super().__init__(description=description)
