@@ -56,7 +56,10 @@ def _find_connected_node(slot: dict, tree: ElementTree) -> tuple:
                     s['fullname'] = fullname
                     s['modtype'] = n_type
                     s['name'] = name
-                    if 'xilinx.com:module_ref' in n.get('VLNV'):
+                    vlnv = n.get('VLNV')
+                    bdtype = n.get('BDTYPE')
+                    if (vlnv and 'xilinx.com:module_ref' in vlnv) or \
+                            (bdtype == "BLOCK_CONTAINER"):
                         s['interface'] = fullname + '/' + name
 
                     return s, n_type in (_mem_items + _dfx_item)
