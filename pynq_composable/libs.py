@@ -295,7 +295,7 @@ class GaussianBlur(VitisVisionIP):
         self.write(0x20, _float2int(aux))
 
 
-class colorThreshold(VitisVisionIP):
+class ColorThreshold(VitisVisionIP):
     """Color Thresholding IP driver
     lower_thr and upper_thr are a numpy array, each row corresponds to a
     channel in the pixel.
@@ -381,7 +381,7 @@ class colorThreshold(VitisVisionIP):
         self._populateThreshold()
 
 
-class inRange(VitisVisionIP):
+class InRange(VitisVisionIP):
     """inRange"""
 
     bindto = ['xilinx.com:hls:inRange_accel:1.0']
