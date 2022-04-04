@@ -27,7 +27,8 @@ class ReprDictComposable(dict):
     will be converted to ReprDict objects when returned.
     """
 
-    def __init__(self, *args, rootname="root", expanded=False, **kwargs):
+    def __init__(self, *args, rootname: str = "root", expanded: bool = False,
+            **kwargs):
         """Dictionary constructor
 
         Parameters

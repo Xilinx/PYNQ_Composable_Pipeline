@@ -599,7 +599,7 @@ class PixelLut(VitisVisionIP):
 
     @property
     def threshold(self):
-        """Set an retrieve threshold ndarray
+        """Set and retrieve threshold ndarray
 
         The first index indicates
 

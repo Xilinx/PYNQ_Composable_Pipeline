@@ -34,7 +34,7 @@ def _nest_level(pl: list) -> int:
     return level + 1
 
 
-def _count_slots(pl: str) -> int:
+def _count_slots(pl: list) -> int:
     """Returns the number of elements in a list"""
 
     total = 0
@@ -75,7 +75,7 @@ def _edge_label(si: int, mi: int, debug: bool) -> str:
            'si=' + str(si) + ' mi=' + str(mi) + '</font>>'
 
 
-def _get_ip_name_by_vlnv(description: str, vlnv: str) -> str:
+def _get_ip_name_by_vlnv(description: dict, vlnv: str) -> str:
     """Search IP by its VLNV and return its name"""
 
     for k, v in description['ip'].items():
@@ -316,7 +316,7 @@ class Composable(DefaultHierarchy):
         self._set_loaded(dfx_dict)
 
     def _unload_region_from_ip_dict(self, partial_region: str) -> None:
-        """Unset loaded attribute for all of the IP of provided region"""
+        """Unset loaded attribute for all the IP of provided region"""
 
         for k in self._c_dict.keys():
             if partial_region in k:
@@ -663,7 +663,7 @@ class Composable(DefaultHierarchy):
     def tap(self, ip: Union[Type[DefaultIP], int] = None) -> None:
         """Observe the output of an IP object in the current pipeline
 
-        Tap into the output of any of the IP cores in the current pipeline
+        Tap into the output of the IP cores in the current pipeline
         Note that tap is not supported in a branch
 
         You can tap by passing the IP name or the index of the IP in the list.
@@ -676,9 +676,9 @@ class Composable(DefaultHierarchy):
             Either an IP object in the current pipeline to be tapped or
             index of IP object in the current pipeline to be tapped
 
-        Examples:
-            tap(cpipe.pr_1.dilate)
-            tap(6)
+            Examples:
+                tap(cpipe.pr_1.dilate)
+                tap(6)
         """
 
         if self._current_pipeline is None:
@@ -794,7 +794,7 @@ class StreamingIP:
 class UnloadedIP:
     """Handles IP objects that are not yet loaded into the hardware
 
-    This can be consider a virtual IP object
+    This can be considered a virtual IP object
     """
 
     def __init__(self, path: str):
