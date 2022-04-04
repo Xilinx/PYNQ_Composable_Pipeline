@@ -1,6 +1,26 @@
 PYNQ Composable Overlays ChangeLog
 ----------------------------------
 
+Added
+.....
+
+1.1.0
+~~~~~
+
+* Move to Vivado 2022.1
+* Support for Block Design Containers
+* Fixes in the video handling class
+* Enhance DifferenceGaussians app
+* EdgeDetect app
+* Copy button on RTD
+* Replace `pi`` with ``mi`` for manager interface
+* Replace `ci`` with ``si`` for subordinate interface
+
+1.0.2
+~~~~~
+
+Do not register overlay when the overlay is not available for download
+
 1.0.0
 ~~~~~
 Added
