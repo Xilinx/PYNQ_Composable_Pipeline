@@ -33,7 +33,7 @@ class PipelineApp:
 
     _dfx_ip = None
 
-    def __init__(self, bitfile_name, source: VSource = VSource.HDMI,
+    def __init__(self, bitfile_name: str, source: VSource = VSource.HDMI,
                  sink: VSink = VSink.HDMI, file: int = 0,
                  videomode: VideoMode = None):
         """Return a PipelineApp object
@@ -254,7 +254,7 @@ class CornerDetect(PipelineApp):
         """ Exposes runtime configurations to the user
 
         Displays one drop down menu to select the Corner Detect Algorithm.
-        It also displays two sliders to change the the threshold and K value
+        It also displays two sliders to change the threshold and K value
         for the algorithms.
         """
         self._thr = IntSlider(min=0, max=255, step=1, value=20)
@@ -502,7 +502,7 @@ class Filter2DApp(PipelineApp):
     expose kernel configurability through the buttons on the board
     """
 
-    def __init__(self, bitfile_name, source: VSource = VSource.HDMI):
+    def __init__(self, bitfile_name: str, source: VSource = VSource.HDMI):
         """Return a Filter2DApp object
 
         Parameters
@@ -538,7 +538,7 @@ class Filter2DApp(PipelineApp):
     def play(self):
         """ Exposes runtime configurations to the user
 
-        Enables user iteration by changing the on board buttons
+        Enables user iteration by pressing the on-board buttons
         """
 
         self._timer.start()
@@ -551,7 +551,7 @@ class LutApp(PipelineApp):
     expose kernel configurability through the switches on the board
     """
 
-    def __init__(self, bitfile_name, source: VSource = VSource.HDMI):
+    def __init__(self, bitfile_name: str, source: VSource = VSource.HDMI):
         """Return a LutApp object
 
         Parameters
@@ -587,7 +587,7 @@ class LutApp(PipelineApp):
     def play(self):
         """ Exposes runtime configurations to the user
 
-        Enables user iteration by changing the on board switches
+        Enables user iteration by moving the on-board switches
         """
 
         self._timer.start()
