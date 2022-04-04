@@ -7,6 +7,7 @@ from typing import Union
 import re
 import os
 import glob
+import json
 import hashlib
 import pickle as pkl
 import argparse
@@ -222,7 +223,8 @@ class HWHComposable:
         base_composable_pr_1_function_2.hwh
 
     """
-    def __init__(self, hwh_file: str, switch_name: str, cache=True):
+    def __init__(self, hwh_file: str, switch_name: str, cache=True,
+            debug=False):
         """Return a new HWHComposable object.
 
         Performs a hardware discovery where the different IP cores connected
@@ -237,6 +239,8 @@ class HWHComposable:
             AXI4-Stream Switch name
         cache : bool
             Use cache file
+        debug : bool
+            Dump plain json file
         """
 
         self._hwh_name = hwh_file
@@ -251,8 +255,9 @@ class HWHComposable:
             hwhdigest = hashlib.md5(file.read()).hexdigest()
         cached_digest = None
 
-        pklfile = os.path.splitext(self._hwh_name)[0] + '_' + \
-            self._hier + '.pkl'
+        basename = os.path.splitext(self._hwh_name)[0] + '_' + self._hier
+        pklfile = basename + '.pkl'
+        jsonfile = basename + '.json'
         if os.path.isfile(pklfile) and cache:
             with open(pklfile, "rb") as file:
                 cached_digest, self.c_dict, self.dfx_dict = pkl.load(file)
@@ -263,6 +268,9 @@ class HWHComposable:
             self._insert_dfx_ip()
             with open(pklfile, "wb") as file:
                 pkl.dump([hwhdigest, self.c_dict, self.dfx_dict], file)
+            if debug:
+                with open(jsonfile, "w") as file:
+                    json.dump(self.c_dict, file)
 
     def _hardware_discovery(self) -> None:
         """Discover how functions are connected to the switch"""
@@ -470,14 +478,11 @@ class HWHComposable:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate composable cached file"
-    )
-    parser.add_argument(
-        "--hwh", help="global hwh file", required=True
-    )
+        description="Generate composable cached file")
+    parser.add_argument("--hwh", help="global hwh file", required=True)
+    parser.add_argument("-d", help="Dump plain json file", action='store_true',
+        required=False)
     args = parser.parse_args()
-
-    print(args.hwh)
 
     tree = ElementTree.parse(args.hwh)
     tree_root = tree.getroot()
@@ -486,5 +491,5 @@ if __name__ == "__main__":
         mod_type = mod.get('MODTYPE')
         if mod_type == 'axis_switch':
             switch_name = mod.get('FULLNAME').lstrip('/')
-            HWHComposable(args.hwh, switch_name, False)
+            HWHComposable(args.hwh, switch_name, cache=False, debug=args.d)
             print("Cache file for {} generated".format(switch_name))
