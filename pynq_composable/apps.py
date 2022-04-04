@@ -407,6 +407,8 @@ class EdgeDetect(PipelineApp):
     """
 
     _dfx_ip = [
+        'pr_0/dilate_accel',
+        'pr_1/dilate_accel',
         'pr_fork/duplicate_accel',
         'pr_join/add_accel'
     ]
