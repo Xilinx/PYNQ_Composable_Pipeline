@@ -270,7 +270,7 @@ class HWHComposable:
                 pkl.dump([hwhdigest, self.c_dict, self.dfx_dict], file)
             if debug:
                 with open(jsonfile, "w") as file:
-                    json.dump(self.c_dict, file)
+                    json.dump(self.c_dict, file, indent=4)
 
     def _hardware_discovery(self) -> None:
         """Discover how functions are connected to the switch"""
