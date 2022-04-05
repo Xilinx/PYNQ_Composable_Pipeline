@@ -314,7 +314,7 @@ class HWHComposable:
             oposite_port = _dfx_get_oposite_port(switch_conn[port]['name'])
             for bus in node.iter("BUSINTERFACE"):
                 b_type = _normalize_type(bus.get('TYPE'))
-                vnvl = bus.get('VLNV')
+                vlnv = bus.get('VLNV')
                 busname = bus.get('BUSNAME')
                 name = bus.get('NAME')
                 if mod_type in _mem_items and port_type == b_type and \
@@ -328,7 +328,7 @@ class HWHComposable:
                         del deep_exp[0]
                     break
                 elif mod_type in _dfx_item and port_type == b_type and \
-                        vnvl == _axis_vlnv and oposite_port == name:
+                        vlnv == _axis_vlnv and oposite_port == name:
                     switch_conn[port]['busname'] = busname
                     switch_conn[port]['type'] = b_type
                     switch_conn[port]['dfx'] = True
