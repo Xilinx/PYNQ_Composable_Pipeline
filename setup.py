@@ -1,10 +1,10 @@
-# Copyright (C) 2021 Xilinx, Inc
+# Copyright (C) 2022 Xilinx, Inc
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
 
 __author__ = "Mario Ruiz"
-__copyright__ = "Copyright 2021, Xilinx"
+__copyright__ = "Copyright 2022, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
@@ -176,7 +176,7 @@ setup(
     python_requires=">=3.8.0",
     install_requires=[
         "pynq>=2.7.0",
-        "graphviz>=0.17"
+        "graphviz>=0.19.2"
     ],
     entry_points=entry_points,
     cmdclass={"build_py": build_py},
