@@ -72,9 +72,6 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 
 # To test this script, run the following commands from Vivado Tcl console:
 # source cv_dfx_4_pr.tcl
-# Use the following parameters to create a PR design
-set_param project.enablePRFlowIPI 1
-set_param project.enablePRFlowIPIOOC 1
 
 # Add user local board path and check if the board file exists
 set_param board.repoPaths [get_property LOCAL_ROOT_DIR [xhub::get_xstores xilinx_board_store]]
