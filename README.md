@@ -43,7 +43,7 @@ Note that this project depends on the [Vitis Accelerated Libraries](https://gith
 ```sh
 git clone https://github.com/Xilinx/PYNQ_Composable_Pipeline
 python3 -m pip install PYNQ_Composable_Pipeline/ --no-build-isolation
-pynq-get-notebooks pynq-composable -p $PYNQ_JUPYTER_NOTEBOOKS
+pynq-get-notebooks pynq_composable -p $PYNQ_JUPYTER_NOTEBOOKS
 ```
 
 The notebooks will be delivered into the folder `/home/xilinx/jupyter_notebooks`
