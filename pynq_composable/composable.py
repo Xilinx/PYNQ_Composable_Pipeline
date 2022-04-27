@@ -743,8 +743,8 @@ class Composable(DefaultHierarchy):
                 attr = getattr(self._ol, name)
             return attr
         else:
-            raise AttributeError ("\'{}\' object has no attribute \'{}\'".\
-                format(type(self).__name__, name))
+            raise AttributeError ("\'{}\' object has no attribute \'{}\'"
+                .format(type(self).__name__, name))
 
     def __dir__(self):
         return sorted(set(super().__dir__() +
