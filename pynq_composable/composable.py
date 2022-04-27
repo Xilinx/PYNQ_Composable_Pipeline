@@ -733,14 +733,18 @@ class Composable(DefaultHierarchy):
             except AttributeError:
                 attr = super().__getattr__(self._paths[name]['fullpath'])
             return attr
-        elif (key := self._hier + name) not in self._ol.ip_dict.keys():
+        elif (key := self._hier + name) not in self._ol.ip_dict.keys() and \
+                name in self._c_dict.keys():
             return StreamingIP(key)
-        else:
+        elif name in self._c_dict:
             try:
                 attr = super().__getattr__(name)
             except AttributeError:
                 attr = getattr(self._ol, name)
             return attr
+        else:
+            raise AttributeError ("\'{}\' object has no attribute \'{}\'".\
+                format(type(self).__name__, name))
 
     def __dir__(self):
         return sorted(set(super().__dir__() +
