@@ -10,6 +10,7 @@ from .parser import HWHComposable
 from pynq import DefaultIP, DefaultHierarchy
 from pynq.utils import ReprDict
 from .repr_dict import ReprDictComposable
+from .virtual import DFXRegion, StreamingIP, UnloadedIP
 from typing import Type, Union
 
 __author__ = "Mario Ruiz"
@@ -743,8 +744,8 @@ class Composable(DefaultHierarchy):
                 attr = getattr(self._ol, name)
             return attr
         else:
-            raise AttributeError ("\'{}\' object has no attribute \'{}\'"
-                .format(type(self).__name__, name))
+            raise AttributeError("\'{}\' object has no attribute \'{}\'"
+                                 .format(type(self).__name__, name))
 
     def __dir__(self):
         return sorted(set(super().__dir__() +
@@ -763,57 +764,3 @@ class Composable(DefaultHierarchy):
                 switch_conf[idx] = self._sw_default[idx]
 
         self._switch.mi = switch_conf
-
-
-class DFXRegion:
-    """Class that wraps attributes for IP objects on DFX regions"""
-
-    def __init__(self, cpipe: Composable, name: str):
-        self._ol = cpipe._ol
-        self._parent = cpipe._hier
-        self._c_dict = cpipe._c_dict
-        self.key = name
-
-    def __getattr__(self, name: str):
-        key = self.key + '/' + name
-        if key in self._c_dict.keys():
-            if not self._c_dict[key]['loaded']:
-                return UnloadedIP(key)
-            elif self._c_dict[key]['modtype'] in _mem_items:
-                return BufferIP(key)
-            else:
-                return getattr(self._ol, self._parent + key)
-        else:
-            raise ValueError("IP \'{}\' does not exist in partial region "
-                             "\'{}\'".format(name, self.key))
-
-
-class StreamingIP:
-    """Handles Streaming only IP"""
-
-    def __init__(self, name: str):
-        self._fullpath = name
-
-
-class UnloadedIP:
-    """Handles IP objects that are not yet loaded into the hardware
-
-    This can be considered a virtual IP object
-    """
-
-    def __init__(self, path: str):
-        self._fullpath = path
-
-
-class BufferIP:
-    """Handles IP objects that are of buffering type
-
-    Expose fullpath attribute for buffering type IP such as:
-
-        a) FIFOs
-
-        b) Slice registers.
-    """
-
-    def __init__(self, path: str):
-        self._fullpath = path
