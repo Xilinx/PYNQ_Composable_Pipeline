@@ -120,7 +120,7 @@ class PipelineApp:
         """
 
         if self._dfx_ip:
-            self._cpipe.loadIP(self._dfx_ip)
+            self._cpipe.load(self._dfx_ip)
         self._pipeline()
         self._cpipe.compose(self._app_pipeline)
         self._video.start()

@@ -502,7 +502,7 @@ class Composable(DefaultHierarchy):
         self._current_flat_pipeline = flat_list
         self.graph = graph
 
-    def loadIP(self, dfx_list: list) -> None:
+    def load(self, dfx_list: list) -> None:
         """Download dfx IP onto the corresponding partial regions
 
         Parameters
