@@ -1,11 +1,11 @@
-# Copyright (C) 2021 Xilinx, Inc
+# Copyright (C) 2022 Xilinx, Inc
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
 from pynq import Overlay
 from pynq.lib.video import VideoMode
 from .video import VideoStream, VSource, VSink
-from .libs import xvF2d, xvLut
+from .libs import XvF2d, xvLut
 from ipywidgets import VBox, HBox, IntRangeSlider, FloatSlider, interact, \
     interactive_output, IntSlider, Dropdown
 from IPython.display import display
@@ -16,7 +16,7 @@ import os
 import warnings
 
 __author__ = "Mario Ruiz"
-__copyright__ = "Copyright 2021, Xilinx"
+__copyright__ = "Copyright 2022, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
@@ -165,9 +165,9 @@ class DifferenceGaussians(PipelineApp):
         self._fi2d1 = self._cpipe.pr_0.filter2d_accel
 
         self.sigma0 = 0.5
-        self._fi2d0.kernel_type = xvF2d.gaussian_blur
+        self._fi2d0.kernel_type = XvF2d.gaussian_blur
         self.sigma1 = 7
-        self._fi2d1.kernel_type = xvF2d.gaussian_blur
+        self._fi2d1.kernel_type = XvF2d.gaussian_blur
         self._lut.kernel_type = xvLut.threshold
         self._play(0.5, 2, 20)
 
@@ -424,7 +424,7 @@ class EdgeDetect(PipelineApp):
         self._di1 = self._cpipe.pr_1.dilate_accel
         self._add = self._cpipe.pr_join.add_accel
         self._dup = self._cpipe.pr_fork.duplicate_accel
-        self._fi2d0.kernel_type = xvF2d.scharr_y
+        self._fi2d0.kernel_type = XvF2d.scharr_y
 
         self._app_pipeline = [self._vii, self._r2g, self._fi2d0, self._ct,
                               self._g2r, self._vio]
@@ -450,9 +450,9 @@ class EdgeDetect(PipelineApp):
 
         Displays threshold slider to change the intensity threshold
         """
-        edge = Dropdown(options=[xvF2d.edge_x, xvF2d.sobel_x, xvF2d.sobel_y,
-                                 xvF2d.scharr_x, xvF2d.scharr_y,
-                                 xvF2d.prewitt_y], value=xvF2d.scharr_y,
+        edge = Dropdown(options=[XvF2d.edge_x, XvF2d.sobel_x, XvF2d.sobel_y,
+                                 XvF2d.scharr_x, XvF2d.scharr_y,
+                                 XvF2d.prewitt_y], value=XvF2d.scharr_y,
                         description='Kernel')
         output = Dropdown(options=['Edges', 'Edges on video'],
                           value='Edges', description='Output Video')
@@ -518,7 +518,7 @@ class Filter2DApp(PipelineApp):
         """
 
         super().__init__(bitfile_name=bitfile_name, source=source)
-        self._fi2d0.kernel_type = xvF2d.identity
+        self._fi2d0.kernel_type = XvF2d.identity
         self._buttons = self._ol.btns_gpio.channel1
         self._leds = self._ol.leds_gpio.channel1
         self._timer = InterruptTimer(0.3, self._play)
@@ -533,9 +533,9 @@ class Filter2DApp(PipelineApp):
 
     def _play(self):
         buttons = int(self._buttons.read())
-        index = buttons % len(xvF2d)
+        index = buttons % len(XvF2d)
         if self._index != index:
-            self._fi2d0.kernel_type = xvF2d(index)
+            self._fi2d0.kernel_type = XvF2d(index)
             self._leds[0:4].write(index)
             self._index = index
 

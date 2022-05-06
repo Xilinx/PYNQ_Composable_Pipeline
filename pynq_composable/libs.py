@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Xilinx, Inc
+# Copyright (C) 2022 Xilinx, Inc
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -11,7 +11,7 @@ from pynq.ps import CPU_ARCH, ZU_ARCH
 import struct
 
 __author__ = "Mario Ruiz"
-__copyright__ = "Copyright 2021, Xilinx"
+__copyright__ = "Copyright 2022, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
@@ -106,7 +106,7 @@ class VitisVisionIP(DefaultIP):
         self.write(self._cols_offset, int(self._cols))
 
 
-class xvF2d(Enum):
+class XvF2d(Enum):
     """Supported filter2D kernels"""
     identity = 0
     edge_x = 1
@@ -136,7 +136,7 @@ class Filter2d(VitisVisionIP):
         self._quantize_error = 0
         self._shift = 0
 
-        self._kernel_type = xvF2d.identity
+        self._kernel_type = XvF2d.identity
         self._sigma = 1.0
 
     def _gaussianBlur(self):
@@ -185,7 +185,7 @@ class Filter2d(VitisVisionIP):
 
         self._sigma = float(sigma)
 
-        if self._kernel_type == xvF2d.gaussian_blur:
+        if self._kernel_type == XvF2d.gaussian_blur:
             self._kernel, self._shift = \
                 self._quantiseKernel(self._gaussianBlur())
             self._populateKernel()
@@ -195,49 +195,49 @@ class Filter2d(VitisVisionIP):
         return self._kernel_type
 
     @kernel_type.setter
-    def kernel_type(self, kernel_type: xvF2d):
-        if kernel_type not in xvF2d:
+    def kernel_type(self, kernel_type: XvF2d):
+        if kernel_type not in XvF2d:
             raise ValueError("Kernel type unknown")
 
         self._shift = 0
-        if kernel_type == xvF2d.identity:
+        if kernel_type == XvF2d.identity:
             self._kernel = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.edge_x:
+        elif kernel_type == XvF2d.edge_x:
             self._kernel = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.edge_y:
+        elif kernel_type == XvF2d.edge_y:
             self._kernel = np.array([[1, 0, -1], [0, 4, 0], [-1, 0, 1]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.edge:
+        elif kernel_type == XvF2d.edge:
             self._kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.sobel_x:
+        elif kernel_type == XvF2d.sobel_x:
             self._kernel = np.array([[1, 0, -1], [2, 0, -2], [1, 0, -1]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.sobel_y:
+        elif kernel_type == XvF2d.sobel_y:
             self._kernel = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.sharpen:
+        elif kernel_type == XvF2d.sharpen:
             self._kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.scharr_x:
+        elif kernel_type == XvF2d.scharr_x:
             self._kernel = np.array([[3, 0, -3], [10, 0, -10], [3, 0, -3]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.scharr_y:
+        elif kernel_type == XvF2d.scharr_y:
             self._kernel = np.array([[3, 10, 3], [0, 0, 0], [-3, -10, -3]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.prewitt_x:
+        elif kernel_type == XvF2d.prewitt_x:
             self._kernel = np.array([[1, 0, -1], [1, 0, -1], [1, 0, -1]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.prewitt_y:
+        elif kernel_type == XvF2d.prewitt_y:
             self._kernel = np.array([[1, 1, 1], [0, 0, 0], [-1, -1, -1]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.median_blur:
+        elif kernel_type == XvF2d.median_blur:
             self._kernel, self._shift = \
                 self._quantiseKernel(self._medianBlur())
             self._shift -= 1
-        elif kernel_type == xvF2d.gaussian_blur:
+        elif kernel_type == XvF2d.gaussian_blur:
             self._kernel, self._shift = \
                 self._quantiseKernel(self._gaussianBlur())
 
