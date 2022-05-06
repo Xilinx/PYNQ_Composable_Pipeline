@@ -5,7 +5,7 @@
 from pynq import Overlay
 from pynq.lib.video import VideoMode
 from .video import VideoStream, VSource, VSink
-from .libs import XvF2d, xvLut
+from .libs import XvF2d, XvLut
 from ipywidgets import VBox, HBox, IntRangeSlider, FloatSlider, interact, \
     interactive_output, IntSlider, Dropdown
 from IPython.display import display
@@ -168,7 +168,7 @@ class DifferenceGaussians(PipelineApp):
         self._fi2d0.kernel_type = XvF2d.gaussian_blur
         self.sigma1 = 7
         self._fi2d1.kernel_type = XvF2d.gaussian_blur
-        self._lut.kernel_type = xvLut.threshold
+        self._lut.kernel_type = XvLut.threshold
         self._play(0.5, 2, 20)
 
         self._app_pipeline = [self._vii, self._fi2d0, self._dup,
@@ -567,7 +567,7 @@ class LutApp(PipelineApp):
         """
 
         super().__init__(bitfile_name=bitfile_name, source=source)
-        self._lut.kernel_type = xvLut.negative
+        self._lut.kernel_type = XvLut.negative
         self._switches = self._ol.switches_gpio.channel1
         self._leds = self._ol.leds_gpio.channel1
         self._timer = InterruptTimer(0.3, self._play)
@@ -582,9 +582,9 @@ class LutApp(PipelineApp):
 
     def _play(self):
         switches = int(self._switches.read())
-        index = switches % len(xvLut)
+        index = switches % len(XvLut)
         if self._index != index:
-            self._lut.kernel_type = xvLut(index)
+            self._lut.kernel_type = XvLut(index)
             self._leds[0:4].write(index)
             self._index = index
 

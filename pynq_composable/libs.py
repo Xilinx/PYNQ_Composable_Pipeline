@@ -527,7 +527,7 @@ class CornerHarris(VitisVisionIP):
         self.write(0x28, int(self._k))
 
 
-class xvLut(Enum):
+class XvLut(Enum):
     """Supported LUT kernels"""
     identity = 0
     negative = 1
@@ -549,7 +549,7 @@ class PixelLut(VitisVisionIP):
         self.step = 8
         self.offset = 32
         self._shape = self._lut.shape
-        self.kernel_type = xvLut.negative
+        self.kernel_type = XvLut.negative
         self._threshold = np.random.randint(0, 255, (2, 3, 3), dtype=np.uint8)
 
     def _negative(self):
@@ -624,30 +624,30 @@ class PixelLut(VitisVisionIP):
             )
 
         self._threshold = matrix
-        self.kernel_type = xvLut.threshold
+        self.kernel_type = XvLut.threshold
 
     @property
     def kernel_type(self):
         return self._kernel_type
 
     @kernel_type.setter
-    def kernel_type(self, kernel_type: xvLut):
-        if kernel_type not in xvLut:
+    def kernel_type(self, kernel_type: XvLut):
+        if kernel_type not in XvLut:
             raise ValueError("Kernel type unknown")
 
-        if kernel_type == xvLut.negative:
+        if kernel_type == XvLut.negative:
             self._negative()
-        elif kernel_type == xvLut.identity:
+        elif kernel_type == XvLut.identity:
             self._identity()
-        elif kernel_type == xvLut.binary_threshold:
+        elif kernel_type == XvLut.binary_threshold:
             self._binary_threshold()
-        elif kernel_type == xvLut.group_bin:
+        elif kernel_type == XvLut.group_bin:
             self._group_bin()
-        elif kernel_type == xvLut.offset:
+        elif kernel_type == XvLut.offset:
             self._offset()
-        elif kernel_type == xvLut.threshold:
+        elif kernel_type == XvLut.threshold:
             self._custom_threshold()
-        elif kernel_type == xvLut.random:
+        elif kernel_type == XvLut.random:
             self._lut = np.random.randint(0, 255, self._shape, dtype=np.uint8)
 
         self._kernel_type = kernel_type
