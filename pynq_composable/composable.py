@@ -259,13 +259,13 @@ class Composable(DefaultHierarchy):
 
         c_dict = self._c_dict.copy()
         for k, v in paths.items():
+            si = v.get('si')
+            mi = v.get('mi')
             for kk, vv in self._c_dict.items():
-                si = v.get('si')
-                mi = v.get('mi')
-                cii = vv.get('si')
-                pii = vv.get('mi')
-                if (si is not None and cii is not None and si in cii) or \
-                   (mi is not None and pii is not None and mi in pii):
+                sii = vv.get('si')
+                mii = vv.get('mi')
+                if (si is not None and sii is not None and si in sii) or \
+                   (mi is not None and mii is not None and mi in mii):
                     if kk in c_dict.keys():
                         c_dict.pop(kk)
                     v['fullpath'] = kk
