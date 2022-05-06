@@ -2,17 +2,22 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-from .composable import Composable, _mem_items
+import composable
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2022, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
+_mem_items = ['axis_register_slice', 'axis_data_fifo',
+              'fifo_generator', 'axis_dwidth_converter',
+              'axis_subset_converter']
+
+
 class DFXRegion:
     """Class that wraps attributes for IP objects on DFX regions"""
 
-    def __init__(self, cpipe: Composable, name: str):
+    def __init__(self, cpipe: composable.Composable, name: str):
         self._ol = cpipe._ol
         self._parent = cpipe._hier
         self._c_dict = cpipe._c_dict

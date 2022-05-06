@@ -18,11 +18,6 @@ __copyright__ = "Copyright 2021, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
-_mem_items = ['axis_register_slice', 'axis_data_fifo',
-              'fifo_generator', 'axis_dwidth_converter',
-              'axis_subset_converter']
-
-
 def _nest_level(pl: list) -> int:
     """Compute nested levels of a list iteratively"""
 
