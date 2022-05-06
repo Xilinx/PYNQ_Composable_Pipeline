@@ -176,7 +176,7 @@ setup(
     python_requires=">=3.8.0",
     install_requires=[
         "pynq>=2.7.0",
-        "graphviz>=0.19.2"
+        "graphviz>=0.20"
     ],
     entry_points=entry_points,
     cmdclass={"build_py": build_py},

@@ -3,4 +3,4 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 [build-system]
-requires = ["setuptools", "wheel", "pynq>=2.7.0", "graphviz>=0.19.2"]
+requires = ["setuptools", "wheel", "pynq>=2.8.0", "graphviz>=0.20"]
