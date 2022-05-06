@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Xilinx, Inc
+# Copyright (C) 2022 Xilinx, Inc
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -6,7 +6,7 @@ from pynq import DefaultIP
 import numpy as np
 
 __author__ = "Mario Ruiz"
-__copyright__ = "Copyright 2021, Xilinx"
+__copyright__ = "Copyright 2022, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
@@ -33,13 +33,13 @@ class StreamSwitch(DefaultIP):
     bindto = ['xilinx.com:ip:axis_switch:1.1']
 
     _control_reg = 0x0
-    _pi_offset = 0x40
+    _mi_offset = 0x40
     _reg_update = 1 << 1
 
     def __init__(self, description: dict):
         super().__init__(description=description)
         self.max_slots = int(description['parameters']['C_NUM_MI_SLOTS'])
-        self._pi = np.zeros(self.max_slots, dtype=np.int64)
+        self._mi = np.zeros(self.max_slots, dtype=np.int64)
 
     def default(self) -> None:
         """Generate default configuration
@@ -48,19 +48,19 @@ class StreamSwitch(DefaultIP):
         producer[j] to consumer[j] for j = 0 to j = (max_slots-1)
         """
 
-        for i in range(len(self._pi)):
-            self._pi[i] = i
+        for i in range(len(self._mi)):
+            self._mi[i] = i
         self._populateRouting()
 
     def disable(self) -> None:
         """Disable all connections in the AXI4-Stream Switch"""
 
-        for i in range(len(self._pi)):
-            self._pi[i] = np.uint64(0x80000000)
+        for i in range(len(self._mi)):
+            self._mi[i] = np.uint64(0x80000000)
         self._populateRouting()
 
     @property
-    def pi(self):
+    def mi(self):
         """ AXI4-Stream Switch configuration
 
         Configure the AXI4-Stream Switch given a numpy array
@@ -83,13 +83,13 @@ class StreamSwitch(DefaultIP):
                 Consumer 0 will be routed to Producer 3\n
                 Producer 0 is disabled
         """
-        pi = np.zeros(self.max_slots, dtype=np.int64)
+        mi = np.zeros(self.max_slots, dtype=np.int64)
         for idx, offset in _mux_mi_gen(self.max_slots):
-            pi[idx] = self.read(offset)
-        return pi
+            mi[idx] = self.read(offset)
+        return mi
 
-    @pi.setter
-    def pi(self, conf_array: np.dtype(np.int64)):
+    @mi.setter
+    def mi(self, conf_array: np.dtype(np.int64)):
         length = len(conf_array)
         if conf_array.dtype is not np.dtype(np.int64):
             raise TypeError("Numpy array must be np.int64 dtype")
@@ -110,13 +110,13 @@ class StreamSwitch(DefaultIP):
                                    np.ones(new_slots, dtype=np.int32) *
                                    np.uint64(0x80000000))
 
-        self._pi = conf_array
+        self._mi = conf_array
         self._populateRouting()
 
     def _populateRouting(self):
         """Writes the current configuration to the AXI4-Stream Switch
 
-        First the Pi selector values are written to the corresponding
+        First the Mi selector values are written to the corresponding
         register. Once the registers have been programmed, a commit
         register transfers the programmed values from the register interface
         into the switch, for a short period of time the AXI4-Stream Switch
@@ -124,5 +124,5 @@ class StreamSwitch(DefaultIP):
         """
 
         for idx, offset in _mux_mi_gen(self.max_slots):
-            self.write(offset, int(self._pi[idx]))
+            self.write(offset, int(self._mi[idx]))
         self.write(self._control_reg, self._reg_update)
