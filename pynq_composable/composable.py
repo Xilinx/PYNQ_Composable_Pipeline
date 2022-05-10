@@ -10,7 +10,7 @@ from .parser import HWHComposable
 from pynq import DefaultIP, DefaultHierarchy
 from pynq.utils import ReprDict
 from .repr_dict import ReprDictComposable
-from .virtual import DFXRegion, StreamingIP, UnloadedIP
+from .virtual import DFXRegion, StreamingIP, VirtualIP
 from typing import Type, Union
 
 __author__ = "Mario Ruiz"
@@ -490,10 +490,9 @@ class Composable(DefaultHierarchy):
                 graph.node(key,
                            _attributes={"color": "blue", "fillcolor": "cyan",
                                         "style": "filled"})
-            if not isinstance(ip, UnloadedIP):
-                if hasattr(ip, "start"):
-                    ip.start()
-            else:
+            if hasattr(ip, "start"):
+                ip.start()
+            elif isinstance(ip, VirtualIP) and not ip.is_loaded:
                 raise AttributeError("IP {} is not loaded, load IP before "
                                      "composing a pipeline"
                                      .format(ip._fullpath))

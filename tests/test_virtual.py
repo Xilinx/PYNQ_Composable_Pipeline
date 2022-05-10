@@ -15,12 +15,6 @@ def test_streaming_ip():
     assert ip._fullpath == name
 
 
-def test_unloaded_ip():
-    name = 'filter2d'
-    ip = virtual.UnloadedIP(name)
-    assert ip._fullpath == name
-
-
 def test_buffer_ip():
     name = 'filter2d'
     ip = virtual.BufferIP(name)
