@@ -13,7 +13,7 @@ _mem_items = ['axis_register_slice', 'axis_data_fifo',
 
 
 class DFXRegion:
-    """Class that wraps attributes for IP objects on DFX regions"""
+    """Class that wraps attributes to handle IP objects within DFX regions"""
 
     def __init__(self, cpipe, name: str):
         self._ol = cpipe._ol
@@ -25,7 +25,7 @@ class DFXRegion:
         key = self.key + '/' + name
         if key in self._c_dict.keys():
             if not self._c_dict[key]['loaded']:
-                return UnloadedIP(key)
+                return VirtualIP(self._c_dict, key)
             elif self._c_dict[key]['modtype'] in _mem_items:
                 return BufferIP(key)
             else:
@@ -35,21 +35,36 @@ class DFXRegion:
                              "\'{}\'".format(name, self.key))
 
 
+class VirtualIP:
+    """Handles MMIO IP objects that are within a DFX region
+
+    This can be considered a virtual IP object when it is not loaded
+    """
+
+    def __init__(self, cpipe, path: str):
+        self._cpipe = cpipe
+        self._c_dict = cpipe._c_dict
+        self._parent = cpipe._hier
+        self._fullpath = path
+
+    @property
+    def is_loaded(self):
+        return self._c_dict[self._fullpath]['loaded']
+
+    def __getattr__(self, name: str):
+        if self.is_loaded:
+            attr = getattr(self._cpipe._ol, self._parent + self._fullpath)
+            return getattr(attr, name)
+        else:
+            raise AttributeError("\'{}\' is not loaded, load IP before "
+                                 "using it".format(self._fullpath))
+
+
 class StreamingIP:
     """Handles Streaming only IP"""
 
     def __init__(self, name: str):
         self._fullpath = name
-
-
-class UnloadedIP:
-    """Handles IP objects that are not yet loaded into the hardware
-
-    This can be considered a virtual IP object
-    """
-
-    def __init__(self, path: str):
-        self._fullpath = path
 
 
 class BufferIP:
