@@ -16,6 +16,7 @@ class DFXRegion:
     """Class that wraps attributes to handle IP objects within DFX regions"""
 
     def __init__(self, cpipe, name: str):
+        self._cpipe = cpipe
         self._ol = cpipe._ol
         self._parent = cpipe._hier
         self._c_dict = cpipe._c_dict
@@ -25,7 +26,7 @@ class DFXRegion:
         key = self.key + '/' + name
         if key in self._c_dict.keys():
             if not self._c_dict[key]['loaded']:
-                return VirtualIP(self._c_dict, key)
+                return VirtualIP(self._cpipe, key)
             elif self._c_dict[key]['modtype'] in _mem_items:
                 return BufferIP(key)
             else:
