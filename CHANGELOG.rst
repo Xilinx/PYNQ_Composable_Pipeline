@@ -9,12 +9,17 @@ Added
 
 * Move to Vivado 2022.1
 * Support for Block Design Containers
+* Enhance handling of IP within the DFX regions
 * Fixes in the video handling class
-* Enhance DifferenceGaussians app
-* EdgeDetect app
+* Enhance ``DifferenceGaussians`` app
+* New ``EdgeDetect`` app
 * Copy button on RTD
-* Replace `pi`` with ``mi`` for manager interface
-* Replace `ci`` with ``si`` for subordinate interface
+* Replace ``pi`` with ``mi`` for manager interface
+* Replace ``ci`` with ``si`` for subordinate interface
+* Replace terminology with Manger and Subordinate
+* Replace ``loadIP`` with ``load``
+* Include attribute ``.control`` to enable/disable the pipeline control logic
+* Replace ``xvF2d`` with ``XvF2d`` and ``xvLut`` with ``XvLut``
 
 1.0.2
 ~~~~~
