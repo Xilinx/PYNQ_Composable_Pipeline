@@ -12,6 +12,7 @@ from pynq.utils import ReprDict
 from .repr_dict import ReprDictComposable
 from .virtual import DFXRegion, StreamingIP, UnloadedIP
 from typing import Type, Union
+import warnings
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
@@ -170,13 +171,15 @@ class Composable(DefaultHierarchy):
             _get_ip_name_by_vlnv(description, 'xilinx.com:ip:axis_switch:1.1')
         self._switch = getattr(self._ol, self._hier + switch_name)
         self._max_slots = self._switch.max_slots
-        pipelinecrt = \
+        self._control = True
+        self._pipelinecrt = \
             _get_ip_name_by_vlnv(description, 'xilinx.com:ip:axi_gpio:2.0')
-        if pipelinecrt:
-            self._pipecrtl = getattr(self._ol, self._hier + pipelinecrt)
-            self._soft_reset = self._pipecrtl.channel1
-            self._dfx_control = self._pipecrtl.channel2
+        if self._pipelinecrt:
+            pipecrtl = getattr(self._ol, self._hier + self._pipelinecrt)
+            self._soft_reset = pipecrtl.channel1
+            self._dfx_control = pipecrtl.channel2
         else:
+            self._control = False
             self._soft_reset = None
             self._dfx_control = None
 
@@ -226,6 +229,26 @@ class Composable(DefaultHierarchy):
         """List of IP objects in the current dataflow pipeline"""
 
         return self._current_pipeline
+
+    @property
+    def control(self):
+        """ Set the operation mode of the pipeline control logic
+
+        Parameters
+        ----------
+        enable : bool
+            True: Soft reset and DFX decouple commands are issued
+            False: No soft reset neither DFX decouple commands are issued
+        """
+        return self._control
+
+    @control.setter
+    def control(self, enable: bool):
+        if self._pipelinecrt:
+            self._control = enable
+        elif enable:
+            warnings.warn("Can't enable pipeline control logic as there is no "
+                          "associated hardware", UserWarning)
 
     def _default_paths(self):
         """Get default paths from user file
@@ -477,7 +500,7 @@ class Composable(DefaultHierarchy):
                                               " instance can only be used once"
                                               .format(ip._fullpath))
 
-        if self._soft_reset:
+        if self._soft_reset and self._control:
             self._soft_reset[0].write(1)
             self._soft_reset[0].write(0)
 
@@ -543,7 +566,7 @@ class Composable(DefaultHierarchy):
         for pr in bit_dict:
             if not bit_dict[pr]['loaded']:
                 decoupler = self._dfx_control[self._dfx_dict[pr]['decouple']]
-                if self._dfx_control and decoupler:
+                if self._dfx_control and decoupler and self._control:
                     decoupler.write(1)
                 for i in range(5):
                     try:
@@ -556,7 +579,7 @@ class Composable(DefaultHierarchy):
                                            "downloaded"
                                            .format(bit_dict[pr]['bitstream']))
 
-                if self._dfx_control and decoupler:
+                if self._dfx_control and decoupler and self._control:
                     decoupler.write(0)
 
     def remove(self, iplist: list = None) -> None:
