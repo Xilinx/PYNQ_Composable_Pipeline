@@ -78,7 +78,8 @@ class VitisVisionIP(DefaultIP):
     @property
     def rows(self) -> int:
         """Image height"""
-        return self._rows
+        rows = int(self.read(self._rows_offset))
+        return rows
 
     @rows.setter
     def rows(self, rows: int):
@@ -93,7 +94,8 @@ class VitisVisionIP(DefaultIP):
     @property
     def cols(self) -> int:
         """Image width"""
-        return self._cols
+        cols = int(self.read(self._cols_offset))
+        return cols
 
     @cols.setter
     def cols(self, cols: int):
