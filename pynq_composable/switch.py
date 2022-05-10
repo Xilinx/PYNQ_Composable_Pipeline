@@ -10,30 +10,32 @@ __copyright__ = "Copyright 2022, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
+_mi_offset = 0x40
+
+
 def _mux_mi_gen(ports: int) -> tuple:
     """Generates index and address for AXI4-Stream Switch MI Mux Registers"""
 
     for i in range(ports):
-        yield i, 0x40 + 4 * i
+        yield i, _mi_offset + 4 * i
 
 
 class StreamSwitch(DefaultIP):
-    """AXI4-Stream Switch python driver
+    """AXI4-Stream Switch Python driver
 
     This class provides the driver to control an AXI4-Stream Switch
     which uses the AXI4-Lite interfaces to specify the routing table.
     This routing mode requires that there is precisely only one path between
-    producer and consumer. When attempting to map the same consumer interface
-    to multiple producer interfaces, only the lowest consumer interface is
-    able to access the consumer interface.
-    Unused producer interfaces are automatically disabled by the logic
+    manager and subordinate. When attempting to map the same subordinate
+    interface to multiple manager interfaces, only the lowest subordinate
+    interface is able to access the subordinate interface.
+    Unused manager interfaces are automatically disabled by the logic
     provided in this driver
     """
 
     bindto = ['xilinx.com:ip:axis_switch:1.1']
 
     _control_reg = 0x0
-    _mi_offset = 0x40
     _reg_update = 1 << 1
 
     def __init__(self, description: dict):
@@ -45,7 +47,7 @@ class StreamSwitch(DefaultIP):
         """Generate default configuration
 
         Configures the AXI4-Stream Switch to connect
-        producer[j] to consumer[j] for j = 0 to j = (max_slots-1)
+        manager[j] to subordinate[j] for j = 0 to j = (max_slots-1)
         """
 
         for i in range(len(self._mi)):
@@ -64,24 +66,24 @@ class StreamSwitch(DefaultIP):
         """ AXI4-Stream Switch configuration
 
         Configure the AXI4-Stream Switch given a numpy array
-        Each element in the array controls a consumer interface selection.
-        If more than one element in the array is set to the same consumer
-        interface, then the lower producer interface wins.
+        Each element in the array controls a subordinate interface selection.
+        If more than one element in the array is set to the same subordinate
+        interface, then the lower manager interface wins.
 
         Parameters
         ----------
         conf_array : numpy array (dtype=np.int64)
-            An array with the mapping of consumer to producer interfaces
-            The index in the array is the producer interface and
-            the value is the consumer interface slot
+            An array with the mapping of subordinate to manager interfaces
+            The index in the array is the manager interface and
+            the value is the subordinate interface slot
             The length of the array can vary from 1 to max slots
-            Use negative values to indicate that a producer is disabled
+            Use negative values to indicate that a manager is disabled
 
             For instance, given this input [-1, 2, 1, 0]\n
-                Consumer 2 will be routed to Producer 1\n
-                Consumer 1 will be routed to Producer 2\n
-                Consumer 0 will be routed to Producer 3\n
-                Producer 0 is disabled
+                Subordinate 2 will be routed to Manager 1\n
+                Subordinate 1 will be routed to Manager 2\n
+                Subordinate 0 will be routed to Manager 3\n
+                Manager 0 is disabled
         """
         mi = np.zeros(self.max_slots, dtype=np.int64)
         for idx, offset in _mux_mi_gen(self.max_slots):
