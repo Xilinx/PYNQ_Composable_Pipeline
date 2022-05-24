@@ -206,18 +206,18 @@ update_compile_order -fileset sources_1
 
 
 ##################################################################
-# PR Join Block Design Container and DFX Regions
+# PR 2 Block Design Container and DFX Regions
 ##################################################################
-set pr_join_subtract "composable_pr_join_subtract"
+set pr_2_dilate_erode "composable_pr_2_dilate_erode"
 set curdesign [current_bd_design]
-create_bd_design -cell [get_bd_cells /composable/pr_join] ${pr_join_subtract}
+create_bd_design -cell [get_bd_cells /composable/pr_2] ${pr_2_dilate_erode}
 current_bd_design $curdesign
-set new_cell [create_bd_cell -type container -reference ${pr_join_subtract} composable/pr_join_temp]
-replace_bd_cell [get_bd_cells /composable/pr_join] $new_cell
-delete_bd_objs  [get_bd_cells /composable/pr_join]
-set_property name pr_join $new_cell
+set new_cell [create_bd_cell -type container -reference ${pr_2_dilate_erode} composable/pr_2_temp]
+replace_bd_cell [get_bd_cells /composable/pr_2] $new_cell
+delete_bd_objs  [get_bd_cells /composable/pr_2]
+set_property name pr_2 $new_cell
 
-current_bd_design [get_bd_designs ${pr_join_subtract}]
+current_bd_design [get_bd_designs ${pr_2_dilate_erode}]
 validate_bd_design
 save_bd_design
 current_bd_design [get_bd_designs ${design_name}]
@@ -225,17 +225,42 @@ validate_bd_design
 save_bd_design
 
 ## Freeze boundaries
-set_property -dict [list CONFIG.LOCK_PROPAGATE {true}] [get_bd_cells composable/pr_join]
+set_property -dict [list CONFIG.LOCK_PROPAGATE {true}] [get_bd_cells composable/pr_2]
 ## Enable DFX
-set_property -dict [list CONFIG.ENABLE_DFX {true}] [get_bd_cells composable/pr_join]
+set_property -dict [list CONFIG.ENABLE_DFX {true}] [get_bd_cells composable/pr_2]
 
 
-## PR Join reconfigurable module 1
-set pr_join_absdiff "composable_pr_join_absdiff"
+## PR 2 reconfigurable module 1
+set pr_2_subtract "composable_pr_2_subtract"
 set curdesign [current_bd_design]
-create_bd_design -boundary_from_container [get_bd_cells /composable/pr_join] ${pr_join_absdiff}
+create_bd_design -boundary_from_container [get_bd_cells /composable/pr_2] ${pr_2_subtract}
 current_bd_design $curdesign
-current_bd_design [get_bd_designs ${pr_join_absdiff}]
+current_bd_design [get_bd_designs ${pr_2_subtract}]
+
+set asr [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_register_slice:2.1 asr ]
+create_bd_cell -type ip -vlnv xilinx.com:hls:subtract_accel:1.0 subtract_accel
+
+connect_bd_intf_net [get_bd_intf_ports s_axi_control] [get_bd_intf_pins asr/S_AXI]
+connect_bd_intf_net [get_bd_intf_pins asr/M_AXI] [get_bd_intf_pins subtract_accel/s_axi_control]
+connect_bd_intf_net [get_bd_intf_ports stream_in0] [get_bd_intf_pins subtract_accel/stream_in]
+connect_bd_intf_net [get_bd_intf_ports stream_in1] [get_bd_intf_pins subtract_accel/stream_in1]
+connect_bd_intf_net [get_bd_intf_ports stream_out0] [get_bd_intf_pins subtract_accel/stream_out]
+connect_bd_net [get_bd_ports ${dfx_clk}] [get_bd_pins subtract_accel/ap_clk] [get_bd_pins asr/aclk]
+connect_bd_net [get_bd_ports ${dfx_rst}] [get_bd_pins subtract_accel/ap_rst_n] [get_bd_pins asr/aresetn]
+assign_bd_address
+
+validate_bd_design
+save_bd_design
+current_bd_design [get_bd_designs ${design_name}]
+validate_bd_design
+save_bd_design
+
+## PR 2 reconfigurable module 2
+set pr_2_absdiff "composable_pr_2_absdiff"
+set curdesign [current_bd_design]
+create_bd_design -boundary_from_container [get_bd_cells /composable/pr_2] ${pr_2_absdiff}
+current_bd_design $curdesign
+current_bd_design [get_bd_designs ${pr_2_absdiff}]
 
 set asr [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_register_slice:2.1 asr ]
 create_bd_cell -type ip -vlnv xilinx.com:hls:absdiff_accel:1.0 absdiff_accel
@@ -243,7 +268,8 @@ create_bd_cell -type ip -vlnv xilinx.com:hls:absdiff_accel:1.0 absdiff_accel
 connect_bd_intf_net [get_bd_intf_ports s_axi_control] [get_bd_intf_pins asr/S_AXI]
 connect_bd_intf_net [get_bd_intf_pins asr/M_AXI] [get_bd_intf_pins absdiff_accel/s_axi_control]
 connect_bd_intf_net [get_bd_intf_ports stream_in0] [get_bd_intf_pins absdiff_accel/stream_in]
-connect_bd_intf_net [get_bd_intf_ports stream_out] [get_bd_intf_pins absdiff_accel/stream_out]
+connect_bd_intf_net [get_bd_intf_ports stream_in1] [get_bd_intf_pins absdiff_accel/stream_in1]
+connect_bd_intf_net [get_bd_intf_ports stream_out0] [get_bd_intf_pins absdiff_accel/stream_out]
 connect_bd_net [get_bd_ports ${dfx_clk}] [get_bd_pins absdiff_accel/ap_clk] [get_bd_pins asr/aclk]
 connect_bd_net [get_bd_ports ${dfx_rst}] [get_bd_pins absdiff_accel/ap_rst_n] [get_bd_pins asr/aresetn]
 assign_bd_address
@@ -255,12 +281,12 @@ validate_bd_design
 save_bd_design
 
 
-## PR Join reconfigurable module 2
-set pr_join_add "composable_pr_join_add"
+## PR 2 reconfigurable module 3
+set pr_2_add "composable_pr_2_add"
 set curdesign [current_bd_design]
-create_bd_design -boundary_from_container [get_bd_cells /composable/pr_join] ${pr_join_add}
+create_bd_design -boundary_from_container [get_bd_cells /composable/pr_2] ${pr_2_add}
 current_bd_design $curdesign
-current_bd_design [get_bd_designs ${pr_join_add}]
+current_bd_design [get_bd_designs ${pr_2_add}]
 
 set asr [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_register_slice:2.1 asr ]
 create_bd_cell -type ip -vlnv xilinx.com:hls:add_accel:1.0 add_accel
@@ -268,7 +294,8 @@ create_bd_cell -type ip -vlnv xilinx.com:hls:add_accel:1.0 add_accel
 connect_bd_intf_net [get_bd_intf_ports s_axi_control] [get_bd_intf_pins asr/S_AXI]
 connect_bd_intf_net [get_bd_intf_pins asr/M_AXI] [get_bd_intf_pins add_accel/s_axi_control]
 connect_bd_intf_net [get_bd_intf_ports stream_in0] [get_bd_intf_pins add_accel/stream_in]
-connect_bd_intf_net [get_bd_intf_ports stream_out] [get_bd_intf_pins add_accel/stream_out]
+connect_bd_intf_net [get_bd_intf_ports stream_in1] [get_bd_intf_pins add_accel/stream_in1]
+connect_bd_intf_net [get_bd_intf_ports stream_out0] [get_bd_intf_pins add_accel/stream_out]
 connect_bd_net [get_bd_ports ${dfx_clk}] [get_bd_pins add_accel/ap_clk] [get_bd_pins asr/aclk]
 connect_bd_net [get_bd_ports ${dfx_rst}] [get_bd_pins add_accel/ap_rst_n] [get_bd_pins asr/aresetn]
 assign_bd_address
@@ -280,12 +307,12 @@ validate_bd_design
 save_bd_design
 
 
-## PR Join reconfigurable module 3
-set pr_join_bitand "composable_pr_join_bitand"
+## PR 2 reconfigurable module 4
+set pr_2_bitand "composable_pr_2_bitand"
 set curdesign [current_bd_design]
-create_bd_design -boundary_from_container [get_bd_cells /composable/pr_join] ${pr_join_bitand}
+create_bd_design -boundary_from_container [get_bd_cells /composable/pr_2] ${pr_2_bitand}
 current_bd_design $curdesign
-current_bd_design [get_bd_designs ${pr_join_bitand}]
+current_bd_design [get_bd_designs ${pr_2_bitand}]
 
 set asr [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_register_slice:2.1 asr ]
 create_bd_cell -type ip -vlnv xilinx.com:hls:bitwise_and_accel:1.0 bitwise_and_accel
@@ -293,7 +320,8 @@ create_bd_cell -type ip -vlnv xilinx.com:hls:bitwise_and_accel:1.0 bitwise_and_a
 connect_bd_intf_net [get_bd_intf_ports s_axi_control] [get_bd_intf_pins asr/S_AXI]
 connect_bd_intf_net [get_bd_intf_pins asr/M_AXI] [get_bd_intf_pins bitwise_and_accel/s_axi_control]
 connect_bd_intf_net [get_bd_intf_ports stream_in0] [get_bd_intf_pins bitwise_and_accel/stream_in]
-connect_bd_intf_net [get_bd_intf_ports stream_out] [get_bd_intf_pins bitwise_and_accel/stream_out]
+connect_bd_intf_net [get_bd_intf_ports stream_in1] [get_bd_intf_pins bitwise_and_accel/stream_in1]
+connect_bd_intf_net [get_bd_intf_ports stream_out0] [get_bd_intf_pins bitwise_and_accel/stream_out]
 connect_bd_net [get_bd_ports ${dfx_clk}] [get_bd_pins bitwise_and_accel/ap_clk] [get_bd_pins asr/aclk]
 connect_bd_net [get_bd_ports ${dfx_rst}] [get_bd_pins bitwise_and_accel/ap_rst_n] [get_bd_pins asr/aresetn]
 assign_bd_address
@@ -303,65 +331,9 @@ save_bd_design
 
 current_bd_design [get_bd_designs ${design_name}]
 # Define synthesis sources
-lappend list_rm ${pr_join_subtract} ${pr_join_absdiff} ${pr_join_add} ${pr_join_bitand}
-set bds "${pr_join_subtract}.bd:${pr_join_absdiff}.bd:${pr_join_add}.bd:${pr_join_bitand}.bd"
-set_property -dict [list CONFIG.LIST_SYNTH_BD ${bds}] [get_bd_cells /composable/pr_join]
-validate_bd_design
-save_bd_design
-update_compile_order -fileset sources_1
-
-
-##################################################################
-# PR Fork Block Design Container and DFX Regions
-##################################################################
-set pr_fork_duplicate "composable_pr_fork_duplicate"
-set curdesign [current_bd_design]
-create_bd_design -cell [get_bd_cells /composable/pr_fork] ${pr_fork_duplicate}
-current_bd_design $curdesign
-set new_cell [create_bd_cell -type container -reference ${pr_fork_duplicate} composable/pr_fork_temp]
-replace_bd_cell [get_bd_cells /composable/pr_fork] $new_cell
-delete_bd_objs  [get_bd_cells /composable/pr_fork]
-set_property name pr_fork $new_cell
-
-current_bd_design [get_bd_designs ${pr_fork_duplicate}]
-validate_bd_design
-save_bd_design
-current_bd_design [get_bd_designs ${design_name}]
-validate_bd_design
-save_bd_design
-
-## Freeze boundaries
-set_property -dict [list CONFIG.LOCK_PROPAGATE {true}] [get_bd_cells composable/pr_fork]
-## Enable DFX
-set_property -dict [list CONFIG.ENABLE_DFX {true}] [get_bd_cells composable/pr_fork]
-
-
-## PR Fork reconfigurable module 1
-set pr_fork_rgb2xyz "composable_pr_fork_rgb2xyz"
-set curdesign [current_bd_design]
-create_bd_design -boundary_from_container [get_bd_cells /composable/pr_fork] ${pr_fork_rgb2xyz}
-current_bd_design $curdesign
-current_bd_design [get_bd_designs ${pr_fork_rgb2xyz}]
-
-set asr [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_register_slice:2.1 asr ]
-create_bd_cell -type ip -vlnv xilinx.com:hls:rgb2xyz_accel:1.0 rgb2xyz_accel
-
-connect_bd_intf_net [get_bd_intf_ports s_axi_control] [get_bd_intf_pins asr/S_AXI]
-connect_bd_intf_net [get_bd_intf_pins asr/M_AXI] [get_bd_intf_pins rgb2xyz_accel/s_axi_control]
-connect_bd_intf_net [get_bd_intf_ports stream_in] [get_bd_intf_pins rgb2xyz_accel/stream_in]
-connect_bd_intf_net [get_bd_intf_ports stream_out0] [get_bd_intf_pins rgb2xyz_accel/stream_out]
-connect_bd_net [get_bd_ports ${dfx_clk}] [get_bd_pins rgb2xyz_accel/ap_clk] [get_bd_pins asr/aclk]
-connect_bd_net [get_bd_ports ${dfx_rst}] [get_bd_pins rgb2xyz_accel/ap_rst_n] [get_bd_pins asr/aresetn]
-assign_bd_address
-
-validate_bd_design
-save_bd_design
-current_bd_design [get_bd_designs ${design_name}]
-
-# Define synthesis sources
-lappend list_rm ${pr_fork_duplicate} ${pr_fork_rgb2xyz}
-set bds "${pr_fork_duplicate}.bd:${pr_fork_rgb2xyz}.bd"
-set_property -dict [list CONFIG.LIST_SYNTH_BD ${bds}] [get_bd_cells /composable/pr_fork]
+lappend list_rm ${pr_2_subtract} ${pr_2_absdiff} ${pr_2_add} ${pr_2_bitand}
+set bds "${pr_2_dilate_erode}.bd:${pr_2_subtract}.bd:${pr_2_absdiff}.bd:${pr_2_add}.bd:${pr_2_bitand}.bd"
+set_property -dict [list CONFIG.LIST_SYNTH_BD ${bds}] [get_bd_cells /composable/pr_2]
 validate_bd_design
 save_bd_design
 update_compile_order -fileset sources_1
@@ -384,36 +356,32 @@ update_compile_order -fileset sources_1
 # Create configurations and run the implementation
 create_pr_configuration -name config_1 -partitions \
    [list \
-      video_cp_i/composable/pr_0:${pr_0_dilate_erode}_inst_0 \
-      video_cp_i/composable/pr_1:${pr_1_dilate_erode}_inst_0 \
-      video_cp_i/composable/pr_fork:${pr_fork_duplicate}_inst_0 \
-      video_cp_i/composable/pr_join:${pr_join_subtract}_inst_0\
+      ${design_name}_i/composable/pr_0:${pr_0_dilate_erode}_inst_0 \
+      ${design_name}_i/composable/pr_1:${pr_1_dilate_erode}_inst_0 \
+      ${design_name}_i/composable/pr_2:${pr_2_subtract}_inst_0\
    ]
 
 create_pr_configuration -name config_2 -partitions \
    [list \
-      video_cp_i/composable/pr_0:${pr_0_fast_fifo}_inst_0 \
-      video_cp_i/composable/pr_1:${pr_1_cornerharris}_inst_0 \
-      video_cp_i/composable/pr_fork:${pr_fork_rgb2xyz}_inst_0 \
-      video_cp_i/composable/pr_join:${pr_join_absdiff}_inst_0\
+      ${design_name}_i/composable/pr_0:${pr_0_fast_fifo}_inst_0 \
+      ${design_name}_i/composable/pr_1:${pr_1_cornerharris}_inst_0 \
+      ${design_name}_i/composable/pr_2:${pr_2_absdiff}_inst_0\
    ]
 
 create_pr_configuration -name config_3 -partitions \
    [list \
-      video_cp_i/composable/pr_0:${pr_0_filter2d_fifo}_inst_0 \
-      video_cp_i/composable/pr_join:${pr_join_add}_inst_0\
+      ${design_name}_i/composable/pr_0:${pr_0_filter2d_fifo}_inst_0 \
+      ${design_name}_i/composable/pr_2:${pr_2_add}_inst_0\
    ] -greyboxes [list \
-      video_cp_i/composable/pr_1 \
-      video_cp_i/composable/pr_fork\
+      ${design_name}_i/composable/pr_1 \
    ]
 
 create_pr_configuration -name config_4 -partitions \
    [list \
-      video_cp_i/composable/pr_join:${pr_join_bitand}_inst_0 \
+      ${design_name}_i/composable/pr_2:${pr_2_bitand}_inst_0 \
    ] -greyboxes [list \
-      video_cp_i/composable/pr_0 \
-      video_cp_i/composable/pr_1 \
-      video_cp_i/composable/pr_fork\
+      ${design_name}_i/composable/pr_0 \
+      ${design_name}_i/composable/pr_1 \
    ]
 
 set_property PR_CONFIGURATION config_1 [get_runs impl_1]
@@ -422,7 +390,7 @@ create_run child_1_impl_1 -parent_run impl_1 -flow {Vivado Implementation 2022} 
 create_run child_2_impl_1 -parent_run impl_1 -flow {Vivado Implementation 2022} -strategy Performance_NetDelay_low -pr_config config_4
 
 # Change global implementation strategy
-set_property strategy Performance_Explore [get_runs impl_1]
+set_property strategy Performance_NetDelay_low [get_runs impl_1]
 set_property report_strategy {UltraFast Design Methodology Reports} [get_runs impl_1]
 
 launch_runs impl_1 -to_step write_bitstream -jobs 16
@@ -442,22 +410,20 @@ set bithier "${design_name}_i_composable"
 foreach pr ${list_rm} {
    catch {exec cp ./${prj_name}/${prj_name}.gen/sources_1/bd/${design_name}/bd/${pr}_inst_0/hw_handoff/${pr}_inst_0.hwh ${dest_dir}/${prj_name}_${pr}_partial.hwh}
 }
-catch {exec cp ./${prj_name}/${prj_name}.gen/sources_1/bd/$design_name/hw_handoff/$design_name.hwh ./${dest_dir}/${prj_name}.hwh}
+catch {exec cp ./${prj_name}/${prj_name}.gen/sources_1/bd/${design_name}/hw_handoff/${design_name}.hwh ./${dest_dir}/${prj_name}.hwh}
 
 # copy bitstreams
 # impl1 having full and partial bitstreams
 catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_0_${pr_0_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_dilate_erode}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_join_${pr_join_subtract}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_join_subtract}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_fork_${pr_fork_duplicate}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_fork_duplicate}_partial.bit}
+catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_2_${pr_2_subtract}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_subtract}_partial.bit}
 catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_1_${pr_1_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_dilate_erode}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/video_cp_wrapper.bit ./${dest_dir}/${prj_name}.bit}
+catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${design_name}_wrapper.bit ./${dest_dir}/${prj_name}.bit}
 # child_0_impl_1
 catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_0_${pr_0_fast_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_fast_fifo}_partial.bit}
 catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_1_${pr_1_cornerharris}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_cornerharris}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_join_${pr_join_absdiff}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_join_absdiff}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_fork_${pr_fork_rgb2xyz}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_fork_rgb2xyz}_partial.bit}
+catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_2_${pr_2_absdiff}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_absdiff}_partial.bit}
 # child_1_impl_1
 catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_0_${pr_0_filter2d_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_filter2d_fifo}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_join_${pr_join_add}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_join_add}_partial.bit}
+catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_2_${pr_2_add}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_add}_partial.bit}
 # child_2_impl_1
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_2_impl_1/${bithier}_pr_join_${pr_join_bitand}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_join_bitand}_partial.bit}
+catch {exec cp ./${prj_name}/${prj_name}.runs/child_2_impl_1/${bithier}_pr_2_${pr_2_bitand}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_bitand}_partial.bit}
