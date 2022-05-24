@@ -605,7 +605,7 @@ proc create_hier_cell_dfx_decouplers { parentCell nameHier } {
   # Create instance: xlslice_pr_0, and set properties
   set xlslice_pr_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:xlslice:1.0 xlslice_pr_0 ]
   set_property -dict [ list \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_WIDTH {6} \
  ] $xlslice_pr_0
 
   # Create instance: xlslice_pr_1, and set properties
@@ -613,7 +613,7 @@ proc create_hier_cell_dfx_decouplers { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.DIN_FROM {1} \
    CONFIG.DIN_TO {1} \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_WIDTH {6} \
    CONFIG.DOUT_WIDTH {1} \
  ] $xlslice_pr_1
 
@@ -622,7 +622,7 @@ proc create_hier_cell_dfx_decouplers { parentCell nameHier } {
   set_property -dict [ list \
    CONFIG.DIN_FROM {2} \
    CONFIG.DIN_TO {2} \
-   CONFIG.DIN_WIDTH {8} \
+   CONFIG.DIN_WIDTH {6} \
    CONFIG.DOUT_WIDTH {1} \
  ] $xlslice_pr_2
 
