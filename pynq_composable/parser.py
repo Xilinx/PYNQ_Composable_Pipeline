@@ -94,6 +94,8 @@ def _get_dfxdecoupler_decouple_gpio_pin(signame: str,
         elif 'xilinx.com:ip:xpm_cdc_gen' in vlnv and m != module:
             return _get_dfxdecoupler_decouple_gpio_pin(
                 m.find("./PORTS/*[@NAME='src_in']").get('SIGNAME'), tree, m)
+        elif 'xilinx.com:ip:axi_gpio' in vlnv:
+            return 0
     return None
 
 
@@ -111,6 +113,8 @@ def _get_dfxdecoupler_status_gpio_pin(signame: str,
         elif 'xilinx.com:ip:xpm_cdc_gen' in vlnv and m != module:
             return _get_dfxdecoupler_status_gpio_pin(
                 m.find("./PORTS/*[@NAME='dest_out']").get('SIGNAME'), tree, m)
+        elif 'xilinx.com:ip:axi_gpio' in vlnv:
+            return 0
     return None
 
 
