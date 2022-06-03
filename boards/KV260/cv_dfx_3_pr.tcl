@@ -5,7 +5,7 @@
 ###############################################################################
 #
 #
-# @file cv_dfx_4_pr.tcl
+# @file cv_dfx_3_pr.tcl
 #
 # Vivado tcl script to generate composable pipeline full and partial bitstreams 
 # for Kria Vision Started Kit KV260 board
@@ -75,7 +75,7 @@ if { [string first $scripts_vivado_version $current_vivado_version] == -1 } {
 ################################################################
 
 # To test this script, run the following commands from Vivado Tcl console:
-# source cv_dfx_4_pr.tcl
+# source cv_dfx_3_pr.tcl
 
 # Add user local board path and check if the board file exists
 set_param board.repoPaths [get_property LOCAL_ROOT_DIR [xhub::get_xstores xilinx_board_store]]
@@ -91,7 +91,7 @@ if { ${board} eq "" } {
 # project, but make sure you do not have an existing project
 # <./${prj_name}/${prj_name}.xpr> in the current working folder.
 
-set prj_name "cv_dfx_4_pr"
+set prj_name "cv_dfx_3_pr"
 set list_projs [get_projects -quiet]
 if { $list_projs eq "" } {
    create_project ${prj_name} ${prj_name} -part xck26-sfvc784-2LV-c
@@ -103,7 +103,7 @@ set_property ip_repo_paths "./../Pynq-ZU/ip/ ../ip/boards/ip" [current_project]
 update_ip_catalog
 
 # Add constraints files
-add_files -fileset constrs_1 -norecurse cv_dfx_4_pr.xdc
+add_files -fileset constrs_1 -norecurse cv_dfx_3_pr.xdc
 add_files -fileset constrs_1 -norecurse pinout.xdc
 
 # CHANGE DESIGN NAME HERE
