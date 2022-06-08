@@ -1,8 +1,8 @@
-# Copyright (C) 2021 Xilinx, Inc
+# Copyright (C) 2022 Xilinx, Inc
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-overlay_name := cv_dfx_4_pr
+overlay_name := cv_dfx_3_pr
 
 all: vision_ip pynq_hls project dict version
 	@echo

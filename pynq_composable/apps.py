@@ -96,6 +96,7 @@ class PipelineApp:
         self._r2h = self._cpipe.rgb2hsv_accel
         self._ct = self._cpipe.colorthresholding_accel
         self._lut = self._cpipe.lut_accel
+        self._dup = self._cpipe.duplicate_accel
         self._app_pipeline = [self._vii, self._vio]
 
     def stop(self):
@@ -149,8 +150,7 @@ class DifferenceGaussians(PipelineApp):
     """
 
     _dfx_ip = [
-        'pr_fork/duplicate_accel',
-        'pr_join/subtract_accel',
+        'pr_2/subtract_accel',
         'pr_0/filter2d_accel'
     ]
 
@@ -160,16 +160,13 @@ class DifferenceGaussians(PipelineApp):
         Download partial bitstreams and configure pipeline
         """
 
-        self._dup = self._cpipe.pr_fork.duplicate_accel
-        self._sub = self._cpipe.pr_join.subtract_accel
+        self._sub = self._cpipe.pr_2.subtract_accel
         self._fi2d1 = self._cpipe.pr_0.filter2d_accel
 
-        self.sigma0 = 0.5
         self._fi2d0.kernel_type = XvF2d.gaussian_blur
-        self.sigma1 = 7
         self._fi2d1.kernel_type = XvF2d.gaussian_blur
         self._lut.kernel_type = XvLut.threshold
-        self._play(0.5, 2, 20)
+        self._play(0.5, 1.3, 20)
 
         self._app_pipeline = [self._vii, self._fi2d0, self._dup,
                               [[self._fi2d1], [1]], self._sub, self._lut,
@@ -188,9 +185,9 @@ class DifferenceGaussians(PipelineApp):
         Displays two sliders to change the sigma value of each Gaussian Filter
         """
 
-        sigma0 = FloatSlider(min=0.1, max=10, value=0.5,
+        sigma0 = FloatSlider(min=0.1, max=2, value=0.5,
                              description='\u03C3\u2080')
-        sigma1 = FloatSlider(min=0.3, max=10, value=2,
+        sigma1 = FloatSlider(min=0.4, max=2, value=1.3,
                              description='\u03C3\u2081')
         thres = IntSlider(min=1, max=254, value=20,
                           description='Threshold')
@@ -206,8 +203,7 @@ class CornerDetect(PipelineApp):
     _dfx_ip = [
         'pr_0/fast_accel',
         'pr_1/cornerHarris_accel',
-        'pr_fork/duplicate_accel',
-        'pr_join/add_accel'
+        'pr_2/add_accel'
     ]
     _algorithm = 'Fast'
 
@@ -219,8 +215,7 @@ class CornerDetect(PipelineApp):
 
         self._fast = self._cpipe.pr_0.fast_accel
         self._harr = self._cpipe.pr_1.cornerHarris_accel
-        self._add = self._cpipe.pr_join.add_accel
-        self._dup = self._cpipe.pr_fork.duplicate_accel
+        self._add = self._cpipe.pr_2.add_accel
 
         self._app_pipeline = [self._vii, self._dup,
                               [[self._r2g, self._fast, self._g2r], [1]],
@@ -275,8 +270,7 @@ class ColorDetect(PipelineApp):
     _dfx_ip = [
         'pr_0/dilate_accel',
         'pr_1/dilate_accel',
-        'pr_fork/duplicate_accel',
-        'pr_join/bitwise_and_accel'
+        'pr_2/bitwise_and_accel'
     ]
     _c_space = 'HSV'
     _output = 'Color Detect'
@@ -292,8 +286,7 @@ class ColorDetect(PipelineApp):
         self._di0 = self._cpipe.pr_0.dilate_accel
         self._er1 = self._cpipe.pr_1.erode_accel
         self._di1 = self._cpipe.pr_1.dilate_accel
-        self._band = self._cpipe.pr_join.bitwise_and_accel
-        self._dup = self._cpipe.pr_fork.duplicate_accel
+        self._band = self._cpipe.pr_2.bitwise_and_accel
 
         self._app_pipeline = [self._vii, self._dup, [[self._r2h, self._ct,
                               self._er0, self._di0, self._di1, self._er1,
@@ -411,8 +404,7 @@ class EdgeDetect(PipelineApp):
     _dfx_ip = [
         'pr_0/dilate_accel',
         'pr_1/dilate_accel',
-        'pr_fork/duplicate_accel',
-        'pr_join/add_accel'
+        'pr_2/add_accel'
     ]
 
     _mask = 'Edges'
@@ -422,8 +414,7 @@ class EdgeDetect(PipelineApp):
 
         self._di0 = self._cpipe.pr_0.dilate_accel
         self._di1 = self._cpipe.pr_1.dilate_accel
-        self._add = self._cpipe.pr_join.add_accel
-        self._dup = self._cpipe.pr_fork.duplicate_accel
+        self._add = self._cpipe.pr_2.add_accel
         self._fi2d0.kernel_type = XvF2d.scharr_y
 
         self._app_pipeline = [self._vii, self._r2g, self._fi2d0, self._ct,
