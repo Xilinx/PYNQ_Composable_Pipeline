@@ -261,6 +261,9 @@ class Composable(DefaultHierarchy):
         self._sw_default = np.ones(self._max_slots, dtype=np.int64) * -1
         filename = os.path.splitext(self._hwh_name)[0] + '_paths.json'
         if not os.path.isfile(filename):
+            warnings.warn("JSON file \'{}\' specifying default paths is not"
+                          " found. No datapath is not configured."
+                          .format(filename), UserWarning)
             return
 
         with open(filename, "r") as file:
