@@ -35,6 +35,8 @@
 #
 # 3.10  mr   06/10/2022 Replace duplicate IP with AXI4-Stream broadcaster
 #
+# 3.11  mr   07/07/2022 Connect buffer FIFOs to the broadcaster output
+#
 # </pre>
 #
 ###############################################################################
@@ -1145,8 +1147,8 @@ proc create_hier_cell_composable { parentCell nameHier } {
   # Create instance: axi_register_slice, and set properties
   set axi_register_slice [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_register_slice:2.1 axi_register_slice ]
 
-  # Create instance: axis_data_fifo_join_0, and set properties
-  set axis_data_fifo_join_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_join_0 ]
+  # Create instance: axis_data_fifo_branch_0, and set properties
+  set axis_data_fifo_branch_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_branch_0 ]
   set_property -dict [ list \
    CONFIG.FIFO_DEPTH {16384} \
    CONFIG.FIFO_MEMORY_TYPE {ultra} \
@@ -1157,10 +1159,10 @@ proc create_hier_cell_composable { parentCell nameHier } {
    CONFIG.TDEST_WIDTH {0} \
    CONFIG.TID_WIDTH {0} \
    CONFIG.TUSER_WIDTH {6} \
- ] $axis_data_fifo_join_0
+ ] $axis_data_fifo_branch_0
 
-  # Create instance: axis_data_fifo_join_1, and set properties
-  set axis_data_fifo_join_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_join_1 ]
+  # Create instance: axis_data_fifo_branch_1, and set properties
+  set axis_data_fifo_branch_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_branch_1 ]
   set_property -dict [ list \
    CONFIG.FIFO_DEPTH {16384} \
    CONFIG.FIFO_MEMORY_TYPE {ultra} \
@@ -1171,10 +1173,10 @@ proc create_hier_cell_composable { parentCell nameHier } {
    CONFIG.TDEST_WIDTH {0} \
    CONFIG.TID_WIDTH {0} \
    CONFIG.TUSER_WIDTH {6} \
- ] $axis_data_fifo_join_1
+ ] $axis_data_fifo_branch_1
 
-  # Create instance: axis_downconv_join_0, and set properties
-  set axis_downconv_join_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_dwidth_converter:1.1 axis_downconv_join_0 ]
+  # Create instance: axis_downconv_branch_0, and set properties
+  set axis_downconv_branch_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_dwidth_converter:1.1 axis_downconv_branch_0 ]
   set_property -dict [ list \
    CONFIG.HAS_MI_TKEEP {0} \
    CONFIG.HAS_TKEEP {0} \
@@ -1183,10 +1185,10 @@ proc create_hier_cell_composable { parentCell nameHier } {
    CONFIG.M_TDATA_NUM_BYTES {3} \
    CONFIG.S_TDATA_NUM_BYTES {6} \
    CONFIG.TUSER_BITS_PER_BYTE {1} \
- ] $axis_downconv_join_0
+ ] $axis_downconv_branch_0
 
-  # Create instance: axis_downconv_join_1, and set properties
-  set axis_downconv_join_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_dwidth_converter:1.1 axis_downconv_join_1 ]
+  # Create instance: axis_downconv_branch_1, and set properties
+  set axis_downconv_branch_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_dwidth_converter:1.1 axis_downconv_branch_1 ]
   set_property -dict [ list \
    CONFIG.HAS_MI_TKEEP {0} \
    CONFIG.HAS_TKEEP {0} \
@@ -1195,7 +1197,7 @@ proc create_hier_cell_composable { parentCell nameHier } {
    CONFIG.M_TDATA_NUM_BYTES {3} \
    CONFIG.S_TDATA_NUM_BYTES {6} \
    CONFIG.TUSER_BITS_PER_BYTE {1} \
- ] $axis_downconv_join_1
+ ] $axis_downconv_branch_1
 
   # Create instance: axis_switch, and set properties
   set axis_switch [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_switch:1.1 axis_switch ]
@@ -1214,8 +1216,8 @@ proc create_hier_cell_composable { parentCell nameHier } {
    CONFIG.TUSER_WIDTH {1} \
  ] $axis_switch
 
-  # Create instance: axis_upconv_join_0, and set properties
-  set axis_upconv_join_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_dwidth_converter:1.1 axis_upconv_join_0 ]
+  # Create instance: axis_upconv_branch_0, and set properties
+  set axis_upconv_branch_0 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_dwidth_converter:1.1 axis_upconv_branch_0 ]
   set_property -dict [ list \
    CONFIG.HAS_MI_TKEEP {1} \
    CONFIG.HAS_TKEEP {0} \
@@ -1224,10 +1226,10 @@ proc create_hier_cell_composable { parentCell nameHier } {
    CONFIG.M_TDATA_NUM_BYTES {6} \
    CONFIG.S_TDATA_NUM_BYTES {3} \
    CONFIG.TUSER_BITS_PER_BYTE {1} \
- ] $axis_upconv_join_0
+ ] $axis_upconv_branch_0
 
-  # Create instance: axis_upconv_join_1, and set properties
-  set axis_upconv_join_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_dwidth_converter:1.1 axis_upconv_join_1 ]
+  # Create instance: axis_upconv_branch_1, and set properties
+  set axis_upconv_branch_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_dwidth_converter:1.1 axis_upconv_branch_1 ]
   set_property -dict [ list \
    CONFIG.HAS_MI_TKEEP {1} \
    CONFIG.HAS_TKEEP {0} \
@@ -1236,7 +1238,7 @@ proc create_hier_cell_composable { parentCell nameHier } {
    CONFIG.M_TDATA_NUM_BYTES {6} \
    CONFIG.S_TDATA_NUM_BYTES {3} \
    CONFIG.TUSER_BITS_PER_BYTE {1} \
- ] $axis_upconv_join_1
+ ] $axis_upconv_branch_1
 
   # Create instance: colorthresholding_accel, and set properties
   set colorthresholding_accel [ create_bd_cell -type ip -vlnv xilinx.com:hls:colorthresholding_accel:1.0 colorthresholding_accel ]
@@ -1312,12 +1314,6 @@ proc create_hier_cell_composable { parentCell nameHier } {
   connect_bd_intf_net -intf_net S01_AXIS_1 [get_bd_intf_pins S01_AXIS] [get_bd_intf_pins axis_switch/S01_AXIS]
   connect_bd_intf_net -intf_net S_AXIS_VIDEO_IN_1 [get_bd_intf_pins S00_AXIS] [get_bd_intf_pins axis_switch/S00_AXIS]
   connect_bd_intf_net -intf_net axi_register_slice_0_M_AXI [get_bd_intf_pins axi_register_slice/M_AXI] [get_bd_intf_pins smartconnect/S00_AXI]
-  connect_bd_intf_net -intf_net axis_data_fifo_join_0_M_AXIS [get_bd_intf_pins axis_data_fifo_join_0/M_AXIS] [get_bd_intf_pins axis_downconv_join_0/S_AXIS]
-  connect_bd_intf_net -intf_net axis_data_fifo_join_1_M_AXIS [get_bd_intf_pins axis_data_fifo_join_1/M_AXIS] [get_bd_intf_pins axis_downconv_join_1/S_AXIS]
-  connect_bd_intf_net -intf_net axis_downconv_join_0_M_AXIS [get_bd_intf_pins axis_downconv_join_0/M_AXIS] [get_bd_intf_pins dfx_decouplers/s_axis_dfx_pr_2_0]
-  connect_bd_intf_net -intf_net axis_downconv_join_1_M_AXIS [get_bd_intf_pins axis_downconv_join_1/M_AXIS] [get_bd_intf_pins dfx_decouplers/s_axis_dfx_pr_2_1]
-  connect_bd_intf_net -intf_net axis_dwidth_converter_1_M_AXIS [get_bd_intf_pins axis_data_fifo_join_0/S_AXIS] [get_bd_intf_pins axis_upconv_join_0/M_AXIS]
-  connect_bd_intf_net -intf_net axis_dwidth_converter_2_M_AXIS [get_bd_intf_pins axis_data_fifo_join_1/S_AXIS] [get_bd_intf_pins axis_upconv_join_1/M_AXIS]
   connect_bd_intf_net -intf_net axis_switch_M00_AXIS [get_bd_intf_pins axis_switch/M00_AXIS] [get_bd_intf_pins M00_AXIS]
   connect_bd_intf_net -intf_net axis_switch_M01_AXIS [get_bd_intf_pins M01_AXIS] [get_bd_intf_pins axis_switch/M01_AXIS]
   connect_bd_intf_net -intf_net axis_switch_M02_AXIS [get_bd_intf_pins axis_switch/M02_AXIS] [get_bd_intf_pins filter2d_accel/stream_in]
@@ -1331,11 +1327,17 @@ proc create_hier_cell_composable { parentCell nameHier } {
   connect_bd_intf_net -intf_net axis_switch_M10_AXIS [get_bd_intf_pins axis_switch/M10_AXIS] [get_bd_intf_pins dfx_decouplers/s_axis_dfx_pr_0_1]
   connect_bd_intf_net -intf_net axis_switch_M11_AXIS [get_bd_intf_pins axis_switch/M11_AXIS] [get_bd_intf_pins dfx_decouplers/s_axis_dfx_pr_1_0]
   connect_bd_intf_net -intf_net axis_switch_M12_AXIS [get_bd_intf_pins axis_switch/M12_AXIS] [get_bd_intf_pins dfx_decouplers/s_axis_dfx_pr_1_1]
-  connect_bd_intf_net -intf_net axis_switch_M13_AXIS [get_bd_intf_pins axis_switch/M13_AXIS] [get_bd_intf_pins axis_upconv_join_0/S_AXIS]
-  connect_bd_intf_net -intf_net axis_switch_M14_AXIS [get_bd_intf_pins axis_switch/M14_AXIS] [get_bd_intf_pins axis_upconv_join_1/S_AXIS]
+  connect_bd_intf_net -intf_net axis_switch_M13_AXIS [get_bd_intf_pins axis_switch/M13_AXIS] [get_bd_intf_pins dfx_decouplers/s_axis_dfx_pr_2_0]
+  connect_bd_intf_net -intf_net axis_switch_M14_AXIS [get_bd_intf_pins axis_switch/M14_AXIS] [get_bd_intf_pins dfx_decouplers/s_axis_dfx_pr_2_1]
+  connect_bd_intf_net -intf_net duplicate_accel_stream_out  [get_bd_intf_pins axis_upconv_branch_0/S_AXIS] [get_bd_intf_pins duplicate_accel/M00_AXIS]
+  connect_bd_intf_net -intf_net duplicate_accel_stream_out1 [get_bd_intf_pins axis_upconv_branch_1/S_AXIS] [get_bd_intf_pins duplicate_accel/M01_AXIS]
+  connect_bd_intf_net -intf_net axis_downconv_branch_0_M_AXIS [get_bd_intf_pins axis_downconv_branch_0/M_AXIS] [get_bd_intf_pins axis_switch/S08_AXIS]
+  connect_bd_intf_net -intf_net axis_downconv_branch_1_M_AXIS [get_bd_intf_pins axis_downconv_branch_1/M_AXIS] [get_bd_intf_pins axis_switch/S09_AXIS]
+  connect_bd_intf_net -intf_net axis_data_fifo_branch_0_M_AXIS [get_bd_intf_pins axis_data_fifo_branch_0/M_AXIS] [get_bd_intf_pins axis_downconv_branch_0/S_AXIS]
+  connect_bd_intf_net -intf_net axis_data_fifo_branch_1_M_AXIS [get_bd_intf_pins axis_data_fifo_branch_1/M_AXIS] [get_bd_intf_pins axis_downconv_branch_1/S_AXIS]
+  connect_bd_intf_net -intf_net axis_dwidth_converter_1_M_AXIS [get_bd_intf_pins axis_data_fifo_branch_0/S_AXIS] [get_bd_intf_pins axis_upconv_branch_0/M_AXIS]
+  connect_bd_intf_net -intf_net axis_dwidth_converter_2_M_AXIS [get_bd_intf_pins axis_data_fifo_branch_1/S_AXIS] [get_bd_intf_pins axis_upconv_branch_1/M_AXIS]
   connect_bd_intf_net -intf_net colorthresholding_accel_stream_out [get_bd_intf_pins axis_switch/S07_AXIS] [get_bd_intf_pins colorthresholding_accel/stream_out]
-  connect_bd_intf_net -intf_net duplicate_accel_stream_out [get_bd_intf_pins axis_switch/S08_AXIS] [get_bd_intf_pins duplicate_accel/M00_AXIS]
-  connect_bd_intf_net -intf_net duplicate_accel_stream_out1 [get_bd_intf_pins axis_switch/S09_AXIS] [get_bd_intf_pins duplicate_accel/M01_AXIS]
   connect_bd_intf_net -intf_net dfx_decouplers_m_axis_dfx_pr_0_0 [get_bd_intf_pins axis_switch/S10_AXIS] [get_bd_intf_pins dfx_decouplers/m_axis_dfx_pr_0_0]
   connect_bd_intf_net -intf_net dfx_decouplers_m_axis_dfx_pr_0_1 [get_bd_intf_pins axis_switch/S11_AXIS] [get_bd_intf_pins dfx_decouplers/m_axis_dfx_pr_0_1]
   connect_bd_intf_net -intf_net dfx_decouplers_m_axis_dfx_pr_1_0 [get_bd_intf_pins axis_switch/S12_AXIS] [get_bd_intf_pins dfx_decouplers/m_axis_dfx_pr_1_0]
@@ -1373,9 +1375,9 @@ proc create_hier_cell_composable { parentCell nameHier } {
 
   # Create port connections
   connect_bd_net -net dfx_decouplers_gpio_out [get_bd_pins dfx_decouplers/dfx_status] [get_bd_pins pipeline_control/gpio2_io_i]
-  connect_bd_net -net net_zynq_us_ss_0_clk_out2 [get_bd_pins clk_300MHz] [get_bd_pins axi_register_slice/aclk] [get_bd_pins axis_data_fifo_join_0/s_axis_aclk] [get_bd_pins axis_data_fifo_join_1/s_axis_aclk] [get_bd_pins axis_downconv_join_0/aclk] [get_bd_pins axis_downconv_join_1/aclk] [get_bd_pins axis_switch/aclk] [get_bd_pins axis_switch/s_axi_ctrl_aclk] [get_bd_pins axis_upconv_join_0/aclk] [get_bd_pins axis_upconv_join_1/aclk] [get_bd_pins colorthresholding_accel/ap_clk] [get_bd_pins dfx_decouplers/clk_300MHz] [get_bd_pins filter2d_accel/ap_clk] [get_bd_pins gray2rgb_accel/ap_clk] [get_bd_pins lut_accel/ap_clk] [get_bd_pins duplicate_accel/aclk] [get_bd_pins pipeline_control/s_axi_aclk] [get_bd_pins pr_0/clk_300MHz] [get_bd_pins pr_1/clk_300MHz] [get_bd_pins pr_fork/clk_300MHz] [get_bd_pins pr_2/clk_300MHz] [get_bd_pins ps_user_soft_reset/slowest_sync_clk] [get_bd_pins rgb2gray_accel/ap_clk] [get_bd_pins rgb2hsv_accel/ap_clk] [get_bd_pins smartconnect/aclk]
+  connect_bd_net -net net_zynq_us_ss_0_clk_out2 [get_bd_pins clk_300MHz] [get_bd_pins axi_register_slice/aclk] [get_bd_pins axis_data_fifo_branch_0/s_axis_aclk] [get_bd_pins axis_data_fifo_branch_1/s_axis_aclk] [get_bd_pins axis_downconv_branch_0/aclk] [get_bd_pins axis_downconv_branch_1/aclk] [get_bd_pins axis_switch/aclk] [get_bd_pins axis_switch/s_axi_ctrl_aclk] [get_bd_pins axis_upconv_branch_0/aclk] [get_bd_pins axis_upconv_branch_1/aclk] [get_bd_pins colorthresholding_accel/ap_clk] [get_bd_pins dfx_decouplers/clk_300MHz] [get_bd_pins filter2d_accel/ap_clk] [get_bd_pins gray2rgb_accel/ap_clk] [get_bd_pins lut_accel/ap_clk] [get_bd_pins duplicate_accel/aclk] [get_bd_pins pipeline_control/s_axi_aclk] [get_bd_pins pr_0/clk_300MHz] [get_bd_pins pr_1/clk_300MHz] [get_bd_pins pr_fork/clk_300MHz] [get_bd_pins pr_2/clk_300MHz] [get_bd_pins ps_user_soft_reset/slowest_sync_clk] [get_bd_pins rgb2gray_accel/ap_clk] [get_bd_pins rgb2hsv_accel/ap_clk] [get_bd_pins smartconnect/aclk]
   connect_bd_net -net net_zynq_us_ss_0_dcm_locked [get_bd_pins clk_300MHz_aresetn] [get_bd_pins axi_register_slice/aresetn] [get_bd_pins axis_switch/aresetn] [get_bd_pins axis_switch/s_axi_ctrl_aresetn]  [get_bd_pins dfx_decouplers/clk_300MHz_aresetn] [get_bd_pins pipeline_control/s_axi_aresetn] [get_bd_pins ps_user_soft_reset/ext_reset_in] [get_bd_pins smartconnect/aresetn]
-  connect_bd_net -net net_zynq_us_ss_soft_reset [get_bd_pins ps_user_soft_reset/peripheral_aresetn] [get_bd_pins axis_data_fifo_join_0/s_axis_aresetn] [get_bd_pins axis_data_fifo_join_1/s_axis_aresetn] [get_bd_pins axis_downconv_join_0/aresetn] [get_bd_pins axis_downconv_join_1/aresetn] [get_bd_pins axis_upconv_join_0/aresetn] [get_bd_pins axis_upconv_join_1/aresetn] [get_bd_pins colorthresholding_accel/ap_rst_n] [get_bd_pins dfx_decouplers/soft_rst_n] [get_bd_pins filter2d_accel/ap_rst_n] [get_bd_pins gray2rgb_accel/ap_rst_n] [get_bd_pins lut_accel/ap_rst_n] [get_bd_pins duplicate_accel/aresetn] [get_bd_pins pr_0/clk_300MHz_aresetn] [get_bd_pins pr_1/clk_300MHz_aresetn] [get_bd_pins pr_fork/clk_300MHz_aresetn] [get_bd_pins pr_2/clk_300MHz_aresetn] [get_bd_pins rgb2gray_accel/ap_rst_n] [get_bd_pins rgb2hsv_accel/ap_rst_n]
+  connect_bd_net -net net_zynq_us_ss_soft_reset [get_bd_pins ps_user_soft_reset/peripheral_aresetn] [get_bd_pins axis_data_fifo_branch_0/s_axis_aresetn] [get_bd_pins axis_data_fifo_branch_1/s_axis_aresetn] [get_bd_pins axis_downconv_branch_0/aresetn] [get_bd_pins axis_downconv_branch_1/aresetn] [get_bd_pins axis_upconv_branch_0/aresetn] [get_bd_pins axis_upconv_branch_1/aresetn] [get_bd_pins colorthresholding_accel/ap_rst_n] [get_bd_pins dfx_decouplers/soft_rst_n] [get_bd_pins filter2d_accel/ap_rst_n] [get_bd_pins gray2rgb_accel/ap_rst_n] [get_bd_pins lut_accel/ap_rst_n] [get_bd_pins duplicate_accel/aresetn] [get_bd_pins pr_0/clk_300MHz_aresetn] [get_bd_pins pr_1/clk_300MHz_aresetn] [get_bd_pins pr_fork/clk_300MHz_aresetn] [get_bd_pins pr_2/clk_300MHz_aresetn] [get_bd_pins rgb2gray_accel/ap_rst_n] [get_bd_pins rgb2hsv_accel/ap_rst_n]
   connect_bd_net -net pipeline_control_gpio2_io_o [get_bd_pins dfx_decouplers/dfx_decouple] [get_bd_pins pipeline_control/gpio2_io_o]
   connect_bd_net -net pipeline_control_gpio_io_o [get_bd_pins pipeline_control/gpio_io_o] [get_bd_pins ps_user_soft_reset/aux_reset_in]
 
