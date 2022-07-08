@@ -390,7 +390,7 @@ create_run child_1_impl_1 -parent_run impl_1 -flow {Vivado Implementation 2022} 
 create_run child_2_impl_1 -parent_run impl_1 -flow {Vivado Implementation 2022} -strategy Performance_NetDelay_low -pr_config config_4
 
 # Change global implementation strategy
-set_property strategy Performance_NetDelay_low [get_runs impl_1]
+set_property strategy Performance_Explore [get_runs impl_1]
 set_property report_strategy {UltraFast Design Methodology Reports} [get_runs impl_1]
 
 launch_runs impl_1 -to_step write_bitstream -jobs 16
