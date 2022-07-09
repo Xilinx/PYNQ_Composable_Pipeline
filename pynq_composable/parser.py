@@ -75,9 +75,9 @@ def _dfx_get_oposite_port(port: str) -> str:
 
 
 def _get_dfx_decouple_gpio_pin(signame: str,
-                                        tree: ElementTree,
-                                        module: ElementTree.Element = None) \
-                                            -> Union[int, None]:
+                               tree: ElementTree,
+                               module: ElementTree.Element = None) \
+                                -> Union[int, None]:
     """Find the gpio pins that controls the DFX decoupler pin"""
 
     search_term = "MODULES/*PORTS/*/[@SIGNAME=\'" + signame + "\']....."
@@ -101,9 +101,9 @@ def _get_dfx_decouple_gpio_pin(signame: str,
 
 
 def _get_dfx_status_gpio_pin(signame: str,
-                                      tree: ElementTree,
-                                      module: ElementTree.Element = None) \
-                                        -> Union[int, None]:
+                             tree: ElementTree,
+                             module: ElementTree.Element = None) \
+                                -> Union[int, None]:
     """Find the gpio pins that gets the DFX status pin"""
 
     search_term = "MODULES/*PORTS/*/[@SIGNAME=\'" + signame + "\']....."
