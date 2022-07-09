@@ -493,8 +493,8 @@ class InterruptTimer(object):
 
 
 class Filter2DApp(PipelineApp):
-    """ This class wraps the functionality to implement the Filter2D IP in and
-    expose kernel configurability through the buttons on the board
+    """ This class wraps the functionality to implement the Filter2D IP and
+    exposes kernel configuration through the buttons on the board
     """
 
     def __init__(self, bitfile_name: str, source: VSource = VSource.HDMI):
@@ -543,7 +543,7 @@ class Filter2DApp(PipelineApp):
 
 class LutApp(PipelineApp):
     """ This class wraps the functionality to implement the LUT IP and
-    expose kernel configurability through the switches on the board
+    exposes kernel configuration through the switches on the board
     """
 
     def __init__(self, bitfile_name: str, source: VSource = VSource.HDMI):

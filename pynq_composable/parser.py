@@ -68,7 +68,7 @@ def _find_connected_node(slot: dict, tree: ElementTree) -> tuple:
     return s, False
 
 
-def _dfx_get_oposite_port(port: str) -> str:
+def _dfx_get_opposite_port(port: str) -> str:
     """Get corresponding opposite port for a dfx decoupler"""
 
     return 's' + port[2::] if 'rp' in port else 'rp' + port[1::]
@@ -318,7 +318,7 @@ class HWHComposable:
             search_term = "MODULES/*/[@FULLNAME=\'" + fullname + "\']"
             node = tree.find(search_term)
             mod_type = node.get('MODTYPE')
-            oposite_port = _dfx_get_oposite_port(switch_conn[port]['name'])
+            opposite_port = _dfx_get_opposite_port(switch_conn[port]['name'])
             for bus in node.iter("BUSINTERFACE"):
                 b_type = _normalize_type(bus.get('TYPE'))
                 vlnv = bus.get('VLNV')
@@ -335,7 +335,7 @@ class HWHComposable:
                         del deep_exp[0]
                     break
                 elif mod_type in _dfx_item and port_type == b_type and \
-                        vlnv == _axis_vlnv and oposite_port == name:
+                        vlnv == _axis_vlnv and opposite_port == name:
                     switch_conn[port]['busname'] = busname
                     switch_conn[port]['type'] = b_type
                     switch_conn[port]['dfx'] = True
@@ -392,7 +392,7 @@ class HWHComposable:
         DFX regions
             - decoupler name
             - decouple gpio pin that control the decoupler
-            - status gpio pin, decupler status
+            - status gpio pin, decoupler status
             - reconfigurable module (rm), list of partial bitstreams and their
               available IP
         If the design has no DFX region the dictionary will be empty
