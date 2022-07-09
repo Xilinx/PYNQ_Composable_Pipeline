@@ -74,7 +74,7 @@ def _dfx_get_oposite_port(port: str) -> str:
     return 's' + port[2::] if 'rp' in port else 'rp' + port[1::]
 
 
-def _get_dfxdecoupler_decouple_gpio_pin(signame: str,
+def _get_dfx_decouple_gpio_pin(signame: str,
                                         tree: ElementTree,
                                         module: ElementTree.Element = None) \
                                             -> Union[int, None]:
@@ -93,14 +93,14 @@ def _get_dfxdecoupler_decouple_gpio_pin(signame: str,
                                  .format(signame))
             return din_to
         elif 'xilinx.com:ip:xpm_cdc_gen' in vlnv and m != module:
-            return _get_dfxdecoupler_decouple_gpio_pin(
+            return _get_dfx_decouple_gpio_pin(
                 m.find("./PORTS/*[@NAME='src_in']").get('SIGNAME'), tree, m)
         elif 'xilinx.com:ip:axi_gpio' in vlnv:
             return 0
     return None
 
 
-def _get_dfxdecoupler_status_gpio_pin(signame: str,
+def _get_dfx_status_gpio_pin(signame: str,
                                       tree: ElementTree,
                                       module: ElementTree.Element = None) \
                                         -> Union[int, None]:
@@ -114,7 +114,7 @@ def _get_dfxdecoupler_status_gpio_pin(signame: str,
                        m.find(f"./PORTS/*[@SIGNAME='{signame}']")
                         .get('NAME'))[0])
         elif 'xilinx.com:ip:xpm_cdc_gen' in vlnv and m != module:
-            return _get_dfxdecoupler_status_gpio_pin(
+            return _get_dfx_status_gpio_pin(
                 m.find("./PORTS/*[@NAME='dest_out']").get('SIGNAME'), tree, m)
         elif 'xilinx.com:ip:axi_gpio' in vlnv:
             return 0
@@ -412,9 +412,9 @@ class HWHComposable:
             decoupler = dfx_dict[d]['decoupler']
             search_term = "MODULES/*/[@FULLNAME=\'" + decoupler + "\']"
             node = tree.find(search_term)
-            dfx_dict[d]['decouple'] = _get_dfxdecoupler_decouple_gpio_pin(
+            dfx_dict[d]['decouple'] = _get_dfx_decouple_gpio_pin(
                 node.find("./PORTS/*[@NAME='decouple']").get('SIGNAME'), tree)
-            dfx_dict[d]['status'] = _get_dfxdecoupler_status_gpio_pin(
+            dfx_dict[d]['status'] = _get_dfx_status_gpio_pin(
                 node.find("./PORTS/*[@NAME='decouple_status']")
                 .get('SIGNAME'), tree)
 
