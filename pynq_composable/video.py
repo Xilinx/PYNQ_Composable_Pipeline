@@ -9,7 +9,7 @@ import json
 import os
 from pynq import Overlay
 from pynq.lib.video import DrmDriver, VideoMode, PIXEL_RGB
-from pynq.lib.video.clocks import *
+from pynq.lib.video.clocks import DP159, SI_5324C
 from pynq.ps import CPU_ARCH, ZU_ARCH, ZYNQ_ARCH
 from time import sleep
 import threading

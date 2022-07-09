@@ -75,8 +75,9 @@ def _dfx_get_oposite_port(port: str) -> str:
 
 
 def _get_dfxdecoupler_decouple_gpio_pin(signame: str,
-                        tree: ElementTree,
-                        module: ElementTree.Element=None) -> Union[int, None]:
+                                        tree: ElementTree,
+                                        module: ElementTree.Element = None) \
+                                            -> Union[int, None]:
     """Find the gpio pins that controls the DFX decoupler pin"""
 
     search_term = "MODULES/*PORTS/*/[@SIGNAME=\'" + signame + "\']....."
@@ -100,8 +101,9 @@ def _get_dfxdecoupler_decouple_gpio_pin(signame: str,
 
 
 def _get_dfxdecoupler_status_gpio_pin(signame: str,
-                        tree: ElementTree,
-                        module: ElementTree.Element=None) -> Union[int, None]:
+                                      tree: ElementTree,
+                                      module: ElementTree.Element = None) \
+                                        -> Union[int, None]:
     """Find the gpio pins that gets the DFX status pin"""
 
     search_term = "MODULES/*PORTS/*/[@SIGNAME=\'" + signame + "\']....."
@@ -109,7 +111,8 @@ def _get_dfxdecoupler_status_gpio_pin(signame: str,
     for m in node:
         if 'xilinx.com:ip:xlconcat' in (vlnv := m.get('VLNV')):
             return int(re.findall(r'\d+',
-                m.find(f"./PORTS/*[@SIGNAME='{signame}']").get('NAME'))[0])
+                       m.find(f"./PORTS/*[@SIGNAME='{signame}']")
+                        .get('NAME'))[0])
         elif 'xilinx.com:ip:xpm_cdc_gen' in vlnv and m != module:
             return _get_dfxdecoupler_status_gpio_pin(
                 m.find("./PORTS/*[@NAME='dest_out']").get('SIGNAME'), tree, m)
@@ -228,7 +231,7 @@ class HWHComposable:
 
     """
     def __init__(self, hwh_file: str, switch_name: str, cache=True,
-            debug=False):
+                 debug=False):
         """Return a new HWHComposable object.
 
         Performs a hardware discovery where the different IP cores connected
@@ -485,7 +488,7 @@ if __name__ == "__main__":
         description="Generate composable cached file")
     parser.add_argument("--hwh", help="global hwh file", required=True)
     parser.add_argument("-d", help="Dump plain json file", action='store_true',
-        required=False)
+                        required=False)
     args = parser.parse_args()
 
     tree = ElementTree.parse(args.hwh)

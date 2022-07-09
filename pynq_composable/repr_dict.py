@@ -28,7 +28,7 @@ class ReprDictComposable(dict):
     """
 
     def __init__(self, *args, rootname: str = "root", expanded: bool = False,
-            **kwargs):
+                 **kwargs):
         """Dictionary constructor
 
         Parameters
