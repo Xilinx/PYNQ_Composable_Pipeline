@@ -104,10 +104,10 @@ class Composable(DefaultHierarchy):
     loaded (bool) IP is loaded
     bitstream (str) location of the corresponding partial bitstream
 
-    Each entry of the PR dictionary (pr_dict) dictionary is a mapping:
+    Each entry of the DFX dictionary (dfx_dict) dictionary is a mapping:
     'name' -> {decoupler, gpio, ip}, where
     name (str) is the name of the partial region
-    decoupler (str) fullpath of the DFX decoupler that controls the pr region
+    decoupler (str) fullpath of the DFX decoupler that controls the dfx region
     gpio (dict) index of PS GPIO that control the DFX decoupler
     ip (dict) dictionary of partial bitstream and IP associated to the region
 
@@ -142,21 +142,21 @@ class Composable(DefaultHierarchy):
         to be next to bitstream file that was used to create the Overlay object
         The name convention for partial bitstreams and HWH file is
 
-        <bitstream_name>_<hierarchy>_<pr_region>_<pr_module_name>.{bit|hwh}
+        <bitstream_name>_<hierarchy>_<dfx_region>_<dfx_module_name>.{bit|hwh}
 
         For instance if the main bitstream is `base.bit` and there are two DFX
-        regions with the names `pr_0` and `pr_1` each of them with the same
+        regions with the names `dfx_0` and `dfx_1` each of them with the same
         two reconfigurable module, `function_1` and `function_2` the names
         should be as follow
 
-            base_composable_pr_0_function_1.bit
-            base_composable_pr_0_function_1.hwh
-            base_composable_pr_0_function_2.bit
-            base_composable_pr_0_function_2.hwh
-            base_composable_pr_1_function_1.bit
-            base_composable_pr_1_function_1.hwh
-            base_composable_pr_1_function_2.bit
-            base_composable_pr_1_function_2.hwh
+            base_composable_dfx_0_function_1.bit
+            base_composable_dfx_0_function_1.hwh
+            base_composable_dfx_0_function_2.bit
+            base_composable_dfx_0_function_2.hwh
+            base_composable_dfx_1_function_1.bit
+            base_composable_dfx_1_function_1.hwh
+            base_composable_dfx_1_function_2.bit
+            base_composable_dfx_1_function_2.hwh
 
         """
 
@@ -215,7 +215,7 @@ class Composable(DefaultHierarchy):
         """Returns the c_dict dictionary
 
         All the IP cores connected to the AXI4-Stream Switch. Key is the name
-        of the IP; value is a dictionary mapping the producer and consumer to
+        of the IP; value is a dictionary mapping the manager and subordinate to
         the switch port, whether the IP is in a dfx region and loaded
         {str: {'si' : list, 'mi' : list, 'modtype': str,
         'dfx': bool, 'loaded': bool, 'bitstream: str'}}.
@@ -326,7 +326,7 @@ class Composable(DefaultHierarchy):
         Parameters
         ----------
         partial_region : str
-            The name of the hierarchical block corresponding to the PR region.
+            The name of the hierarchical block corresponding to the DRF region.
         partial_bit : str
             The name of the partial bitstream.
         """
@@ -537,8 +537,8 @@ class Composable(DefaultHierarchy):
             contain either a string with the fullname or the IP object
 
             Examples:
-                [cpipe.pr_0.fast_accel, cpipe.pr_1.dilate_accel]
-                ['pr_0/fast_accel', 'pr_1/dilate_accel']
+                [cpipe.dfx_0.fast_accel, cpipe.dfx_1.dilate_accel]
+                ['dfx_0/fast_accel', 'dfx_1/dilate_accel']
         """
 
         bit_dict = dict()
@@ -593,8 +593,8 @@ class Composable(DefaultHierarchy):
             List of IP to be removed from the current pipeline
 
             Examples:
-                [cpipe.pr_0.erode]
-                [cpipe.pr_1.filter2d, cpipe.pr_fork.duplicate]
+                [cpipe.erode]
+                [cpipe.filter2d, cpipe.duplicate]
         """
 
         if self._current_pipeline is None:
@@ -625,8 +625,8 @@ class Composable(DefaultHierarchy):
             Second: index
 
             Examples:
-                ([cpipe.pr_0.erode], 3)
-                ([cpipe.pr_1.filter2d, cpipe.pr_fork.duplicate], 2)
+                ([cpipe.erode], 3)
+                ([cpipe.filter2d, cpipe.duplicate], 2)
         """
 
         if not isinstance(iptuple, tuple):
@@ -660,7 +660,7 @@ class Composable(DefaultHierarchy):
             Second: new IP object
 
             Examples:
-                (cpipe.pr_0.erode, cpipe.pr_1.dilate)
+                (cpipe.erode, cpipe.dilate)
         """
 
         if not isinstance(replaceip, tuple):
@@ -698,7 +698,7 @@ class Composable(DefaultHierarchy):
             index of IP object in the current pipeline to be tapped
 
             Examples:
-                tap(cpipe.pr_1.dilate)
+                tap(cpipe.dilate)
                 tap(6)
         """
 
