@@ -82,6 +82,63 @@ def _get_ip_name_by_vlnv(description: dict, vlnv: str) -> str:
     return None
 
 
+def _build_docstrings(hier: str, c_dict: dict, dfx_dict: dict,
+                      pipelinecrt: str) -> str:
+    """Automated documentation string for a composable hierarchy
+
+    Parameters
+    ----------
+    hier : str
+        Hierarchy name.
+    c_dict : dict
+        Dictionary containing the IP connected to the AXI4-Stream Switch
+    dfx_dict : dict
+        Dictionary containing the DFX regions are associated control
+    pipelinecrt: str
+        AXI GPIO for pipeline control name
+    Returns
+    -------
+    str : The auto generated documentation string
+    """
+
+    lines = list()
+    lines.append("Auto generated documentation for the composable hierarchy"
+                 " \'{}\'".format(hier.strip('/')))
+
+    lines.append("The IP available for composition are:")
+    lines.append("")
+
+    lines.append("IP Blocks")
+    lines.append("---------")
+    lines.append("{: <35} | DFX".format("Name"))
+    lines.append(44*"-")
+    if c_dict:
+        for k, v in c_dict.items():
+            lines.append("{: <35} | {}".format(k, v['dfx']))
+    else:
+        lines.append("None")
+
+    lines.append("")
+    lines.append("DFX Regions")
+    lines.append("-----------")
+    lines.append("{: <35} | DFX Decoupler".format("Name"))
+    lines.append(48*"-")
+    if dfx_dict:
+        for k, v in dfx_dict.items():
+            lines.append("{: <35} | {}".format(k, v['decoupler']))
+    else:
+        lines.append("None")
+
+    lines.append("")
+    lines.append("Pipeline Control")
+    lines.append("----------------")
+    lines.append(hier + pipelinecrt)
+
+    lines.append("")
+
+    return '\n    '.join(lines)
+
+
 class Composable(DefaultHierarchy):
     """This class keeps track of a composable overlay
 
@@ -196,6 +253,8 @@ class Composable(DefaultHierarchy):
         self._graph_debug = False
         self._current_pipeline = None
         self._current_flat_pipeline = None
+        self.__doc__ = _build_docstrings(self._hier, self._c_dict,
+                                         self._dfx_dict, self._pipelinecrt)
 
     @property
     def dfx_dict(self) -> dict:
