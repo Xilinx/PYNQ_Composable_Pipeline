@@ -4,6 +4,7 @@
 
 import numpy as np
 from pynq import Overlay
+from pynq.lib.video import VideoMode
 from pynq_composable import Composable, StreamSwitch, VitisVisionIP, \
     CornerHarris
 from pynq_composable.virtual import VirtualIP, BufferIP
@@ -12,7 +13,13 @@ import pytest
 
 @pytest.fixture
 def create_overlay():
-    ol = Overlay("cv_dfx_3_pr.bit")
+    for i in range(5):
+        try:
+            ol = Overlay("cv_dfx_3_pr.bit")
+        except OSError:
+            if i != 4:
+                continue
+            raise OSError("Could not program the FPGA")
     yield ol
     ol.free()
 
@@ -35,14 +42,20 @@ def test_overlay_ip_dict(create_overlay):
 
 
 def test_composable_overlay_dict(create_composable):
-    """Test if drivers have been assigned properly"""
+    """Test if dictionaries are not empty"""
     _, cpipe = create_composable
     assert cpipe.c_dict
     assert cpipe.dfx_dict
 
 
+def test_switch_default_config(create_composable):
+    """Test if dictionaries are not empty"""
+    _, cpipe = create_composable
+    assert cpipe.axis_switch.mi[0] == 0
+
+
 def test_composable_drivers(create_composable):
-    """Test if driver"""
+    """Test if drivers have been assigned properly"""
     ol, cpipe = create_composable
     assert type(cpipe) == Composable
     assert type(ol.composable.axis_switch) == StreamSwitch
