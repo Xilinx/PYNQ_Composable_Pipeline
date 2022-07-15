@@ -8,7 +8,9 @@ from pynq.lib.video import VideoMode
 from pynq_composable import Composable, StreamSwitch, VitisVisionIP, \
     CornerHarris
 from pynq_composable.virtual import VirtualIP, BufferIP
+from pynq_composable.libs import XvLut, _cols, _rows
 import pytest
+import time
 
 
 @pytest.fixture
@@ -105,3 +107,64 @@ def test_pipeline_1(create_composable):
     cpipe.compose(pipeline)
     """Check if composed correctly"""
     assert cpipe.current_pipeline == pipeline
+
+
+@pytest.mark.timeout(60)
+def test_data_movement_fifo(create_composable):
+    ol, cpipe = create_composable
+    load_ip(cpipe)
+    pipeline = [cpipe.ps_video_in, cpipe.pr_0.axis_data_fifo_0,
+                cpipe.ps_video_out]
+    pipeline = [cpipe.ps_video_in, cpipe.ps_video_out]
+    cpipe.compose(pipeline)
+    """Check if composed correctly"""
+    assert cpipe.current_pipeline == pipeline
+    assert cpipe.axis_switch.mi[0] == 0
+
+    mode = VideoMode(_cols, _rows, 24)
+    writechannel = ol.video.axi_vdma.writechannel
+    readchannel = ol.video.axi_vdma.readchannel
+    writechannel.mode = readchannel.mode = mode
+    writechannel.start()
+    readchannel.start()
+
+    frame = writechannel.newframe()
+    res = np.empty(shape=frame.shape, dtype=np.uint8)
+    frame[:] = np.random.randint(0, 255, size=frame.shape, dtype=np.uint8)
+    writechannel.writeframe(frame)
+    time.sleep(1)
+    res[:] = readchannel.readframe()
+
+    writechannel.stop()
+    readchannel.stop()
+    assert np.array_equal(frame, res)
+
+
+@pytest.mark.timeout(40)
+def test_data_movement_lut_negative(create_composable):
+    ol, cpipe = create_composable
+    cpipe.lut_accel.kernel_type = XvLut.negative
+    pipeline = [cpipe.ps_video_in, cpipe.lut_accel, cpipe.ps_video_out]
+    cpipe.compose(pipeline)
+    """Check if composed correctly"""
+    assert cpipe.current_pipeline == pipeline
+
+    mode = VideoMode(_cols, _rows, 24)
+    writechannel = ol.video.axi_vdma.writechannel
+    readchannel = ol.video.axi_vdma.readchannel
+    writechannel.mode = readchannel.mode = mode
+    writechannel.start()
+    readchannel.start()
+
+    frame = writechannel.newframe()
+    golden = np.empty(shape=frame.shape, dtype=np.uint8)
+    for c in range(frame.shape[1]):
+        value = c % 255
+        frame[:, c, :] = value
+        golden[:, c, :] = 255 - value
+    writechannel.writeframe(frame)
+    time.sleep(1)
+    res = readchannel.readframe()
+    writechannel.stop()
+    readchannel.stop()
+    assert np.array_equal(golden, res)
