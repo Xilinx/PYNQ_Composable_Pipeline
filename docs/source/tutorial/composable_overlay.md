@@ -12,8 +12,7 @@ for PYNQ, if you are not familiar with this process check out
 [Tutorial: Creating a hardware design for PYNQ](https://discuss.pynq.io/t/tutorial-creating-a-hardware-design-for-pynq/145)
 
 In this case we will target the [Kria KV260 Vision AI Starter Kit](https://www.xilinx.com/products/som/kria/kv260-vision-starter-kit.html),
-note that we will use Vivado 2020.2.2 (first release that supports the
-Kria KV260 Vision AI Starter Kit)
+note that we will use Vivado 2022.1.
 
 1. Create a New Project
 1. Click *Next >* in the first window

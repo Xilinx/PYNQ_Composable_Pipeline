@@ -17,9 +17,9 @@ composable video pipeline is shown in the image below.
    :align: center
 
 This version implements several standard vision functions. The most common
-functions are implemented in the static region, these account for 6 functions.
+functions are implemented in the static region, these account for 7 functions.
 The composable overlay also provides 12 dynamic functions implemented across
-4 DFX regions, note that ``pr_0`` and ``pr_1`` provide pairs of functions.
+3 DFX regions, note that ``pr_0`` and ``pr_1`` provide pairs of functions.
 
 
 .. list-table::
@@ -33,6 +33,7 @@ The composable overlay also provides 12 dynamic functions implemented across
    * - lut
    * - rgb2gray
    * - rgb2hsv
+   * - duplicate
 
 
 .. list-table::
@@ -42,17 +43,15 @@ The composable overlay also provides 12 dynamic functions implemented across
    * - Dynamic IP
      - DFX Region
    * - absdiff
-     - pr_join
+     - pr_2
    * - add
-     - pr_join
+     - pr_2
    * - bitwise_add
-     - pr_join
+     - pr_2
    * - cornerHarris
      - pr_1
    * - dilate
      - pr_0 & pr_1
-   * - duplicate
-     - pr_fork
    * - erode
      - pr_0 & pr_1
    * - fast
@@ -60,11 +59,11 @@ The composable overlay also provides 12 dynamic functions implemented across
    * - fifo
      - pr_0 & pr_1
    * - filter2d
-     - pr_0
+     - pr_1
    * - rgb2xyz
-     - pr_fork
+     - pr_2
    * - subtract
-     - pr_join 
+     - pr_2
 
 Rebuild Composable Video Pipeline
 =================================
@@ -76,7 +75,7 @@ repository recursively (to pull submodules).
 
   git clone https://github.com/Xilinx/PYNQ_Composable_Pipeline --recursive
 
-You also need Vitis and Vivado ``2020.2.2`` installed.
+You also need Vitis and Vivado ``2022.1`` installed.
 
 Then to rebuild the video pipeline you can run ``make`` in the
 `boards/Pynq-Z2 <https://github.com/Xilinx/PYNQ_Composable_Pipeline/tree/main/boards/Pynq-Z2>`_
@@ -112,7 +111,7 @@ install the ``pynq_composable`` package on your board, please refer to
 If you are interested in building your own composable overlay, check out the
 tutorial :ref:`composable-overlay-tutorial`
 
-The Composable Video Pipeline also uses the following python modules:
+The Composable Video Pipeline also uses the following Python modules:
 
   * :mod:`pynq_composable.libs`  - Drivers to control the vision IP cores.
   * :mod:`pynq_composable.video`  - Drivers to control video sources and sinks.

@@ -24,11 +24,11 @@ The composable overlay architecture of a composable video overlay for the PYNQ-Z
 * [PYNQ-Z1](boards/Pynq-Z1/README.md)
 * [PYNQ-Z2](boards/Pynq-Z2/README.md)
 * [PYNQ-ZU](boards/Pynq-ZU/README.md)
-* [Kria KV260](boards/KV260/README.md), Vitis and Vivado 2020.2.2 are required.
+* [Kria KV260](boards/KV260/README.md)
 
 > Note: PYNQ-Z1 is supported with the same composable overlay as PYNQ-Z2
 
-To rebuild the composable pipeline you need Vitis and Vivado 2020.2. Navigate to one of the supported boards folder and run `make`, only steps for Linux are provided.
+To rebuild the composable pipeline you need Vitis and Vivado 2022.1. Navigate to one of the supported boards folder and run `make`, only steps for Linux are provided.
 
 ## Clone this repository
 
