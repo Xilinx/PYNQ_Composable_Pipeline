@@ -7,17 +7,43 @@ from pynq import Overlay
 from pynq_composable import Composable, StreamSwitch, VitisVisionIP, \
     CornerHarris
 from pynq_composable.virtual import VirtualIP, BufferIP
+import pytest
 
 
-def main():
+@pytest.fixture
+def create_overlay():
     ol = Overlay("cv_dfx_3_pr.bit")
-    cpipe = ol.composable
+    yield ol
+    ol.free()
 
-    """Test if dictionaries are created"""
+
+@pytest.fixture
+def create_composable(create_overlay):
+    ol = create_overlay
+    cpipe = ol.composable
+    yield ol, cpipe
+
+
+def test_overlay_type(create_overlay):
+    ol = create_overlay
+    assert type(ol) == Overlay
+
+
+def test_overlay_ip_dict(create_overlay):
+    ol = create_overlay
+    assert ol.ip_dict
+
+
+def test_composable_overlay_dict(create_composable):
+    """Test if drivers have been assigned properly"""
+    _, cpipe = create_composable
     assert cpipe.c_dict
     assert cpipe.dfx_dict
 
-    """Test if drivers have been assigned properly"""
+
+def test_composable_drivers(create_composable):
+    """Test if driver"""
+    ol, cpipe = create_composable
     assert type(cpipe) == Composable
     assert type(ol.composable.axis_switch) == StreamSwitch
     assert type(ol.composable.rgb2gray_accel) == VitisVisionIP
@@ -25,31 +51,38 @@ def main():
     assert type(cpipe.pr_0.axis_data_fifo_0) == VirtualIP
     assert type(cpipe.pr_1.cornerHarris_accel) == VirtualIP
 
-    assert cpipe.current_pipeline is None
-    assert cpipe.graph.body == []
 
-    initial_conf = cpipe.axis_switch.mi
-    assert initial_conf[0] == 0
-
-    """Load some IP and verify if drivers have been assigned properly"""
+def load_ip(cpipe: Composable) -> None:
     cpipe.load([cpipe.pr_0.axis_data_fifo_0, cpipe.pr_1.cornerHarris_accel,
                 cpipe.pr_2.bitwise_and_accel])
 
+
+@pytest.mark.dependency()
+def test_load_dfx_ip(create_composable):
+    """Load some IP and verify if drivers have been assigned properly"""
+    ol, cpipe = create_composable
+    load_ip(cpipe)
     assert type(cpipe.pr_0.axis_data_fifo_0) == BufferIP
     assert type(cpipe.pr_1.cornerHarris_accel) == CornerHarris
     assert type(cpipe.pr_2.bitwise_and_accel) == VitisVisionIP
 
+
+@pytest.mark.dependency(depends=["test_load_dfx_ip"])
+def test_pipeline_0(create_composable):
+    ol, cpipe = create_composable
+    load_ip(cpipe)
     pipeline = [cpipe.ps_video_in, cpipe.rgb2gray_accel, cpipe.lut_accel,
                 cpipe.pr_1.cornerHarris_accel, cpipe.pr_0.axis_data_fifo_0,
                 cpipe.gray2rgb_accel, cpipe.ps_video_out]
     cpipe.compose(pipeline)
-
-    """Check if composed correctly"""
     assert cpipe.current_pipeline == pipeline
     assert cpipe.graph.body
-    conf_0 = cpipe.axis_switch.mi
-    assert not np.array_equal(initial_conf, conf_0)
-    """Check a branched pipeline"""
+
+
+@pytest.mark.dependency(depends=["test_load_dfx_ip"])
+def test_pipeline_1(create_composable):
+    ol, cpipe = create_composable
+    load_ip(cpipe)
     pipeline = [cpipe.ps_video_in, cpipe.duplicate_accel,
                 [[cpipe.rgb2gray_accel, cpipe.pr_1.cornerHarris_accel],
                  [cpipe.lut_accel]], cpipe.pr_2.bitwise_and_accel,
@@ -59,9 +92,3 @@ def main():
     cpipe.compose(pipeline)
     """Check if composed correctly"""
     assert cpipe.current_pipeline == pipeline
-    conf_1 = cpipe.axis_switch.mi
-    assert not np.array_equal(conf_0, conf_1)
-
-
-if __name__ == "__main__":
-    main()
