@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import numpy as np
+import os
 from pynq import Overlay
 from pynq.lib.video import VideoMode
 from pynq_composable import Composable, StreamSwitch, VitisVisionIP, \
@@ -10,6 +11,7 @@ from pynq_composable import Composable, StreamSwitch, VitisVisionIP, \
 from pynq_composable.virtual import VirtualIP, BufferIP
 from pynq_composable.libs import XvLut, _cols, _rows
 import pytest
+import shutil
 import time
 
 
@@ -171,3 +173,40 @@ def test_data_movement_lut_negative(create_composable):
     writechannel.stop()
     readchannel.stop()
     assert np.array_equal(golden, res)
+
+
+def test_parser(tmp_path):
+    dir = tmp_path / "hwh"
+    shutil.copytree("../overlay/", dir)
+    for item in os.listdir(str(dir)):
+        if item.endswith(".pkl"):
+            os.remove(os.path.join(str(dir), item))
+
+    ol = Overlay(os.path.join(str(dir), "cv_dfx_3_pr.bit"))
+    cpipe = ol.composable
+    pklfile = "../overlay/cv_dfx_3_pr_composable.pkl"
+    if os.path.isfile(pklfile):
+        import pickle as pkl
+        from deepdiff import DeepDiff
+        with open(pklfile, "rb") as file:
+            _, c_dict, dfx_dict = pkl.load(file)
+
+        excludedRegex = [r"root\[\'.*'\]\['bitstream'\]"]
+        diff = DeepDiff(cpipe._c_dict, c_dict,
+                        exclude_regex_paths=excludedRegex)
+        if 'dictionary_item_added' in diff.keys():
+            del[diff['dictionary_item_added']]
+        if 'dictionary_item_removed' in diff.keys():
+            del[diff['dictionary_item_removed']]
+
+        assert not diff
+        excludedRegex = [
+            r"root\[\'.*'\]\['rm'\]\[\'.*'\]\[\'.*'\]\['bitstream'\]"
+        ]
+        diff = DeepDiff(cpipe._dfx_dict, dfx_dict,
+                        exclude_regex_paths=excludedRegex)
+        assert not diff
+
+    else:
+        assert cpipe.c_dict
+        assert cpipe.dfx_dict
