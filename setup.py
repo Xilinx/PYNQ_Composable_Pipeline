@@ -176,7 +176,10 @@ setup(
     python_requires=">=3.8.0",
     install_requires=[
         "pynq>=2.7.0",
-        "graphviz>=0.20"
+        "graphviz>=0.20",
+        "pytest-dependency>=0.5.1",
+        "pytest-timeout>=2.1.0",
+        "deepdiff>=5.8.1"
     ],
     entry_points=entry_points,
     cmdclass={"build_py": build_py},

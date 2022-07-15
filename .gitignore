@@ -17,3 +17,4 @@ docs/build/
 *.dtbo
 *.zip
 hd_visual/
+.vscode/
