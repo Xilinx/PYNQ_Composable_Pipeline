@@ -119,12 +119,10 @@ def test_data_movement_fifo(create_composable):
     ol, cpipe = create_composable
     load_ip(cpipe)
     pipeline = [cpipe.ps_video_in, cpipe.pr_0.axis_data_fifo_0,
-                cpipe.ps_video_out]
-    pipeline = [cpipe.ps_video_in, cpipe.ps_video_out]
+                cpipe.pr_1.axis_data_fifo_0, cpipe.ps_video_out]
     cpipe.compose(pipeline)
     """Check if composed correctly"""
     assert cpipe.current_pipeline == pipeline
-    assert cpipe.axis_switch.mi[0] == 0
 
     mode = VideoMode(_cols, _rows, 24)
     writechannel = ol.video.axi_vdma.writechannel
