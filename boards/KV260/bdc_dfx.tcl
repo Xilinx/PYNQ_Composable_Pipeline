@@ -194,10 +194,45 @@ set_property range 32K [get_bd_addr_segs {s_axi_control/SEG_cornerHarris_accel_R
 validate_bd_design
 save_bd_design
 current_bd_design [get_bd_designs ${design_name}]
+validate_bd_design
+save_bd_design
+
+## PR 1 reconfigurable module 2
+set pr_1_rgb2xyz "composable_pr_1_rgb2xyz_fifo"
+set curdesign [current_bd_design]
+create_bd_design -boundary_from_container [get_bd_cells /composable/pr_1] ${pr_1_rgb2xyz}
+current_bd_design $curdesign
+current_bd_design [get_bd_designs ${pr_1_rgb2xyz}]
+
+set asr [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_register_slice:2.1 asr ]
+create_bd_cell -type ip -vlnv xilinx.com:hls:rgb2xyz_accel:1.0 rgb2xyz_accel
+set axis_data_fifo_1 [ create_bd_cell -type ip -vlnv xilinx.com:ip:axis_data_fifo:2.0 axis_data_fifo_1 ]
+set_property -dict [list \
+  CONFIG.TDATA_NUM_BYTES {3} \
+  CONFIG.TUSER_WIDTH {1} \
+  CONFIG.FIFO_DEPTH {4096} \
+  CONFIG.HAS_TLAST {1} \
+  CONFIG.FIFO_MEMORY_TYPE {auto} \
+] ${axis_data_fifo_1}
+
+connect_bd_intf_net [get_bd_intf_ports s_axi_control] [get_bd_intf_pins asr/S_AXI]
+connect_bd_intf_net [get_bd_intf_pins asr/M_AXI] [get_bd_intf_pins rgb2xyz_accel/s_axi_control]
+connect_bd_intf_net [get_bd_intf_ports stream_in0] [get_bd_intf_pins rgb2xyz_accel/stream_in]
+connect_bd_intf_net [get_bd_intf_ports stream_out0] [get_bd_intf_pins rgb2xyz_accel/stream_out]
+connect_bd_net [get_bd_ports ${dfx_clk}] [get_bd_pins rgb2xyz_accel/ap_clk] [get_bd_pins axis_data_fifo_1/s_axis_aclk] [get_bd_pins asr/aclk]
+connect_bd_net [get_bd_ports ${dfx_rst}] [get_bd_pins rgb2xyz_accel/ap_rst_n] [get_bd_pins axis_data_fifo_1/s_axis_aresetn] [get_bd_pins asr/aresetn]
+connect_bd_intf_net [get_bd_intf_ports stream_in1] [get_bd_intf_pins axis_data_fifo_1/S_AXIS]
+connect_bd_intf_net [get_bd_intf_ports stream_out1] [get_bd_intf_pins axis_data_fifo_1/M_AXIS]
+assign_bd_address
+set_property range 32K [get_bd_addr_segs {s_axi_control/SEG_rgb2xyz_accel_Reg}]
+validate_bd_design
+save_bd_design
+
+current_bd_design [get_bd_designs ${design_name}]
 
 # Define synthesis sources
-lappend list_rm ${pr_1_dilate_erode} ${pr_1_cornerharris}
-set bds "${pr_1_dilate_erode}.bd:${pr_1_cornerharris}.bd"
+lappend list_rm ${pr_1_dilate_erode} ${pr_1_cornerharris} ${pr_1_rgb2xyz}
+set bds "${pr_1_dilate_erode}.bd:${pr_1_cornerharris}.bd:${pr_1_rgb2xyz}.bd"
 set_property -dict [list CONFIG.LIST_SYNTH_BD ${bds}] [get_bd_cells /composable/pr_1]
 validate_bd_design
 save_bd_design
@@ -371,9 +406,8 @@ create_pr_configuration -name config_2 -partitions \
 create_pr_configuration -name config_3 -partitions \
    [list \
       ${design_name}_i/composable/pr_0:${pr_0_filter2d_fifo}_inst_0 \
-      ${design_name}_i/composable/pr_2:${pr_2_add}_inst_0\
-   ] -greyboxes [list \
-      ${design_name}_i/composable/pr_1 \
+      ${design_name}_i/composable/pr_1:${pr_1_rgb2xyz}_inst_0 \
+      ${design_name}_i/composable/pr_2:${pr_2_add}_inst_0 \
    ]
 
 create_pr_configuration -name config_4 -partitions \
@@ -424,6 +458,7 @@ catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_1_${p
 catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_2_${pr_2_absdiff}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_absdiff}_partial.bit}
 # child_1_impl_1
 catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_0_${pr_0_filter2d_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_filter2d_fifo}_partial.bit}
+catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_1_${pr_1_rgb2xyz}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_rgb2xyz}_partial.bit}
 catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_2_${pr_2_add}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_add}_partial.bit}
 # child_2_impl_1
 catch {exec cp ./${prj_name}/${prj_name}.runs/child_2_impl_1/${bithier}_pr_2_${pr_2_bitand}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_bitand}_partial.bit}
