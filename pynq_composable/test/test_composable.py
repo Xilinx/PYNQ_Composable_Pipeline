@@ -18,10 +18,13 @@ def create_overlay():
     for i in range(5):
         try:
             ol = Overlay("cv_dfx_3_pr.bit")
-        except OSError:
-            if i != 4:
+        except OSError as e:
+            if "Bitstream file" in str(e):
+                pytest.exit(str(e))
+            elif i != 4:
                 continue
             raise OSError("Could not program the FPGA")
+
     yield ol
     ol.free()
 
