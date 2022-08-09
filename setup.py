@@ -14,7 +14,7 @@ import shutil
 import tempfile
 import urllib.request
 import hashlib
-from pynqutils.setup_utils import build_py, find_version
+from pynqutils.setup_utils import build_py, find_version, extend_package
 
 
 # global variables
@@ -26,17 +26,6 @@ notebooks_dir = os.environ.get("PYNQ_JUPYTER_NOTEBOOKS")
 overlay_dest = "{}/".format(module_name)
 data_files = []
 cwd = os.getcwd()
-
-
-# extend package
-def extend_package(path):
-    if os.path.isdir(path):
-        data_files.extend(
-            [os.path.join("..", root, f)
-             for root, _, files in os.walk(path) for f in files]
-        )
-    elif os.path.isfile(path):
-        data_files.append(os.path.join("..", path))
 
 
 def copy_notebooks(board_folder, module_name):
