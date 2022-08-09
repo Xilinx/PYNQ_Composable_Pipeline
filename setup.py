@@ -11,11 +11,10 @@ __email__ = "pynq_support@xilinx.com"
 from setuptools import setup, find_packages
 import os
 import shutil
-import re
 import tempfile
 import urllib.request
 import hashlib
-from pynqutils.setup_utils import build_py
+from pynqutils.setup_utils import build_py, find_version
 
 
 # global variables
@@ -27,17 +26,6 @@ notebooks_dir = os.environ.get("PYNQ_JUPYTER_NOTEBOOKS")
 overlay_dest = "{}/".format(module_name)
 data_files = []
 cwd = os.getcwd()
-
-
-# parse version number
-def find_version(file_path):
-    with open(file_path, "r") as fp:
-        version_file = fp.read()
-        version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                                  version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise NameError("Version string must be defined in {}.".format(file_path))
 
 
 # extend package
@@ -78,7 +66,7 @@ def update_notebooks_display_port(module_name):
     for (dirpath, dirnames, filenames) in os.walk(module_name):
         for filename in filenames:
             if filename.endswith(".ipynb"):
-                with open(os.sep.join([dirpath, filename]), 'r') as file :
+                with open(os.sep.join([dirpath, filename]), 'r') as file:
                     filedata = file.read()
 
                 filedata = filedata.replace("HDMI", "DisplayPort")
