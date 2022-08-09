@@ -15,7 +15,7 @@ import re
 import tempfile
 import urllib.request
 import hashlib
-from pynq.utils import build_py
+from pynqutils.setup_utils import build_py
 
 
 # global variables
