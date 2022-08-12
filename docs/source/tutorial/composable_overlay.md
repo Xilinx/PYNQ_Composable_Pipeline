@@ -220,7 +220,7 @@ use the TCL console.
 
 Copy and paste the following TCL commands on the TCL console.
 
-```
+```tcl
 set_property name axis_switch [get_bd_cells filter/axis_switch_0]
 set filter_names "fir_lowpass fir_highpass fir_bandpass fir_stopband"
 foreach fir ${filter_names} {
