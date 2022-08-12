@@ -121,9 +121,9 @@ def _build_docstrings(hier: str, c_dict: dict, dfx_dict: dict,
     lines.append("")
     lines.append("DFX Regions")
     lines.append("-----------")
-    lines.append("{: <35} | DFX Decoupler".format("Name"))
-    lines.append(48*"-")
     if dfx_dict:
+        lines.append("{: <35} | DFX Decoupler".format("Name"))
+        lines.append(48*"-")
         for k, v in dfx_dict.items():
             lines.append("{: <35} | {}".format(k, v['decoupler']))
     else:
@@ -132,9 +132,12 @@ def _build_docstrings(hier: str, c_dict: dict, dfx_dict: dict,
     lines.append("")
     lines.append("Pipeline Control")
     lines.append("----------------")
-    lines.append(hier + pipelinecrt)
+    if pipelinecrt:
+        lines.append(hier + pipelinecrt)
+    else:
+        lines.append("None")
 
-    lines.append("")
+    lines.append(" ")
 
     return '\n    '.join(lines)
 
