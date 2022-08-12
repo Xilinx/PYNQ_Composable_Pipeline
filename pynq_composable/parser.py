@@ -364,7 +364,7 @@ class HWHComposable:
                 if not key:
                     key = switch_conn[d].get('fullname')
                 dictionary = default_dfx_dict
-            key = key.replace(self._hier, '').lstrip('/')
+            key = key.split('/')[-1]
             if key not in static_dict.keys():
                 dictionary[key] = dict()
 
