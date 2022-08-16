@@ -124,7 +124,7 @@ def download_overlay(board, overlay_dest):
 if board:
     copy_notebooks(board_folder, module_name)
     download_overlay(board, overlay_dest)
-extend_package(module_name)
+extend_package(module_name, data_files)
 update_notebooks_display_port(module_name + '/notebooks/')
 pkg_version = find_version("{}/__init__.py".format(module_name))
 
