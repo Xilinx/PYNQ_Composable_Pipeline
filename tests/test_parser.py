@@ -6,7 +6,6 @@
 import pytest
 import hashlib
 import pickle as pkl
-import sys
 from pynq_composable import parser
 
 __author__ = "Mario Ruiz"
@@ -14,18 +13,25 @@ __copyright__ = "Copyright 2021, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
-hwhfilename = "tests/cv_dfx_2pipes.hwh"
-pklfile0 = "tests/cv_dfx_2pipes_pipeline0.pkl"
-pklfile1 = "tests/cv_dfx_2pipes_pipeline1.pkl"
+hwhfilename = "tests/files/cv_dfx_2pipes.hwh"
+pklfile0 = "tests/files/cv_dfx_2pipes_pipeline0.pkl"
+pklfile1 = "tests/files/cv_dfx_2pipes_pipeline1.pkl"
 
-with open(pklfile0, "rb") as file:
-    _cached_digest0, _c_dict0, _dfx_dict0 = pkl.load(file)
 
-with open(pklfile1, "rb") as file:
-    _cached_digest1, _c_dict1, _dfx_dict1 = pkl.load(file)
+def _get_hwh_digest(filename):
+    with open(filename, 'rb') as file:
+        hwhdigest = hashlib.md5(file.read()).hexdigest()
+    return hwhdigest
 
-with open(hwhfilename, 'rb') as file:
-    hwhdigest = hashlib.md5(file.read()).hexdigest()
+
+def _get_pickled_dict(filename):
+    with open(filename, "rb") as file:
+        return pkl.load(file)
+
+
+_hwhdigest = _get_hwh_digest(hwhfilename)
+_cached_digest0, _c_dict0, _dfx_dict0 = _get_pickled_dict(pklfile0)
+_cached_digest1, _c_dict1, _dfx_dict1 = _get_pickled_dict(pklfile1)
 
 
 def test_file():
@@ -49,7 +55,7 @@ def test_switch0():
     hwhparser = parser.HWHComposable(hwhfilename, switch, False)
     assert _c_dict0 == hwhparser.c_dict
     assert _dfx_dict0 == hwhparser.dfx_dict
-    assert hwhdigest == _cached_digest0
+    assert _hwhdigest == _cached_digest0
 
 
 def test_switch1():
@@ -57,4 +63,4 @@ def test_switch1():
     hwhparser = parser.HWHComposable(hwhfilename, switch, False)
     assert _c_dict1 == hwhparser.c_dict
     assert _dfx_dict1 == hwhparser.dfx_dict
-    assert hwhdigest == _cached_digest1
+    assert _hwhdigest == _cached_digest1
