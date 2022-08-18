@@ -64,3 +64,24 @@ def test_switch1():
     assert _c_dict1 == hwhparser.c_dict
     assert _dfx_dict1 == hwhparser.dfx_dict
     assert _hwhdigest == _cached_digest1
+
+
+def test_dfx():
+    filename = "tests/files/cv_dfx_3_pr.hwh"
+    pklfile_composable = "tests/files/cv_dfx_3_pr_composable.pkl"
+    switch = "composable/axis_switch"
+    _, c_dict, dfx_dict = _get_pickled_dict(pklfile_composable)
+    hwhparser = parser.HWHComposable(filename, switch, False, True)
+
+    from deepdiff import DeepDiff
+    excludedRegex = [r"root\[\'.*'\]\['bitstream'\]"]
+    diff = DeepDiff(c_dict, hwhparser.c_dict,
+                    exclude_regex_paths=excludedRegex)
+    assert not diff
+    excludedRegex = [
+        r"root\[\'.*'\]\['rm'\]\[\'.*'\]\[\'.*'\]\['bitstream'\]"
+    ]
+    diff = DeepDiff(dfx_dict, hwhparser.dfx_dict,
+                    exclude_regex_paths=excludedRegex)
+
+    assert not diff
