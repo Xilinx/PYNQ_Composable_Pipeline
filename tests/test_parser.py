@@ -60,7 +60,7 @@ def test_switch0():
 
 def test_switch1():
     switch = "pipeline1/axis_switch"
-    hwhparser = parser.HWHComposable(hwhfilename, switch, False)
+    hwhparser = parser.HWHComposable(hwhfilename, switch, False, True)
     assert _c_dict1 == hwhparser.c_dict
     assert _dfx_dict1 == hwhparser.dfx_dict
     assert _hwhdigest == _cached_digest1
