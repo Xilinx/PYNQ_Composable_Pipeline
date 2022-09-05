@@ -4,10 +4,13 @@
 
 overlay_name := cv_dfx_3_pr
 
-all: vision_ip pynq_hls project dtbo dict version
+all: submodule vision_ip pynq_hls project dtbo dict version
 	@echo
 	@tput setaf 2 ; echo "Built $(overlay_name) successfully!"; tput sgr0;
 	@echo
+
+submodule:
+	git submodule init && git submodule update
 
 vision_ip:
 	make -C ../Pynq-ZU/ip/vitis_vision/ DEVICE=zynq-us -j4
