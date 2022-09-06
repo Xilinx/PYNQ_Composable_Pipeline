@@ -10,7 +10,7 @@ all: submodule vision_ip pynq_hls project dtbo dict version
 	@echo
 
 submodule:
-	git submodule init && git submodule update
+	cd ../../ && git submodule init && git submodule update
 
 vision_ip:
 	make -C ../Pynq-ZU/ip/vitis_vision/ DEVICE=zynq-us -j4
