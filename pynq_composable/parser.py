@@ -262,8 +262,8 @@ class HWHComposable:
             hwhdigest = hashlib.md5(file.read()).hexdigest()
         cached_digest = None
 
-        basename = os.path.splitext(self._hwh_name)[0] + '_' + self._hier
-        basename = basename.replace('/', '_')
+        basename = os.path.splitext(self._hwh_name)[0] + '_' + \
+            self._hier.replace('/', '_')
         pklfile = basename + '.pkl'
         jsonfile = basename + '.json'
         if os.path.isfile(pklfile) and cache:
