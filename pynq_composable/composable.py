@@ -231,7 +231,8 @@ class Composable(DefaultHierarchy):
             _get_ip_name_by_vlnv(description, 'xilinx.com:ip:axis_switch:1.1')
         self._switch = getattr(self._ol, self._hier + switch_name)
         self._max_slots = self._switch.max_slots
-        self._control = True
+        self._enable_soft_reset = True
+        self._enable_dfx_decouple = True
         self._pipelinecrt = \
             _get_ip_name_by_vlnv(description, 'xilinx.com:ip:axi_gpio:2.0')
         if self._pipelinecrt:
@@ -239,7 +240,8 @@ class Composable(DefaultHierarchy):
             self._soft_reset = pipecrtl.channel1
             self._dfx_control = pipecrtl.channel2
         else:
-            self._control = False
+            self._enable_soft_reset = False
+            self._enable_dfx_decouple = False
             self._soft_reset = None
             self._dfx_control = None
 
@@ -293,23 +295,43 @@ class Composable(DefaultHierarchy):
         return self._current_pipeline
 
     @property
-    def control(self):
-        """ Set the operation mode of the pipeline control logic
+    def soft_reset_mode(self):
+        """ Set the operation mode of the soft reset logic
 
         Parameters
         ----------
         enable : bool
-            True: Soft reset and DFX decouple commands are issued
-            False: No soft reset neither DFX decouple commands are issued
+            True: Soft reset command is issued
+            False: No soft reset is issued
         """
-        return self._control
+        return self._enable_soft_reset
 
-    @control.setter
-    def control(self, enable: bool):
+    @soft_reset_mode.setter
+    def soft_reset_mode(self, enable: bool):
         if self._pipelinecrt:
-            self._control = enable
+            self._enable_soft_reset = enable
         elif enable:
-            warnings.warn("Can't enable pipeline control logic as there is no "
+            warnings.warn("Can't enable soft reset logic as there is no "
+                          "associated hardware", UserWarning)
+
+    @property
+    def dfx_decouple_mode(self):
+        """ Set the operation mode of the dfx decouple logic
+
+        Parameters
+        ----------
+        enable : bool
+            True: DFX decouple commands are issued
+            False: No DFX decouple commands are issued
+        """
+        return self._enable_dfx_decouple
+
+    @dfx_decouple_mode.setter
+    def dfx_decouple_mode(self, enable: bool):
+        if self._pipelinecrt:
+            self._enable_dfx_decouple = enable
+        elif enable:
+            warnings.warn("Can't enable DFX decouple logic as there is no "
                           "associated hardware", UserWarning)
 
     def _default_paths(self):
@@ -565,7 +587,7 @@ class Composable(DefaultHierarchy):
                                               " instance can only be used once"
                                               .format(ip._fullpath))
 
-        if self._soft_reset and self._control:
+        if self._soft_reset and self._enable_soft_reset:
             self._soft_reset[0].write(1)
             self._soft_reset[0].write(0)
 
@@ -630,7 +652,8 @@ class Composable(DefaultHierarchy):
         for pr in bit_dict:
             if not bit_dict[pr]['loaded']:
                 decoupler = self._dfx_control[self._dfx_dict[pr]['decouple']]
-                if self._dfx_control and decoupler and self._control:
+                if self._dfx_control and decoupler and \
+                        self._enable_dfx_decouple:
                     decoupler.write(1)
                 for i in range(5):
                     try:
@@ -643,7 +666,8 @@ class Composable(DefaultHierarchy):
                                            "downloaded"
                                            .format(bit_dict[pr]['bitstream']))
 
-                if self._dfx_control and decoupler and self._control:
+                if self._dfx_control and decoupler and \
+                        self._enable_dfx_decouple:
                     decoupler.write(0)
 
     def remove(self, iplist: list = None) -> None:
