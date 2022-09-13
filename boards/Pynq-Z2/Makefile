@@ -42,4 +42,4 @@ zip:
 	zip -r composable-video-pipeline-Pynq-Z2-v$(ver).zip overlay/
 
 dict:
-	python3 ../../pynq_composable/parser.py --hwh overlay/$(overlay_name).hwh
+	cd overlay/ && python3 ../../pynq_composable/parser.py --hwh $(overlay_name).hwh
