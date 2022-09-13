@@ -46,4 +46,4 @@ zip:
 	zip -r composable-video-pipeline-KV260-v$(ver).zip overlay/
 
 dict:
-	cd overlay/ && python3 ../../pynq_composable/parser.py --hwh $(overlay_name).hwh
+	cd overlay/ && python3 ../../../pynq_composable/parser.py --hwh $(overlay_name).hwh
