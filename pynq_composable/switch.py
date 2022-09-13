@@ -11,6 +11,7 @@ __email__ = "pynq_support@xilinx.com"
 
 
 _mi_offset = 0x40
+_mi_disable = np.uint64(0x80000000)
 
 
 def _mux_mi_gen(ports: int) -> tuple:
@@ -52,14 +53,14 @@ class StreamSwitch(DefaultIP):
 
         for i in range(len(self._mi)):
             self._mi[i] = i
-        self._populateRouting()
+        self._populate_routing()
 
     def disable(self) -> None:
         """Disable all connections in the AXI4-Stream Switch"""
 
         for i in range(len(self._mi)):
-            self._mi[i] = np.uint64(0x80000000)
-        self._populateRouting()
+            self._mi[i] = _mi_disable
+        self._populate_routing()
 
     @property
     def mi(self):
@@ -92,10 +93,9 @@ class StreamSwitch(DefaultIP):
 
     @mi.setter
     def mi(self, conf_array: np.dtype(np.int64)):
-        length = len(conf_array)
         if conf_array.dtype is not np.dtype(np.int64):
             raise TypeError("Numpy array must be np.int64 dtype")
-        elif length > self.max_slots:
+        elif (length := len(conf_array)) > self.max_slots:
             raise ValueError("Provided numpy array is bigger than "
                              "number of slots {}".format(self.max_slots))
         elif length < 1:
@@ -104,18 +104,18 @@ class StreamSwitch(DefaultIP):
 
         for slot in range(len(conf_array)):
             if conf_array[slot] < 0:
-                conf_array[slot] = np.uint64(0x80000000)
+                conf_array[slot] = _mi_disable
 
         if length != self.max_slots:
             new_slots = self.max_slots - length
             conf_array = np.append(conf_array,
                                    np.ones(new_slots, dtype=np.int32) *
-                                   np.uint64(0x80000000))
+                                   _mi_disable)
 
         self._mi = conf_array
-        self._populateRouting()
+        self._populate_routing()
 
-    def _populateRouting(self):
+    def _populate_routing(self):
         """Writes the current configuration to the AXI4-Stream Switch
 
         First the Mi selector values are written to the corresponding
