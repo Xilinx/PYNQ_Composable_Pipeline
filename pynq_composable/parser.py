@@ -424,7 +424,8 @@ class HWHComposable:
     def _partial_bitstreams_discovery(self) -> None:
         """Search for partial bitstreams and add them to the dictionary"""
 
-        filelist = glob.glob(self._dir_name + '/*.bit')
+        path = '' if self._dir_name == '' else self._dir_name + '/'
+        filelist = glob.glob(path + '*.bit')
         working_list = filelist.copy()
 
         for key in self.dfx_dict:
@@ -445,10 +446,10 @@ class HWHComposable:
         into the self.c_dict
         """
 
+        path = '' if self._dir_name == '' else self._dir_name + '/'
         for r in self.dfx_dict:
             for b in self.dfx_dict[r].get('rm', list()):
-                hwh_name = self._dir_name + '/' + \
-                    os.path.splitext(b)[0] + '.hwh'
+                hwh_name = path + os.path.splitext(b)[0] + '.hwh'
                 if os.path.exists(hwh_name):
                     dfx_dict = _dfx_ip_discovery(r, hwh_name)
                     self.dfx_dict[r]['rm'][b] = dfx_dict
