@@ -39,6 +39,8 @@
 #
 # 3.20  mr   09/09/2022 Include HW contract to enable relocation
 #
+# 3.20  mr   09/19/2022 Add hw_contract cell hierarchy needed for relocation
+#
 # </pre>
 #
 ###############################################################################
