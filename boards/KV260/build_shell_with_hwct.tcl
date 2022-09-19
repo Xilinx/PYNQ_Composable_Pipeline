@@ -60,7 +60,7 @@ if {$store_checkpoint} {
 
 
 # use different directive, if needed to close timing. 
-place_design -directive Explore
+place_design -directive EarlyBlockPlacement
 if {$store_checkpoint} {
   write_checkpoint post_place.dcp -force
 }
@@ -87,23 +87,23 @@ if {$store_checkpoint} {
   write_checkpoint post_route.dcp -force
   report_route_status
 }
-#
-#
-#
-## only bit for static is needed.  Bits for RPs are just for testing and can be omitted. 
-#write_bitstream ${full_shell_name}.bit -force
-#
-#
-##############################################################################
-## Write abstract and full shell
-##############################################################################
-#write_abstract_shell -cell video_cp_i/composable/pr_0 abs_shell_PR0.dcp
-#
-##update_design -cell video_cp_i/composable/pr_0 -black_box
-##update_design -cell video_cp_i/composable/pr_1 -black_box
-##update_design -cell video_cp_i/composable/pr_2 -black_box
-##lock_design -level routing
-##write_checkpoint ${full_shell_name}.dcp
+
+
+
+# only bit for static is needed.  Bits for RPs are just for testing and can be omitted. 
+write_bitstream ${full_shell_name}.bit -force
+
+
+#############################################################################
+# Write abstract and full shell
+#############################################################################
+write_abstract_shell -cell video_cp_i/composable/pr_0 abs_shell_PR0.dcp
+
+#update_design -cell video_cp_i/composable/pr_0 -black_box
+#update_design -cell video_cp_i/composable/pr_1 -black_box
+#update_design -cell video_cp_i/composable/pr_2 -black_box
+#lock_design -level routing
+#write_checkpoint ${full_shell_name}.dcp
 
 
 
