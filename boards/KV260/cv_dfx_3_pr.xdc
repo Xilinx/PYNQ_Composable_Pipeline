@@ -177,10 +177,12 @@ set_property USER_CLOCK_ROOT X0Y2 [get_nets video_cp_i/ps_e/inst/pl_clk*]
 
 
 ############################ To make sure these clocks use the same clock track number #######################################
-place_cell [get_cells video_cp_i/composable/clk_buf_rp0/U0/USE_BUFG.GEN_BUFG[0].BUFG_U]  BUFGCE_X0Y60
-place_cell [get_cells video_cp_i/composable/clk_buf_rp1/U0/USE_BUFG.GEN_BUFG[0].BUFG_U]  BUFGCE_X0Y36
-place_cell [get_cells video_cp_i/composable/clk_buf_rp2/U0/USE_BUFG.GEN_BUFG[0].BUFG_U]  BUFGCE_X0Y12 
- 
+# move to assign_intf_cells_to_pblock.tcl. Somehow, the bufg is not fixed
+#place_cell [get_cells video_cp_i/composable/clk_buf_rp0/U0/USE_BUFG.GEN_BUFG[0].BUFG_U]  BUFGCE_X0Y60
+#place_cell [get_cells video_cp_i/composable/clk_buf_rp1/U0/USE_BUFG.GEN_BUFG[0].BUFG_U]  BUFGCE_X0Y36
+#place_cell [get_cells video_cp_i/composable/clk_buf_rp2/U0/USE_BUFG.GEN_BUFG[0].BUFG_U]  BUFGCE_X0Y12 
+#set_property is_bel_fixed true [get_cells [list video_cp_i/composable/clk_buf_rp*/U0/USE_BUFG.GEN_BUFG[0].BUFG_U]]
+#set_property is_loc_fixed true [get_cells [list video_cp_i/composable/clk_buf_rp*/U0/USE_BUFG.GEN_BUFG[0].BUFG_U]] 
 
 
  

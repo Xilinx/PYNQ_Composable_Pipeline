@@ -49,7 +49,7 @@ if {$store_checkpoint} {
 
 
 # to assign only cells connect to static to pblock_static_core
-#source ${src_dir}/assign_intf_cells_to_pblock.tcl
+source ${src_dir}/assign_intf_cells_to_pblock.tcl
 
 ## TO be removed after doing it in RW
 #set_property PROHIBIT 1 [get_bels { \
@@ -65,7 +65,7 @@ if {$store_checkpoint} {
   write_checkpoint post_place.dcp -force
 }
 
-#source ${src_dir}/adjust_pblock_preroute.tcl -notrace
+source ${src_dir}/adjust_pblock_preroute.tcl -notrace
 
 ## downgrade the check for containment of nets in static. The check is permanantly disable in 21.2
 ##set_msg_config -id {[Constraints  18-4638]} -new_severity INFO
@@ -97,7 +97,7 @@ write_bitstream ${full_shell_name}.bit -force
 #############################################################################
 # Write abstract and full shell
 #############################################################################
-write_abstract_shell -cell video_cp_i/composable/pr_0 abs_shell_PR0.dcp
+write_abstract_shell -cell video_cp_i/composable/pr_0 abs_shell_PR0.dcp -force
 
 #update_design -cell video_cp_i/composable/pr_0 -black_box
 #update_design -cell video_cp_i/composable/pr_1 -black_box
@@ -106,4 +106,15 @@ write_abstract_shell -cell video_cp_i/composable/pr_0 abs_shell_PR0.dcp
 #write_checkpoint ${full_shell_name}.dcp
 
 
-
+# useful commands
+# highlight shell-pr nets
+# highlight_objects  -color blue [get_nets -of [get_pins video_cp_i/composable/pr_*/*] -filter {TYPE != "GLOBAL_CLOCK"}]
+# 
+# highlight nets connecting to pblock_rp_intf_pr*. 
+# They should not connecting to anything else apart from pr and it counterpart on the left.
+# No unhighlight nets (except clock) should be inside pblock_rp_intf_pr*. (Highlight nets include cyan and blue)
+# highlight_objects -color cyan [get_nets -of [get_pins -of [get_cells -of [get_pblocks pblock_rp_intf_pr*]]] -filter {TYPE != "GLOBAL_CLOCK" && TYPE != "POWER" && TYPE != "GROUND" && IS_ROUTE_FIXED} ]
+#
+# set clocks [get_clocks] 
+# foreach clk $clocks {select_objects [get_nets -of [get_clocks $clk]]; gets stdin}
+# foreach clk $clocks {select_objects [get_nets -of [get_clocks $clk]]; after 10000}
