@@ -4,7 +4,7 @@
 
 overlay_name := cv_dfx_3_pr
 
-all: submodule vision_ip pynq_hls project dtbo dict version
+all: submodule vision_ip pynq_hls project dtbo version
 	@echo
 	@tput setaf 2 ; echo "Built $(overlay_name) successfully!"; tput sgr0;
 	@echo
