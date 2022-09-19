@@ -156,7 +156,8 @@ setup(
         "graphviz>=0.20",
         "pytest-dependency>=0.5.1",
         "pytest-timeout>=2.1.0",
-        "deepdiff>=5.8.1"
+        "deepdiff>=5.8.1",
+        "coverage>=6.4.4"
     ],
     entry_points=entry_points,
     cmdclass={"build_py": build_py},
