@@ -548,39 +548,44 @@ proc create_hier_cell_dfx_decouplers { parentCell nameHier } {
    CONFIG.DOUT_WIDTH {1} \
  ] $xlslice_pr_2
 
-  set addr_prefixes {0x8012 0x8013 0x8014}
-  for {set i 0} {$i < [llength $addr_prefixes]} {incr i} {
-    create_hier_cell_hw_contract_pr $hier_obj hw_contract_pr$i [lindex $addr_prefixes $i]
-  }
+  create_hier_cell_hw_contract $hier_obj hw_contract {0x8012 0x8013 0x8014}
 
   # Create interface connections
-  connect_bd_intf_net -intf_net S_AXI_INTERCONNECT_1 [get_bd_intf_pins S05_AXI] [get_bd_intf_pins axi_register_slice/S_AXI]
-  connect_bd_intf_net -intf_net axi_register_slice_0_M_AXI [get_bd_intf_pins axi_register_slice/M_AXI] [get_bd_intf_pins axi_interconnect/S00_AXI]
+  connect_bd_intf_net -intf_net hw_contract_0_rp_in_0 [get_bd_intf_pins hw_contract/rp_in_0] [get_bd_intf_pins m_axis_pr_0_0]
+  connect_bd_intf_net -intf_net hw_contract_0_rp_in_1 [get_bd_intf_pins hw_contract/rp_in_1] [get_bd_intf_pins m_axis_pr_0_1]
+  connect_bd_intf_net -intf_net hw_contract_1_rp_in_0 [get_bd_intf_pins hw_contract/rp_in_2] [get_bd_intf_pins m_axis_pr_1_0]
+  connect_bd_intf_net -intf_net hw_contract_1_rp_in_1 [get_bd_intf_pins hw_contract/rp_in_3] [get_bd_intf_pins m_axis_pr_1_1]
+  connect_bd_intf_net -intf_net hw_contract_2_rp_in_0 [get_bd_intf_pins hw_contract/rp_in_4] [get_bd_intf_pins m_axis_pr_2_0]
+  connect_bd_intf_net -intf_net hw_contract_2_rp_in_1 [get_bd_intf_pins hw_contract/rp_in_5] [get_bd_intf_pins m_axis_pr_2_1]
 
-  connect_bd_intf_net -intf_net hw_contract_0_rp_in_0 [get_bd_intf_pins hw_contract_pr0/rp_in_0] [get_bd_intf_pins m_axis_pr_0_0]
-  connect_bd_intf_net -intf_net hw_contract_0_rp_in_1 [get_bd_intf_pins hw_contract_pr0/rp_in_1] [get_bd_intf_pins m_axis_pr_0_1]
-  connect_bd_intf_net -intf_net hw_contract_1_rp_in_0 [get_bd_intf_pins hw_contract_pr1/rp_in_0] [get_bd_intf_pins m_axis_pr_1_0]
-  connect_bd_intf_net -intf_net hw_contract_1_rp_in_1 [get_bd_intf_pins hw_contract_pr1/rp_in_1] [get_bd_intf_pins m_axis_pr_1_1]
-  connect_bd_intf_net -intf_net hw_contract_2_rp_in_0 [get_bd_intf_pins hw_contract_pr2/rp_in_0] [get_bd_intf_pins m_axis_pr_2_0]
-  connect_bd_intf_net -intf_net hw_contract_2_rp_in_1 [get_bd_intf_pins hw_contract_pr2/rp_in_1] [get_bd_intf_pins m_axis_pr_2_1]
+  connect_bd_intf_net -intf_net s_axis_pr_0_0 [get_bd_intf_pins s_axis_pr_0_0] [get_bd_intf_pins hw_contract/rp_out_0]
+  connect_bd_intf_net -intf_net s_axis_pr_0_1 [get_bd_intf_pins s_axis_pr_0_1] [get_bd_intf_pins hw_contract/rp_out_1]
+  connect_bd_intf_net -intf_net s_axis_pr_1_0 [get_bd_intf_pins s_axis_pr_1_0] [get_bd_intf_pins hw_contract/rp_out_2]
+  connect_bd_intf_net -intf_net s_axis_pr_1_1 [get_bd_intf_pins s_axis_pr_1_1] [get_bd_intf_pins hw_contract/rp_out_3]
+  connect_bd_intf_net -intf_net s_axis_pr_2_0 [get_bd_intf_pins s_axis_pr_2_0] [get_bd_intf_pins hw_contract/rp_out_4]
+  connect_bd_intf_net -intf_net s_axis_pr_2_1 [get_bd_intf_pins s_axis_pr_2_1] [get_bd_intf_pins hw_contract/rp_out_5]
 
-  connect_bd_intf_net -intf_net s_axis_pr_0_0 [get_bd_intf_pins s_axis_pr_0_0] [get_bd_intf_pins hw_contract_pr0/rp_out_0]
-  connect_bd_intf_net -intf_net s_axis_pr_0_1 [get_bd_intf_pins s_axis_pr_0_1] [get_bd_intf_pins hw_contract_pr0/rp_out_1]
-  connect_bd_intf_net -intf_net s_axis_pr_1_0 [get_bd_intf_pins s_axis_pr_1_0] [get_bd_intf_pins hw_contract_pr1/rp_out_0]
-  connect_bd_intf_net -intf_net s_axis_pr_1_1 [get_bd_intf_pins s_axis_pr_1_1] [get_bd_intf_pins hw_contract_pr1/rp_out_1]
-  connect_bd_intf_net -intf_net s_axis_pr_2_0 [get_bd_intf_pins s_axis_pr_2_0] [get_bd_intf_pins hw_contract_pr2/rp_out_0]
-  connect_bd_intf_net -intf_net s_axis_pr_2_1 [get_bd_intf_pins s_axis_pr_2_1] [get_bd_intf_pins hw_contract_pr2/rp_out_1]
+  connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins axi_interconnect/M00_AXI] [get_bd_intf_pins hw_contract/S_AXI0]
+  connect_bd_intf_net -intf_net axi_interconnect_M01_AXI [get_bd_intf_pins axi_interconnect/M01_AXI] [get_bd_intf_pins hw_contract/S_AXI1]
+  connect_bd_intf_net -intf_net axi_interconnect_M02_AXI [get_bd_intf_pins axi_interconnect/M02_AXI] [get_bd_intf_pins hw_contract/S_AXI2]
 
-  connect_bd_intf_net -intf_net axi_interconnect_M00_AXI [get_bd_intf_pins axi_interconnect/M00_AXI] [get_bd_intf_pins hw_contract_pr0/S_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_M01_AXI [get_bd_intf_pins axi_interconnect/M01_AXI] [get_bd_intf_pins hw_contract_pr1/S_AXI]
-  connect_bd_intf_net -intf_net axi_interconnect_M02_AXI [get_bd_intf_pins axi_interconnect/M02_AXI] [get_bd_intf_pins hw_contract_pr2/S_AXI]
+  connect_bd_intf_net -intf_net hw_contract_0_s_out_0 [get_bd_intf_pins m_axis_dfx_pr_0_0] [get_bd_intf_pins hw_contract/M_AXIS_rp_2_s_0]
+  connect_bd_intf_net -intf_net hw_contract_0_s_out_1 [get_bd_intf_pins m_axis_dfx_pr_0_1] [get_bd_intf_pins hw_contract/M_AXIS_rp_2_s_1]
+  connect_bd_intf_net -intf_net hw_contract_1_s_out_0 [get_bd_intf_pins m_axis_dfx_pr_1_0] [get_bd_intf_pins hw_contract/M_AXIS_rp_2_s_2]
+  connect_bd_intf_net -intf_net hw_contract_1_s_out_1 [get_bd_intf_pins m_axis_dfx_pr_1_1] [get_bd_intf_pins hw_contract/M_AXIS_rp_2_s_3]
+  connect_bd_intf_net -intf_net hw_contract_2_s_out_0 [get_bd_intf_pins m_axis_dfx_pr_2_0] [get_bd_intf_pins hw_contract/M_AXIS_rp_2_s_4]
+  connect_bd_intf_net -intf_net hw_contract_2_s_out_1 [get_bd_intf_pins m_axis_dfx_pr_2_1] [get_bd_intf_pins hw_contract/M_AXIS_rp_2_s_5]
 
-  connect_bd_intf_net -intf_net hw_contract_0_s_out_0 [get_bd_intf_pins m_axis_dfx_pr_0_0] [get_bd_intf_pins hw_contract_pr0/M_AXIS_rp_2_s_0]
-  connect_bd_intf_net -intf_net hw_contract_0_s_out_1 [get_bd_intf_pins m_axis_dfx_pr_0_1] [get_bd_intf_pins hw_contract_pr0/M_AXIS_rp_2_s_1]
-  connect_bd_intf_net -intf_net hw_contract_1_s_out_0 [get_bd_intf_pins m_axis_dfx_pr_1_0] [get_bd_intf_pins hw_contract_pr1/M_AXIS_rp_2_s_0]
-  connect_bd_intf_net -intf_net hw_contract_1_s_out_1 [get_bd_intf_pins m_axis_dfx_pr_1_1] [get_bd_intf_pins hw_contract_pr1/M_AXIS_rp_2_s_1]
-  connect_bd_intf_net -intf_net hw_contract_2_s_out_0 [get_bd_intf_pins m_axis_dfx_pr_2_0] [get_bd_intf_pins hw_contract_pr2/M_AXIS_rp_2_s_0]
-  connect_bd_intf_net -intf_net hw_contract_2_s_out_1 [get_bd_intf_pins m_axis_dfx_pr_2_1] [get_bd_intf_pins hw_contract_pr2/M_AXIS_rp_2_s_1]
+  connect_bd_intf_net -intf_net axisreg_m_pr_0_0_m_axis [get_bd_intf_pins axisreg_m_pr_0_0/M_AXIS] [get_bd_intf_pins hw_contract/s_axis_s_2_rp_0]
+  connect_bd_intf_net -intf_net axisreg_m_pr_0_1_m_axis [get_bd_intf_pins axisreg_m_pr_0_1/M_AXIS] [get_bd_intf_pins hw_contract/s_axis_s_2_rp_1]
+  connect_bd_intf_net -intf_net axisreg_m_pr_1_0_m_axis [get_bd_intf_pins axisreg_m_pr_1_0/M_AXIS] [get_bd_intf_pins hw_contract/s_axis_s_2_rp_2]
+  connect_bd_intf_net -intf_net axisreg_m_pr_1_1_m_axis [get_bd_intf_pins axisreg_m_pr_1_1/M_AXIS] [get_bd_intf_pins hw_contract/s_axis_s_2_rp_3]
+  connect_bd_intf_net -intf_net axisreg_m_pr_2_0_m_axis [get_bd_intf_pins axisreg_m_pr_2_0/M_AXIS] [get_bd_intf_pins hw_contract/s_axis_s_2_rp_4]
+  connect_bd_intf_net -intf_net axisreg_m_pr_2_1_m_axis [get_bd_intf_pins axisreg_m_pr_2_1/M_AXIS] [get_bd_intf_pins hw_contract/s_axis_s_2_rp_5]
+
+  connect_bd_intf_net -intf_net hw_contract_pr0_s_axi_lite [get_bd_intf_pins hw_contract/s_axi_lite0] [get_bd_intf_pins s_axi_lite_pr_0]
+  connect_bd_intf_net -intf_net hw_contract_pr1_s_axi_lite [get_bd_intf_pins hw_contract/s_axi_lite1] [get_bd_intf_pins s_axi_lite_pr_1]
+  connect_bd_intf_net -intf_net hw_contract_pr2_s_axi_lite [get_bd_intf_pins hw_contract/s_axi_lite2] [get_bd_intf_pins s_axi_lite_pr_2]
 
   connect_bd_intf_net -intf_net s_axis_dfx_pr_0_0 [get_bd_intf_pins s_axis_dfx_pr_0_0] [get_bd_intf_pins axisreg_m_pr_0_0/S_AXIS]
   connect_bd_intf_net -intf_net s_axis_dfx_pr_0_1 [get_bd_intf_pins s_axis_dfx_pr_0_1] [get_bd_intf_pins axisreg_m_pr_0_1/S_AXIS]
@@ -589,36 +594,28 @@ proc create_hier_cell_dfx_decouplers { parentCell nameHier } {
   connect_bd_intf_net -intf_net s_axis_dfx_pr_2_0 [get_bd_intf_pins s_axis_dfx_pr_2_0] [get_bd_intf_pins axisreg_m_pr_2_0/S_AXIS]
   connect_bd_intf_net -intf_net s_axis_dfx_pr_2_1 [get_bd_intf_pins s_axis_dfx_pr_2_1] [get_bd_intf_pins axisreg_m_pr_2_1/S_AXIS]
 
-  connect_bd_intf_net -intf_net axisreg_m_pr_0_0_m_axis [get_bd_intf_pins axisreg_m_pr_0_0/M_AXIS] [get_bd_intf_pins hw_contract_pr0/s_axis_s_2_rp_0]
-  connect_bd_intf_net -intf_net axisreg_m_pr_0_1_m_axis [get_bd_intf_pins axisreg_m_pr_0_1/M_AXIS] [get_bd_intf_pins hw_contract_pr0/s_axis_s_2_rp_1]
-  connect_bd_intf_net -intf_net axisreg_m_pr_1_0_m_axis [get_bd_intf_pins axisreg_m_pr_1_0/M_AXIS] [get_bd_intf_pins hw_contract_pr1/s_axis_s_2_rp_0]
-  connect_bd_intf_net -intf_net axisreg_m_pr_1_1_m_axis [get_bd_intf_pins axisreg_m_pr_1_1/M_AXIS] [get_bd_intf_pins hw_contract_pr1/s_axis_s_2_rp_1]
-  connect_bd_intf_net -intf_net axisreg_m_pr_2_0_m_axis [get_bd_intf_pins axisreg_m_pr_2_0/M_AXIS] [get_bd_intf_pins hw_contract_pr2/s_axis_s_2_rp_0]
-  connect_bd_intf_net -intf_net axisreg_m_pr_2_1_m_axis [get_bd_intf_pins axisreg_m_pr_2_1/M_AXIS] [get_bd_intf_pins hw_contract_pr2/s_axis_s_2_rp_1]
-
-  connect_bd_intf_net -intf_net hw_contract_pr0_s_axi_lite [get_bd_intf_pins hw_contract_pr0/s_axi_lite] [get_bd_intf_pins s_axi_lite_pr_0]
-  connect_bd_intf_net -intf_net hw_contract_pr1_s_axi_lite [get_bd_intf_pins hw_contract_pr1/s_axi_lite] [get_bd_intf_pins s_axi_lite_pr_1]
-  connect_bd_intf_net -intf_net hw_contract_pr2_s_axi_lite [get_bd_intf_pins hw_contract_pr2/s_axi_lite] [get_bd_intf_pins s_axi_lite_pr_2]
+  connect_bd_intf_net -intf_net S_AXI_INTERCONNECT_1 [get_bd_intf_pins S05_AXI] [get_bd_intf_pins axi_register_slice/S_AXI]
+  connect_bd_intf_net -intf_net axi_register_slice_0_M_AXI [get_bd_intf_pins axi_register_slice/M_AXI] [get_bd_intf_pins axi_interconnect/S00_AXI]
 
 
   # Create port connections
-  connect_bd_net -net ps7_0_FCLK_CLK1 [get_bd_pins clk_300MHz] [get_bd_pins axi_register_slice/aclk] [get_bd_pins axi_interconnect/ACLK] [get_bd_pins axi_interconnect/S00_ACLK] [get_bd_pins axi_interconnect/M00_ACLK] [get_bd_pins axi_interconnect/M01_ACLK] [get_bd_pins axi_interconnect/M02_ACLK] [get_bd_pins axi_interconnect/M03_ACLK] [get_bd_pins axi_interconnect/M04_ACLK] [get_bd_pins axi_interconnect/M05_ACLK] [get_bd_pins axisreg_m_pr_0_0/aclk] [get_bd_pins axisreg_m_pr_0_1/aclk] [get_bd_pins axisreg_m_pr_1_0/aclk] [get_bd_pins axisreg_m_pr_1_1/aclk] [get_bd_pins axisreg_m_pr_2_0/aclk] [get_bd_pins axisreg_m_pr_2_1/aclk] [get_bd_pins hw_contract_pr0/clk_300MHz] [get_bd_pins hw_contract_pr1/clk_300MHz] [get_bd_pins hw_contract_pr2/clk_300MHz]
-  connect_bd_net -net ps7_0_GPIO_O [get_bd_pins dfx_decouple] [get_bd_pins xlslice_pr_0/Din] [get_bd_pins xlslice_pr_1/Din] [get_bd_pins xlslice_pr_2/Din]
-  connect_bd_net -net rst_ps7_0_fclk1_peripheral_aresetn [get_bd_pins clk_300MHz_aresetn] [get_bd_pins axi_register_slice/aresetn] [get_bd_pins axi_interconnect/ARESETN] [get_bd_pins axi_interconnect/S00_ARESETN] [get_bd_pins axi_interconnect/M00_ARESETN] [get_bd_pins axi_interconnect/M01_ARESETN] [get_bd_pins axi_interconnect/M02_ARESETN] [get_bd_pins axi_interconnect/M03_ARESETN] [get_bd_pins axi_interconnect/M04_ARESETN] [get_bd_pins axi_interconnect/M05_ARESETN] [get_bd_pins hw_contract_pr0/clk_300MHz_aresetn] [get_bd_pins hw_contract_pr1/clk_300MHz_aresetn] [get_bd_pins hw_contract_pr2/clk_300MHz_aresetn]
-  connect_bd_net -net rst_ps7_0_fclk1_soft_reset [get_bd_pins soft_rst_n] [get_bd_pins axisreg_m_pr_0_0/aresetn] [get_bd_pins axisreg_m_pr_0_1/aresetn] [get_bd_pins axisreg_m_pr_1_0/aresetn] [get_bd_pins axisreg_m_pr_1_1/aresetn] [get_bd_pins axisreg_m_pr_2_0/aresetn] [get_bd_pins axisreg_m_pr_2_1/aresetn] [get_bd_pins hw_contract_pr0/soft_rst_n] [get_bd_pins hw_contract_pr3/soft_rst_n] [get_bd_pins hw_contract_pr2/soft_rst_n]
+  connect_bd_net -net main_clk [get_bd_pins clk_300MHz] [get_bd_pins axi_register_slice/aclk] [get_bd_pins axi_interconnect/ACLK] [get_bd_pins axi_interconnect/S00_ACLK] [get_bd_pins axi_interconnect/M00_ACLK] [get_bd_pins axi_interconnect/M01_ACLK] [get_bd_pins axi_interconnect/M02_ACLK] [get_bd_pins axi_interconnect/M03_ACLK] [get_bd_pins axi_interconnect/M04_ACLK] [get_bd_pins axi_interconnect/M05_ACLK] [get_bd_pins axisreg_m_pr_0_0/aclk] [get_bd_pins axisreg_m_pr_0_1/aclk] [get_bd_pins axisreg_m_pr_1_0/aclk] [get_bd_pins axisreg_m_pr_1_1/aclk] [get_bd_pins axisreg_m_pr_2_0/aclk] [get_bd_pins axisreg_m_pr_2_1/aclk] [get_bd_pins hw_contract/clk_300MHz]
+  connect_bd_net -net decouple [get_bd_pins dfx_decouple] [get_bd_pins xlslice_pr_0/Din] [get_bd_pins xlslice_pr_1/Din] [get_bd_pins xlslice_pr_2/Din]
+  connect_bd_net -net peripheral_aresetn [get_bd_pins clk_300MHz_aresetn] [get_bd_pins axi_register_slice/aresetn] [get_bd_pins axi_interconnect/ARESETN] [get_bd_pins axi_interconnect/S00_ARESETN] [get_bd_pins axi_interconnect/M00_ARESETN] [get_bd_pins axi_interconnect/M01_ARESETN] [get_bd_pins axi_interconnect/M02_ARESETN] [get_bd_pins axi_interconnect/M03_ARESETN] [get_bd_pins axi_interconnect/M04_ARESETN] [get_bd_pins axi_interconnect/M05_ARESETN] [get_bd_pins hw_contract/clk_300MHz_aresetn]
+  connect_bd_net -net soft_reset [get_bd_pins soft_rst_n] [get_bd_pins axisreg_m_pr_0_0/aresetn] [get_bd_pins axisreg_m_pr_0_1/aresetn] [get_bd_pins axisreg_m_pr_1_0/aresetn] [get_bd_pins axisreg_m_pr_1_1/aresetn] [get_bd_pins axisreg_m_pr_2_0/aresetn] [get_bd_pins axisreg_m_pr_2_1/aresetn] [get_bd_pins hw_contract/soft_rst_n]
   connect_bd_net -net xlconcat_0_dout [get_bd_pins dfx_status] [get_bd_pins xlconcat_0/dout]
-  connect_bd_net -net xlslice_pr_0_Dout [get_bd_pins xlslice_pr_0/Dout] [get_bd_pins hw_contract_pr0/decouple_in]
-  connect_bd_net -net xlslice_pr_1_Dout [get_bd_pins xlslice_pr_1/Dout] [get_bd_pins hw_contract_pr1/decouple_in]
-  connect_bd_net -net xlslice_pr_2_Dout [get_bd_pins xlslice_pr_2/Dout] [get_bd_pins hw_contract_pr2/decouple_in]
-  connect_bd_net -net hw_contract_rp_resetn_rp0 [get_bd_pins rp_resetn_pr_0] [get_bd_pins hw_contract_pr0/rp_resetn_RST]
-  connect_bd_net -net hw_contract_rp_resetn_rp1 [get_bd_pins rp_resetn_pr_1] [get_bd_pins hw_contract_pr1/rp_resetn_RST]
-  connect_bd_net -net hw_contract_rp_resetn_rp2 [get_bd_pins rp_resetn_pr_2] [get_bd_pins hw_contract_pr2/rp_resetn_RST]
-  connect_bd_net -net clk_300MHz_rp0 [get_bd_pins clk_300MHz_pr_0] [get_bd_pins hw_contract_pr0/clk_300MHz_rp]
-  connect_bd_net -net clk_300MHz_rp1 [get_bd_pins clk_300MHz_pr_1] [get_bd_pins hw_contract_pr1/clk_300MHz_rp]
-  connect_bd_net -net clk_300MHz_rp2 [get_bd_pins clk_300MHz_pr_2] [get_bd_pins hw_contract_pr2/clk_300MHz_rp]
-  connect_bd_net -net dfx_decoupler_0_decouple_status [get_bd_pins hw_contract_pr0/decouple_status] [get_bd_pins xlconcat_0/In3]
-  connect_bd_net -net dfx_decoupler_1_decouple_status [get_bd_pins hw_contract_pr1/decouple_status] [get_bd_pins xlconcat_0/In4]
-  connect_bd_net -net dfx_decoupler_2_decouple_status [get_bd_pins hw_contract_pr2/decouple_status] [get_bd_pins xlconcat_0/In5]
+  connect_bd_net -net xlslice_pr_0_Dout [get_bd_pins xlslice_pr_0/Dout] [get_bd_pins hw_contract/decouple_pr0]
+  connect_bd_net -net xlslice_pr_1_Dout [get_bd_pins xlslice_pr_1/Dout] [get_bd_pins hw_contract/decouple_pr1]
+  connect_bd_net -net xlslice_pr_2_Dout [get_bd_pins xlslice_pr_2/Dout] [get_bd_pins hw_contract/decouple_pr2]
+  connect_bd_net -net hw_contract_rp_resetn_rp0 [get_bd_pins rp_resetn_pr_0] [get_bd_pins hw_contract/rp_resetn_rp0]
+  connect_bd_net -net hw_contract_rp_resetn_rp1 [get_bd_pins rp_resetn_pr_1] [get_bd_pins hw_contract/rp_resetn_rp1]
+  connect_bd_net -net hw_contract_rp_resetn_rp2 [get_bd_pins rp_resetn_pr_2] [get_bd_pins hw_contract/rp_resetn_rp2]
+  connect_bd_net -net clk_300MHz_rp0 [get_bd_pins clk_300MHz_pr_0] [get_bd_pins hw_contract/clk_300MHz_rp0]
+  connect_bd_net -net clk_300MHz_rp1 [get_bd_pins clk_300MHz_pr_1] [get_bd_pins hw_contract/clk_300MHz_rp1]
+  connect_bd_net -net clk_300MHz_rp2 [get_bd_pins clk_300MHz_pr_2] [get_bd_pins hw_contract/clk_300MHz_rp2]
+  connect_bd_net -net dfx_decoupler_0_decouple_status [get_bd_pins hw_contract/decouple_status_rp0] [get_bd_pins xlconcat_0/In3]
+  connect_bd_net -net dfx_decoupler_1_decouple_status [get_bd_pins hw_contract/decouple_status_rp1] [get_bd_pins xlconcat_0/In4]
+  connect_bd_net -net dfx_decoupler_2_decouple_status [get_bd_pins hw_contract/decouple_status_rp2] [get_bd_pins xlconcat_0/In5]
 
   # Restore current instance
   current_bd_instance $oldCurInst
