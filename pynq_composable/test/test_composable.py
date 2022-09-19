@@ -78,101 +78,6 @@ def load_ip(cpipe: Composable) -> None:
 
 
 @pytest.mark.dependency()
-def test_load_dfx_ip(create_composable):
-    """Load some IP and verify if drivers have been assigned properly"""
-    ol, cpipe = create_composable
-    load_ip(cpipe)
-    assert type(cpipe.pr_0.axis_data_fifo_0) == BufferIP
-    assert type(cpipe.pr_1.cornerHarris_accel) == CornerHarris
-    assert type(cpipe.pr_2.bitwise_and_accel) == VitisVisionIP
-
-
-@pytest.mark.dependency(depends=["test_load_dfx_ip"])
-def test_pipeline_0(create_composable):
-    ol, cpipe = create_composable
-    load_ip(cpipe)
-    pipeline = [cpipe.ps_video_in, cpipe.rgb2gray_accel, cpipe.lut_accel,
-                cpipe.pr_1.cornerHarris_accel, cpipe.pr_0.axis_data_fifo_0,
-                cpipe.gray2rgb_accel, cpipe.ps_video_out]
-    cpipe.compose(pipeline)
-    assert cpipe.current_pipeline == pipeline
-    assert cpipe.graph.body
-
-
-@pytest.mark.dependency(depends=["test_load_dfx_ip"])
-def test_pipeline_1(create_composable):
-    ol, cpipe = create_composable
-    load_ip(cpipe)
-    pipeline = [cpipe.ps_video_in, cpipe.duplicate_accel,
-                [[cpipe.rgb2gray_accel, cpipe.pr_1.cornerHarris_accel],
-                 [cpipe.lut_accel]], cpipe.pr_2.bitwise_and_accel,
-                cpipe.pr_0.axis_data_fifo_0, cpipe.gray2rgb_accel,
-                cpipe.ps_video_out]
-
-    cpipe.compose(pipeline)
-    """Check if composed correctly"""
-    assert cpipe.current_pipeline == pipeline
-
-
-@pytest.mark.timeout(60)
-def test_data_movement_fifo(create_composable):
-    ol, cpipe = create_composable
-    load_ip(cpipe)
-    pipeline = [cpipe.ps_video_in, cpipe.pr_0.axis_data_fifo_0,
-                cpipe.pr_1.axis_data_fifo_0, cpipe.ps_video_out]
-    cpipe.compose(pipeline)
-    """Check if composed correctly"""
-    assert cpipe.current_pipeline == pipeline
-
-    mode = VideoMode(_cols, _rows, 24)
-    writechannel = ol.video.axi_vdma.writechannel
-    readchannel = ol.video.axi_vdma.readchannel
-    writechannel.mode = readchannel.mode = mode
-    writechannel.start()
-    readchannel.start()
-
-    frame = writechannel.newframe()
-    res = np.empty(shape=frame.shape, dtype=np.uint8)
-    frame[:] = np.random.randint(0, 255, size=frame.shape, dtype=np.uint8)
-    writechannel.writeframe(frame)
-    time.sleep(1)
-    res[:] = readchannel.readframe()
-
-    writechannel.stop()
-    readchannel.stop()
-    assert np.array_equal(frame, res)
-
-
-@pytest.mark.timeout(40)
-def test_data_movement_lut_negative(create_composable):
-    ol, cpipe = create_composable
-    cpipe.lut_accel.kernel_type = XvLut.negative
-    pipeline = [cpipe.ps_video_in, cpipe.lut_accel, cpipe.ps_video_out]
-    cpipe.compose(pipeline)
-    """Check if composed correctly"""
-    assert cpipe.current_pipeline == pipeline
-
-    mode = VideoMode(_cols, _rows, 24)
-    writechannel = ol.video.axi_vdma.writechannel
-    readchannel = ol.video.axi_vdma.readchannel
-    writechannel.mode = readchannel.mode = mode
-    writechannel.start()
-    readchannel.start()
-
-    frame = writechannel.newframe()
-    golden = np.empty(shape=frame.shape, dtype=np.uint8)
-    for c in range(frame.shape[1]):
-        value = c % 255
-        frame[:, c, :] = value
-        golden[:, c, :] = 255 - value
-    writechannel.writeframe(frame)
-    time.sleep(1)
-    res = readchannel.readframe()
-    writechannel.stop()
-    readchannel.stop()
-    assert np.array_equal(golden, res)
-
-
 def test_parser(tmp_path):
     dir = tmp_path / "hwh"
     shutil.copytree("../overlay/", dir)
@@ -208,3 +113,101 @@ def test_parser(tmp_path):
     else:
         assert cpipe.c_dict
         assert cpipe.dfx_dict
+
+
+@pytest.mark.dependency()
+def test_load_dfx_ip(create_composable):
+    """Load some IP and verify if drivers have been assigned properly"""
+    ol, cpipe = create_composable
+    load_ip(cpipe)
+    assert type(cpipe.pr_0.axis_data_fifo_0) == BufferIP
+    assert type(cpipe.pr_1.cornerHarris_accel) == CornerHarris
+    assert type(cpipe.pr_2.bitwise_and_accel) == VitisVisionIP
+
+
+@pytest.mark.dependency(depends=["test_parser", "test_load_dfx_ip"])
+def test_pipeline_0(create_composable):
+    ol, cpipe = create_composable
+    load_ip(cpipe)
+    pipeline = [cpipe.ps_video_in, cpipe.rgb2gray_accel, cpipe.lut_accel,
+                cpipe.pr_1.cornerHarris_accel, cpipe.pr_0.axis_data_fifo_0,
+                cpipe.gray2rgb_accel, cpipe.ps_video_out]
+    cpipe.compose(pipeline)
+    assert cpipe.current_pipeline == pipeline
+    assert cpipe.graph.body
+
+
+@pytest.mark.dependency(depends=["test_parser", "test_load_dfx_ip"])
+def test_pipeline_1(create_composable):
+    ol, cpipe = create_composable
+    load_ip(cpipe)
+    pipeline = [cpipe.ps_video_in, cpipe.duplicate_accel,
+                [[cpipe.rgb2gray_accel, cpipe.pr_1.cornerHarris_accel],
+                 [cpipe.lut_accel]], cpipe.pr_2.bitwise_and_accel,
+                cpipe.pr_0.axis_data_fifo_0, cpipe.gray2rgb_accel,
+                cpipe.ps_video_out]
+
+    cpipe.compose(pipeline)
+    """Check if composed correctly"""
+    assert cpipe.current_pipeline == pipeline
+
+
+@pytest.mark.timeout(60)
+@pytest.mark.dependency(depends=["test_parser", "test_load_dfx_ip"])
+def test_data_movement_fifo(create_composable):
+    ol, cpipe = create_composable
+    load_ip(cpipe)
+    pipeline = [cpipe.ps_video_in, cpipe.pr_0.axis_data_fifo_0,
+                cpipe.pr_1.axis_data_fifo_0, cpipe.ps_video_out]
+    cpipe.compose(pipeline)
+    """Check if composed correctly"""
+    assert cpipe.current_pipeline == pipeline
+
+    mode = VideoMode(_cols, _rows, 24)
+    writechannel = ol.video.axi_vdma.writechannel
+    readchannel = ol.video.axi_vdma.readchannel
+    writechannel.mode = readchannel.mode = mode
+    writechannel.start()
+    readchannel.start()
+
+    frame = writechannel.newframe()
+    res = np.empty(shape=frame.shape, dtype=np.uint8)
+    frame[:] = np.random.randint(0, 255, size=frame.shape, dtype=np.uint8)
+    writechannel.writeframe(frame)
+    time.sleep(1)
+    res[:] = readchannel.readframe()
+
+    writechannel.stop()
+    readchannel.stop()
+    assert np.array_equal(frame, res)
+
+
+@pytest.mark.timeout(40)
+@pytest.mark.dependency(depends=["test_parser"])
+def test_data_movement_lut_negative(create_composable):
+    ol, cpipe = create_composable
+    cpipe.lut_accel.kernel_type = XvLut.negative
+    pipeline = [cpipe.ps_video_in, cpipe.lut_accel, cpipe.ps_video_out]
+    cpipe.compose(pipeline)
+    """Check if composed correctly"""
+    assert cpipe.current_pipeline == pipeline
+
+    mode = VideoMode(_cols, _rows, 24)
+    writechannel = ol.video.axi_vdma.writechannel
+    readchannel = ol.video.axi_vdma.readchannel
+    writechannel.mode = readchannel.mode = mode
+    writechannel.start()
+    readchannel.start()
+
+    frame = writechannel.newframe()
+    golden = np.empty(shape=frame.shape, dtype=np.uint8)
+    for c in range(frame.shape[1]):
+        value = c % 255
+        frame[:, c, :] = value
+        golden[:, c, :] = 255 - value
+    writechannel.writeframe(frame)
+    time.sleep(1)
+    res = readchannel.readframe()
+    writechannel.stop()
+    readchannel.stop()
+    assert np.array_equal(golden, res)
