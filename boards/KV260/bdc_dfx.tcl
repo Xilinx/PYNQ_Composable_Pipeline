@@ -473,19 +473,19 @@ foreach pr ${list_rm} {
 }
 catch {exec cp ./${prj_name}/${prj_name}.gen/sources_1/bd/${design_name}/hw_handoff/${design_name}.hwh ./${dest_dir}/${prj_name}.hwh}
 
-# copy bitstreams
-# impl1 having full and partial bitstreams
-catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_0_${pr_0_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_dilate_erode}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_2_${pr_2_subtract}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_subtract}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_1_${pr_1_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_dilate_erode}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${design_name}_wrapper.bit ./${dest_dir}/${prj_name}.bit}
-# child_0_impl_1
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_0_${pr_0_fast_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_fast_fifo}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_1_${pr_1_cornerharris}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_cornerharris}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_2_${pr_2_absdiff}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_absdiff}_partial.bit}
-# child_1_impl_1
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_0_${pr_0_filter2d_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_filter2d_fifo}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_1_${pr_1_rgb2xyz}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_rgb2xyz}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_2_${pr_2_add}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_add}_partial.bit}
-# child_2_impl_1
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_2_impl_1/${bithier}_pr_2_${pr_2_bitand}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_bitand}_partial.bit}
+## copy bitstreams
+## impl1 having full and partial bitstreams
+#catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_0_${pr_0_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_dilate_erode}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_2_${pr_2_subtract}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_subtract}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_1_${pr_1_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_dilate_erode}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${design_name}_wrapper.bit ./${dest_dir}/${prj_name}.bit}
+## child_0_impl_1
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_0_${pr_0_fast_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_fast_fifo}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_1_${pr_1_cornerharris}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_cornerharris}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_2_${pr_2_absdiff}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_absdiff}_partial.bit}
+## child_1_impl_1
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_0_${pr_0_filter2d_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_filter2d_fifo}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_1_${pr_1_rgb2xyz}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_rgb2xyz}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_2_${pr_2_add}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_add}_partial.bit}
+## child_2_impl_1
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_2_impl_1/${bithier}_pr_2_${pr_2_bitand}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_bitand}_partial.bit}

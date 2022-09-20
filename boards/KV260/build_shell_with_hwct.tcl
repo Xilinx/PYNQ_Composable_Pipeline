@@ -11,7 +11,8 @@ if { $argc != 1 } {
 #set hwct ../hw_contract_usepr1.dcp  resutling in some unrouted net (GND)
 # hw_contract_userp1_d2af from new function WriteCheckpointOfCell
 #set hwct ./hw_contract_userpr1_rw.dcp
-set hwct ./hwctdirect_pr1.dcp
+set root_dir ./
+set hwct ${root_dir}/hwctdirect_pr1.dcp
 #set hwct ../hwct/[lindex $argv 0]
 # the name of resulting full shell DCP and bit
 set full_shell_name     full_shell
@@ -22,7 +23,7 @@ set store_checkpoint 1
 
 #set project_dir "/group/zircon/pongstorn/projects/PYNQ_overlay_sep2022/PYNQ_Composable_Pipeline/boards/KV260/cv_dfx_3_pr"
 set project_name [lindex $argv 0]
-set post_opt_dcp "${project_name}/${project_name}.runs/impl_1/video_cp_wrapper_opt.dcp"
+set post_opt_dcp "${root_dir}/${project_name}/${project_name}.runs/impl_1/video_cp_wrapper_opt.dcp"
 set src_dir ./
 
 # use post_opt not post_synth because hwct is build from post_route. Thus some of the unnecessary logics are trimmed.
@@ -49,7 +50,7 @@ if {$store_checkpoint} {
 
 
 # to assign only cells connect to static to pblock_static_core
-source ${src_dir}/assign_intf_cells_to_pblock.tcl
+source ${root_dir}/assign_intf_cells_to_pblock.tcl
 
 ## TO be removed after doing it in RW
 #set_property PROHIBIT 1 [get_bels { \
@@ -60,12 +61,12 @@ source ${src_dir}/assign_intf_cells_to_pblock.tcl
 
 
 # use different directive, if needed to close timing. 
-place_design -directive EarlyBlockPlacement
+place_design -directive AltSpreadLogic_high
 if {$store_checkpoint} {
   write_checkpoint post_place.dcp -force
 }
 
-source ${src_dir}/adjust_pblock_preroute.tcl -notrace
+source ${root_dir}/adjust_pblock_preroute.tcl -notrace
 
 ## downgrade the check for containment of nets in static. The check is permanantly disable in 21.2
 ##set_msg_config -id {[Constraints  18-4638]} -new_severity INFO
@@ -83,9 +84,10 @@ if { [catch {route_design -directive AggressiveExplore}] } {
   puts stderr "CRITICAL WARNING: route_design may found some problem. Please check log file."
 }
 
+report_route_status
+report_timing
 if {$store_checkpoint} {
   write_checkpoint post_route.dcp -force
-  report_route_status
 }
 
 
@@ -107,6 +109,9 @@ write_abstract_shell -cell video_cp_i/composable/pr_0 abs_shell_PR0.dcp -force
 
 
 # useful commands
+# To see if bufgce are at similar location
+# mark_objects  [get_cells [list video_cp_i/composable/clk_buf_rp*/U0/USE_BUFG.GEN_BUFG[0].BUFG_U]]
+#
 # highlight shell-pr nets
 # highlight_objects  -color blue [get_nets -of [get_pins video_cp_i/composable/pr_*/*] -filter {TYPE != "GLOBAL_CLOCK"}]
 # 

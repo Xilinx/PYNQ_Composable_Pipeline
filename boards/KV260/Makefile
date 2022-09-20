@@ -28,6 +28,7 @@ shell:
 
 build_all_rm:
 	build_all_rm.sh $(overlay_name) relocatable_modules
+build_package:	
 	build_package.sh $(overlay_name) $(overlay_name)_reloc
 
 dtbo:
