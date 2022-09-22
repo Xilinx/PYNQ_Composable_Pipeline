@@ -99,7 +99,7 @@ write_bitstream ${full_shell_name}.bit -force
 #############################################################################
 # Write abstract and full shell
 #############################################################################
-write_abstract_shell -cell video_cp_i/composable/pr_0 abs_shell_PR0.dcp -force
+write_abstract_shell -cell video_cp_i/composable/pr_1 abs_shell_PR1.dcp -force
 
 #update_design -cell video_cp_i/composable/pr_0 -black_box
 #update_design -cell video_cp_i/composable/pr_1 -black_box

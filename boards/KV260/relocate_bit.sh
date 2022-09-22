@@ -1,7 +1,14 @@
 #!/bin/bash
 
-# ussage relocate_bit.sh 1
-# where the PR number is where the bit fiels are implemented in
+# Usage relocate_bit.sh <dir> <PR>
+#
+# where 
+# dir specifies the directory to store all the bitstreams. The dir must already exists.
+# PR is PR number where the bit streams are implemented in.
+#
+# To relocate bitstream implemented at pr_1 to others and store bitstreams at a directory named temp, use 
+# relocate_bit.sh temp 1
+
 dir=$1
 s=$2
 

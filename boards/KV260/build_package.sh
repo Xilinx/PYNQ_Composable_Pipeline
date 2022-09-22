@@ -13,7 +13,7 @@ if [ -d "$PKG_NAME" ]; then rm -Rf $PKG_NAME; fi
 mkdir $PKG_NAME
 
 
-relocate_bit.sh $PKG_NAME 0
+relocate_bit.sh $PKG_NAME 1
 
 
 echo "Copy the shell bit file $SHELL"

@@ -43,14 +43,14 @@ set bd_dir    ${root_dir}/${prj_name}/${prj_name}.gen/sources_1/bd/video_cp/bd/
 set synth_dir ${root_dir}/${prj_name}/${prj_name}.runs/
 
 
-add_files -quiet ${root_dir}/abs_shell_PR0.dcp
+add_files -quiet ${root_dir}/abs_shell_PR1.dcp
 set_param project.isImplRun true
 add_files -quiet ${bd_dir}/${function}/${function}.bd
 add_files -quiet ${synth_dir}/${function}_synth_1/${function}.dcp
 set_param project.isImplRun false
-set_property SCOPED_TO_CELLS video_cp_i/composable/pr_0 [get_files ${synth_dir}/${function}_synth_1/${function}.dcp]
+set_property SCOPED_TO_CELLS video_cp_i/composable/pr_1 [get_files ${synth_dir}/${function}_synth_1/${function}.dcp]
 set_param project.isImplRun true
-link_design -top video_cp_wrapper -part xck26-sfvc784-2LV-c -reconfig_partitions {video_cp_i/composable/pr_0} 
+link_design -top video_cp_wrapper -part xck26-sfvc784-2LV-c -reconfig_partitions {video_cp_i/composable/pr_1} 
 set_param project.isImplRun false
 
 
@@ -94,7 +94,7 @@ set time_route [expr {([clock seconds] - $TIME_step_start)}]
 
 
 set TIME_step_start [clock seconds]
-write_bitstream -cell video_cp_i/composable/pr_0 ${bit_name}.bit
+write_bitstream -cell video_cp_i/composable/pr_1 ${bit_name}.bit
 set time_bitstream [expr {([clock seconds] - $TIME_step_start)}]
 
 set time_total [expr {([clock seconds] - $TIME_start)}]
