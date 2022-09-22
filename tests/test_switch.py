@@ -14,16 +14,16 @@ __copyright__ = "Copyright 2022, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 desc = {"parameters":
-        {"C_BASEADDR": "0x0", "C_HIGHADDR": "0xFFFF", "C_NUM_MI_SLOTS": 8},
+        {"C_BASEADDR": "0x0", "C_HIGHADDR": "0xFFFF", "NUM_MI": 8},
         "phys_addr": 0x0, "addr_range": 0xFFFF}
 
-test_data = [(np.arange(desc["parameters"]["C_NUM_MI_SLOTS"], dtype=np.int64),
+test_data = [(np.arange(desc["parameters"]["NUM_MI"], dtype=np.int64),
               {'64': 0, '68': 1, '72': 2, '76': 3, '80': 4, '84': 5, '88': 6,
                '92': 7, '0': 2}),
              (np.arange(5, dtype=np.int64),
               {'64': 0, '68': 1, '72': 2, '76': 3, '80': 4, '84': 1 << 31,
                '88': 1 << 31, '92': 1 << 31, '0': 2}),
-             (np.ones(desc["parameters"]["C_NUM_MI_SLOTS"], dtype=np.int64)*-1,
+             (np.ones(desc["parameters"]["NUM_MI"], dtype=np.int64)*-1,
               {'64': 1 << 31, '68': 1 << 31, '72': 1 << 31, '76': 1 << 31,
                '80': 1 << 31, '84': 1 << 31, '88': 1 << 31, '92': 1 << 31,
                '0': 2}),
@@ -63,7 +63,7 @@ def test_too_long(ipdevice):
     with pytest.raises(ValueError) as excinfo:
         sw.mi = np.ones(20, dtype=np.int64)
     assert str(excinfo.value) == "Provided numpy array is bigger than number "\
-        "of slots {}".format(desc["parameters"]["C_NUM_MI_SLOTS"])
+        "of slots {}".format(desc["parameters"]["NUM_MI"])
 
 
 def test_too_short(ipdevice):
@@ -112,6 +112,6 @@ def test_data_all_disabled(ipdevice):
 
 def test_data_return(ipdevice):
     sw = switch.StreamSwitch(desc)
-    tvector = np.arange(desc["parameters"]["C_NUM_MI_SLOTS"], dtype=np.int64)
+    tvector = np.arange(desc["parameters"]["NUM_MI"], dtype=np.int64)
     sw.mi = tvector
     assert np.array_equal(sw.mi, tvector)
