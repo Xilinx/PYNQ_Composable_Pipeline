@@ -8,10 +8,11 @@ prj_dir=$1
 out_dir=$2
 
 # list of source function for relocation. 
-# Note composable_pr_1_dilate_erode is needed but it will be relocated from composable_pr_0_dilate_erode.
+# Note that the hwct will be from pr_1. Thus, the synthesized netlist must also be from pr_1 if SmartConnect IP is used in the function.
+# dilate_erode function use pr_1 because it has SmartConnect IP. 
 # Thus, it is not listed.
 allRMs=( \
-  composable_pr_0_dilate_erode_inst_0       \
+  composable_pr_1_dilate_erode_inst_0       \
   composable_pr_0_fast_fifo_inst_0          \
   composable_pr_0_filter2d_fifo_inst_0      \
   composable_pr_1_cornerharris_fifo_inst_0  \
