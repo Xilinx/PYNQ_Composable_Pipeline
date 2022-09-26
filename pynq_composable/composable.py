@@ -8,7 +8,7 @@ import numpy as np
 import os
 from .parser import HWHComposable
 from pynq import DefaultIP, DefaultHierarchy
-from pynq.utils import ReprDict
+from pynqutils.runtime import ReprDict
 from .repr_dict import ReprDictComposable
 from .virtual import DFXRegion, StreamingIP, VirtualIP
 from typing import Type, Union
