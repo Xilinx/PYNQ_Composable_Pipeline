@@ -3,6 +3,177 @@
 # SPDX-License-Identifier: BSD-3-Clause
 ###############################################################################
 
+# Hierarchical cell: hw_contract
+proc create_hier_cell_hw_contract { parentCell nameHier addr_prefixes} {
+
+  variable script_folder
+
+  if { $parentCell eq "" || $nameHier eq "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2092 -severity "ERROR" "create_hier_cell_hw_contract() - Empty argument(s)!"}
+     return
+  }
+
+  # Get object for parentCell
+  set parentObj [get_bd_cells $parentCell]
+  if { $parentObj == "" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2090 -severity "ERROR" "Unable to find parent cell <$parentCell>!"}
+     return
+  }
+
+  # Make sure parentObj is hier blk
+  set parentType [get_property TYPE $parentObj]
+  if { $parentType ne "hier" } {
+     catch {common::send_gid_msg -ssname BD::TCL -id 2091 -severity "ERROR" "Parent <$parentObj> has TYPE = <$parentType>. Expected to be <hier>."}
+     return
+  }
+
+  # Save current instance; Restore later
+  set oldCurInst [current_bd_instance .]
+
+  # Set parent object as current
+  current_bd_instance $parentObj
+
+  # Create cell and set as current instance
+  set hier_obj [create_bd_cell -type hier $nameHier]
+  current_bd_instance $hier_obj
+
+  # Create interface pins
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS_rp_2_s_0
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS_rp_2_s_1
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS_rp_2_s_2
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS_rp_2_s_3
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS_rp_2_s_4
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 M_AXIS_rp_2_s_5
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI0
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI1
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:aximm_rtl:1.0 S_AXI2
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 rp_in_0
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 rp_in_1
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 rp_in_2
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 rp_in_3
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 rp_in_4
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 rp_in_5
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 rp_out_0
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 rp_out_1
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 rp_out_2
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 rp_out_3
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 rp_out_4
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 rp_out_5
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_lite0
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_lite1
+
+  create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:aximm_rtl:1.0 s_axi_lite2
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 s_axis_s_2_rp_0
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 s_axis_s_2_rp_1
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 s_axis_s_2_rp_2
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 s_axis_s_2_rp_3
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 s_axis_s_2_rp_4
+
+  create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 s_axis_s_2_rp_5
+
+
+  # Create pins
+  create_bd_pin -dir I -type clk clk_300MHz
+  create_bd_pin -dir I -type rst clk_300MHz_aresetn
+  create_bd_pin -dir I -type clk clk_300MHz_rp0
+  create_bd_pin -dir I -type clk clk_300MHz_rp1
+  create_bd_pin -dir I -type clk clk_300MHz_rp2
+  create_bd_pin -dir I -from 0 -to 0 decouple_pr0
+  create_bd_pin -dir I -from 0 -to 0 decouple_pr1
+  create_bd_pin -dir I -from 0 -to 0 decouple_pr2
+  create_bd_pin -dir O decouple_status_rp1
+  create_bd_pin -dir O decouple_status_rp2
+  create_bd_pin -dir O decouple_status_rp0
+  create_bd_pin -dir O -type rst rp_resetn_rp0
+  create_bd_pin -dir O -type rst rp_resetn_rp1
+  create_bd_pin -dir O -type rst rp_resetn_rp2
+  create_bd_pin -dir I -type rst soft_rst_n
+
+  for {set i 0} {$i < [llength $addr_prefixes]} {incr i} {
+    create_hier_cell_hw_contract_pr $hier_obj hw_contract_pr$i [lindex $addr_prefixes $i]
+  }
+
+  # Create interface connections
+  connect_bd_intf_net -intf_net clock_isolation_rp0_M_AXIS_rp_2_s_0 [get_bd_intf_pins M_AXIS_rp_2_s_0] [get_bd_intf_pins hw_contract_pr0/M_AXIS_rp_2_s_0]
+  connect_bd_intf_net -intf_net clock_isolation_rp0_M_AXIS_rp_2_s_1 [get_bd_intf_pins M_AXIS_rp_2_s_1] [get_bd_intf_pins hw_contract_pr0/M_AXIS_rp_2_s_1]
+  connect_bd_intf_net -intf_net clock_isolation_rp1_M_AXIS_rp_2_s_0 [get_bd_intf_pins M_AXIS_rp_2_s_2] [get_bd_intf_pins hw_contract_pr1/M_AXIS_rp_2_s_0]
+  connect_bd_intf_net -intf_net clock_isolation_rp1_M_AXIS_rp_2_s_1 [get_bd_intf_pins M_AXIS_rp_2_s_3] [get_bd_intf_pins hw_contract_pr1/M_AXIS_rp_2_s_1]
+  connect_bd_intf_net -intf_net clock_isolation_rp2_M_AXIS_rp_2_s_0 [get_bd_intf_pins M_AXIS_rp_2_s_4] [get_bd_intf_pins hw_contract_pr2/M_AXIS_rp_2_s_0]
+  connect_bd_intf_net -intf_net clock_isolation_rp2_M_AXIS_rp_2_s_1 [get_bd_intf_pins M_AXIS_rp_2_s_5] [get_bd_intf_pins hw_contract_pr2/M_AXIS_rp_2_s_1]
+  connect_bd_intf_net -intf_net dfx_decoupler_0_rp_in_0 [get_bd_intf_pins rp_in_0] [get_bd_intf_pins hw_contract_pr0/rp_in_0]
+  connect_bd_intf_net -intf_net dfx_decoupler_0_rp_in_1 [get_bd_intf_pins rp_in_1] [get_bd_intf_pins hw_contract_pr0/rp_in_1]
+  connect_bd_intf_net -intf_net dfx_decoupler_1_rp_in_0 [get_bd_intf_pins rp_in_2] [get_bd_intf_pins hw_contract_pr1/rp_in_0]
+  connect_bd_intf_net -intf_net dfx_decoupler_1_rp_in_1 [get_bd_intf_pins rp_in_3] [get_bd_intf_pins hw_contract_pr1/rp_in_1]
+  connect_bd_intf_net -intf_net dfx_decoupler_2_rp_in_0 [get_bd_intf_pins rp_in_4] [get_bd_intf_pins hw_contract_pr2/rp_in_0]
+  connect_bd_intf_net -intf_net dfx_decoupler_2_rp_in_1 [get_bd_intf_pins rp_in_5] [get_bd_intf_pins hw_contract_pr2/rp_in_1]
+  connect_bd_intf_net -intf_net dfx_decoupler_pr_0_s_axi_lite [get_bd_intf_pins s_axi_lite0] [get_bd_intf_pins hw_contract_pr0/s_axi_lite]
+  connect_bd_intf_net -intf_net dfx_decoupler_pr_1_s_axi_lite [get_bd_intf_pins s_axi_lite1] [get_bd_intf_pins hw_contract_pr1/s_axi_lite]
+  connect_bd_intf_net -intf_net dfx_decoupler_pr_2_s_axi_lite [get_bd_intf_pins s_axi_lite2] [get_bd_intf_pins hw_contract_pr2/s_axi_lite]
+  connect_bd_intf_net -intf_net pr_0_out0_M_AXIS [get_bd_intf_pins rp_out_0] [get_bd_intf_pins hw_contract_pr0/rp_out_0]
+  connect_bd_intf_net -intf_net pr_0_out1_M_AXIS [get_bd_intf_pins rp_out_1] [get_bd_intf_pins hw_contract_pr0/rp_out_1]
+  connect_bd_intf_net -intf_net pr_1_out0_M_AXIS [get_bd_intf_pins rp_out_2] [get_bd_intf_pins hw_contract_pr1/rp_out_0]
+  connect_bd_intf_net -intf_net pr_1_out1_M_AXIS [get_bd_intf_pins rp_out_3] [get_bd_intf_pins hw_contract_pr1/rp_out_1]
+  connect_bd_intf_net -intf_net pr_2_out0_M_AXIS [get_bd_intf_pins rp_out_4] [get_bd_intf_pins hw_contract_pr2/rp_out_0]
+  connect_bd_intf_net -intf_net pr_2_out1_M_AXIS [get_bd_intf_pins rp_out_5] [get_bd_intf_pins hw_contract_pr2/rp_out_1]
+  connect_bd_intf_net -intf_net s_axis_dfx_pr_0_0_1 [get_bd_intf_pins s_axis_s_2_rp_0] [get_bd_intf_pins hw_contract_pr0/s_axis_s_2_rp_0]
+  connect_bd_intf_net -intf_net s_axis_dfx_pr_0_1_1 [get_bd_intf_pins s_axis_s_2_rp_1] [get_bd_intf_pins hw_contract_pr0/s_axis_s_2_rp_1]
+  connect_bd_intf_net -intf_net s_axis_dfx_pr_1_0_1 [get_bd_intf_pins s_axis_s_2_rp_2] [get_bd_intf_pins hw_contract_pr1/s_axis_s_2_rp_0]
+  connect_bd_intf_net -intf_net s_axis_dfx_pr_1_1_1 [get_bd_intf_pins s_axis_s_2_rp_3] [get_bd_intf_pins hw_contract_pr1/s_axis_s_2_rp_1]
+  connect_bd_intf_net -intf_net s_axis_dfx_pr_2_0_1 [get_bd_intf_pins s_axis_s_2_rp_4] [get_bd_intf_pins hw_contract_pr2/s_axis_s_2_rp_0]
+  connect_bd_intf_net -intf_net s_axis_dfx_pr_2_1_1 [get_bd_intf_pins s_axis_s_2_rp_5] [get_bd_intf_pins hw_contract_pr2/s_axis_s_2_rp_1]
+  connect_bd_intf_net -intf_net smartconnect_0_M00_AXI [get_bd_intf_pins S_AXI0] [get_bd_intf_pins hw_contract_pr0/S_AXI]
+  connect_bd_intf_net -intf_net smartconnect_0_M01_AXI [get_bd_intf_pins S_AXI1] [get_bd_intf_pins hw_contract_pr1/S_AXI]
+  connect_bd_intf_net -intf_net smartconnect_0_M02_AXI [get_bd_intf_pins S_AXI2] [get_bd_intf_pins hw_contract_pr2/S_AXI]
+
+  # Create port connections
+  connect_bd_net -net clk_rp0 [get_bd_pins clk_300MHz_rp0] [get_bd_pins hw_contract_pr0/clk_300MHz_rp]
+  connect_bd_net -net clk_rp1 [get_bd_pins clk_300MHz_rp1] [get_bd_pins hw_contract_pr1/clk_300MHz_rp]
+  connect_bd_net -net clk_rp2 [get_bd_pins clk_300MHz_rp2] [get_bd_pins hw_contract_pr2/clk_300MHz_rp]
+  connect_bd_net -net dfx_decoupler_pr_0_decouple_status [get_bd_pins decouple_status_rp0] [get_bd_pins hw_contract_pr0/decouple_status]
+  connect_bd_net -net dfx_decoupler_pr_1_decouple_status [get_bd_pins decouple_status_rp1] [get_bd_pins hw_contract_pr1/decouple_status]
+  connect_bd_net -net dfx_decoupler_pr_2_decouple_status [get_bd_pins decouple_status_rp2] [get_bd_pins hw_contract_pr2/decouple_status]
+  connect_bd_net -net dfx_decoupler_pr_0_rp_resetn_RST   [get_bd_pins rp_resetn_rp0] [get_bd_pins hw_contract_pr0/rp_resetn_RST]
+  connect_bd_net -net dfx_decoupler_pr_1_rp_resetn_RST   [get_bd_pins rp_resetn_rp1] [get_bd_pins hw_contract_pr1/rp_resetn_RST]
+  connect_bd_net -net dfx_decoupler_pr_2_rp_resetn_RST   [get_bd_pins rp_resetn_rp2] [get_bd_pins hw_contract_pr2/rp_resetn_RST]
+  connect_bd_net -net xlslice_pr_0_Dout [get_bd_pins decouple_pr0] [get_bd_pins hw_contract_pr0/decouple_in]
+  connect_bd_net -net xlslice_pr_1_Dout [get_bd_pins decouple_pr1] [get_bd_pins hw_contract_pr1/decouple_in]
+  connect_bd_net -net xlslice_pr_2_Dout [get_bd_pins decouple_pr2] [get_bd_pins hw_contract_pr2/decouple_in]
+
+  connect_bd_net -net clk  [get_bd_pins clk_300MHz] [get_bd_pins hw_contract_pr0/clk_300MHz] [get_bd_pins hw_contract_pr1/clk_300MHz] [get_bd_pins hw_contract_pr2/clk_300MHz]
+  connect_bd_net -net rstn [get_bd_pins clk_300MHz_aresetn] [get_bd_pins hw_contract_pr0/clk_300MHz_aresetn] [get_bd_pins hw_contract_pr1/clk_300MHz_aresetn] [get_bd_pins hw_contract_pr2/clk_300MHz_aresetn]
+  connect_bd_net -net soft_rstn [get_bd_pins soft_rst_n] [get_bd_pins hw_contract_pr0/soft_rst_n] [get_bd_pins hw_contract_pr1/soft_rst_n] [get_bd_pins hw_contract_pr2/soft_rst_n]
+
+  # Restore current instance
+  current_bd_instance $oldCurInst
+}
+
 # Hierarchical cell: clock_isolation
 proc create_hier_cell_clock_isolation { parentCell nameHier } {
 

@@ -393,7 +393,7 @@ create_pr_configuration -name config_1 -partitions \
    [list \
       ${design_name}_i/composable/pr_0:${pr_0_dilate_erode}_inst_0 \
       ${design_name}_i/composable/pr_1:${pr_1_dilate_erode}_inst_0 \
-      ${design_name}_i/composable/pr_2:${pr_2_subtract}_inst_0\
+      ${design_name}_i/composable/pr_2:${pr_2_dilate_erode}_inst_0\
    ]
 
 create_pr_configuration -name config_2 -partitions \
@@ -417,23 +417,50 @@ create_pr_configuration -name config_4 -partitions \
       ${design_name}_i/composable/pr_0 \
       ${design_name}_i/composable/pr_1 \
    ]
+# PM:PM can we move this to pr_1 or 0 and combine with config_4   
+create_pr_configuration -name config_5 -partitions \
+   [list \
+      ${design_name}_i/composable/pr_2:${pr_2_subtract}_inst_0\
+   ] -greyboxes [list \
+      ${design_name}_i/composable/pr_0 \
+      ${design_name}_i/composable/pr_1 \
+   ]
 
 set_property PR_CONFIGURATION config_1 [get_runs impl_1]
 create_run child_0_impl_1 -parent_run impl_1 -flow {Vivado Implementation 2022} -strategy Performance_NetDelay_low -pr_config config_2
 create_run child_1_impl_1 -parent_run impl_1 -flow {Vivado Implementation 2022} -strategy Performance_NetDelay_low -pr_config config_3
 create_run child_2_impl_1 -parent_run impl_1 -flow {Vivado Implementation 2022} -strategy Performance_NetDelay_low -pr_config config_4
+create_run child_3_impl_1 -parent_run impl_1 -flow {Vivado Implementation 2022} -strategy Performance_NetDelay_low -pr_config config_5
 
 # Change global implementation strategy
-set_property strategy Performance_Explore [get_runs impl_1]
+#set_property strategy Performance_Explore [get_runs impl_1]
+set_property strategy Performance_RefinePlacement [get_runs impl_1]
 set_property report_strategy {UltraFast Design Methodology Reports} [get_runs impl_1]
+
+# add custom script to build a shell for relocation
+#set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE Explore [get_runs impl_1]
+#set_property STEPS.ROUTE_DESIGN.ARGS.DIRECTIVE Explore [get_runs impl_1]
+add_files -fileset utils_1 -norecurse               assign_intf_cells_to_pblock.tcl
+add_files -fileset utils_1 -norecurse               adjust_pblock_preroute.tcl
+set_property STEPS.PLACE_DESIGN.TCL.PRE [ get_files assign_intf_cells_to_pblock.tcl -of [get_fileset utils_1] ] [get_runs impl_1]
+set_property STEPS.ROUTE_DESIGN.TCL.PRE [ get_files adjust_pblock_preroute.tcl -of [get_fileset utils_1] ] [get_runs impl_1]
+
+## downgrade the check for containment of nets in static. The check is supposed to be permanantly disable in 21.2, but it is not even in 22.1
+##set_msg_config -id {[Constraints  18-4638]} -new_severity INFO
+#set_msg_config -suppress -id {[Constraints  18-4638]}
+set_msg_config -suppress -id {[Constraints  18-901]}
+##ERROR: [Constraints 18-901] HDPostRouteDRC-04: the net GND (or <const0>) does not honor the contain/exclude routing due to routing nodes:
+
 
 launch_runs impl_1 -to_step write_bitstream -jobs 16
 wait_on_run impl_1
-launch_runs child_0_impl_1 -to_step write_bitstream -jobs 16
-wait_on_run child_0_impl_1
-launch_runs child_1_impl_1 child_2_impl_1 -to_step write_bitstream -jobs 16
-wait_on_run child_1_impl_1
-wait_on_run child_2_impl_1
+#launch_runs child_0_impl_1 -to_step write_bitstream -jobs 16
+#wait_on_run child_0_impl_1
+#launch_runs child_1_impl_1 child_2_impl_1 -to_step write_bitstream -jobs 16
+#wait_on_run child_1_impl_1
+#wait_on_run child_2_impl_1
+#launch_runs child_3_impl_1 -to_step write_bitstream -jobs 16
+#wait_on_run child_3_impl_1
 
 # create bitstreams directory
 set dest_dir "./overlay"
@@ -446,19 +473,19 @@ foreach pr ${list_rm} {
 }
 catch {exec cp ./${prj_name}/${prj_name}.gen/sources_1/bd/${design_name}/hw_handoff/${design_name}.hwh ./${dest_dir}/${prj_name}.hwh}
 
-# copy bitstreams
-# impl1 having full and partial bitstreams
-catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_0_${pr_0_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_dilate_erode}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_2_${pr_2_subtract}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_subtract}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_1_${pr_1_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_dilate_erode}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${design_name}_wrapper.bit ./${dest_dir}/${prj_name}.bit}
-# child_0_impl_1
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_0_${pr_0_fast_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_fast_fifo}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_1_${pr_1_cornerharris}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_cornerharris}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_2_${pr_2_absdiff}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_absdiff}_partial.bit}
-# child_1_impl_1
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_0_${pr_0_filter2d_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_filter2d_fifo}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_1_${pr_1_rgb2xyz}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_rgb2xyz}_partial.bit}
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_2_${pr_2_add}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_add}_partial.bit}
-# child_2_impl_1
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_2_impl_1/${bithier}_pr_2_${pr_2_bitand}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_bitand}_partial.bit}
+## copy bitstreams
+## impl1 having full and partial bitstreams
+#catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_0_${pr_0_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_dilate_erode}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_2_${pr_2_subtract}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_subtract}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_1_${pr_1_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_dilate_erode}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${design_name}_wrapper.bit ./${dest_dir}/${prj_name}.bit}
+## child_0_impl_1
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_0_${pr_0_fast_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_fast_fifo}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_1_${pr_1_cornerharris}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_cornerharris}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_2_${pr_2_absdiff}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_absdiff}_partial.bit}
+## child_1_impl_1
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_0_${pr_0_filter2d_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_filter2d_fifo}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_1_${pr_1_rgb2xyz}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_rgb2xyz}_partial.bit}
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_2_${pr_2_add}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_add}_partial.bit}
+## child_2_impl_1
+#catch {exec cp ./${prj_name}/${prj_name}.runs/child_2_impl_1/${bithier}_pr_2_${pr_2_bitand}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_bitand}_partial.bit}
