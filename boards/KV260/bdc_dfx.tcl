@@ -23,6 +23,8 @@
 ###############################################################################
 
 
+set relocatable 1
+
 # Set clock and reset names
 set family [get_property FAMILY [get_parts [get_property PART_NAME [current_board_part]]]]
 if {${family} == "zynq"} {
@@ -454,14 +456,15 @@ set_msg_config -suppress -id {[Constraints  18-901]}
 
 launch_runs impl_1 -to_step write_bitstream -jobs 16
 wait_on_run impl_1
-#launch_runs child_0_impl_1 -to_step write_bitstream -jobs 16
-#wait_on_run child_0_impl_1
-#launch_runs child_1_impl_1 child_2_impl_1 -to_step write_bitstream -jobs 16
-#wait_on_run child_1_impl_1
-#wait_on_run child_2_impl_1
-#launch_runs child_3_impl_1 -to_step write_bitstream -jobs 16
-#wait_on_run child_3_impl_1
-
+if {$relocatable == 0} {
+   launch_runs child_0_impl_1 -to_step write_bitstream -jobs 16
+   wait_on_run child_0_impl_1
+   launch_runs child_1_impl_1 child_2_impl_1 -to_step write_bitstream -jobs 16
+   wait_on_run child_1_impl_1
+   wait_on_run child_2_impl_1
+   launch_runs child_3_impl_1 -to_step write_bitstream -jobs 16
+   wait_on_run child_3_impl_1
+}
 # create bitstreams directory
 set dest_dir "./overlay"
 exec mkdir $dest_dir -p
@@ -473,19 +476,23 @@ foreach pr ${list_rm} {
 }
 catch {exec cp ./${prj_name}/${prj_name}.gen/sources_1/bd/${design_name}/hw_handoff/${design_name}.hwh ./${dest_dir}/${prj_name}.hwh}
 
-## copy bitstreams
-## impl1 having full and partial bitstreams
-#catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_0_${pr_0_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_dilate_erode}_partial.bit}
-#catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_2_${pr_2_subtract}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_subtract}_partial.bit}
-#catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_1_${pr_1_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_dilate_erode}_partial.bit}
-#catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${design_name}_wrapper.bit ./${dest_dir}/${prj_name}.bit}
-## child_0_impl_1
-#catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_0_${pr_0_fast_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_fast_fifo}_partial.bit}
-#catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_1_${pr_1_cornerharris}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_cornerharris}_partial.bit}
-#catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_2_${pr_2_absdiff}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_absdiff}_partial.bit}
-## child_1_impl_1
-#catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_0_${pr_0_filter2d_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_filter2d_fifo}_partial.bit}
-#catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_1_${pr_1_rgb2xyz}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_rgb2xyz}_partial.bit}
-#catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_2_${pr_2_add}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_add}_partial.bit}
-## child_2_impl_1
-#catch {exec cp ./${prj_name}/${prj_name}.runs/child_2_impl_1/${bithier}_pr_2_${pr_2_bitand}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_bitand}_partial.bit}
+if {$relocatable == 0} {
+   ## copy bitstreams
+   ## impl1 having full and partial bitstreams
+   catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_0_${pr_0_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_dilate_erode}_partial.bit}
+   catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_2_${pr_2_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_dilate_erode}_partial.bit}
+   catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${bithier}_pr_1_${pr_1_dilate_erode}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_dilate_erode}_partial.bit}
+   catch {exec cp ./${prj_name}/${prj_name}.runs/impl_1/${design_name}_wrapper.bit ./${dest_dir}/${prj_name}.bit}
+   # child_0_impl_1
+   catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_0_${pr_0_fast_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_fast_fifo}_partial.bit}
+   catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_1_${pr_1_cornerharris}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_cornerharris}_partial.bit}
+   catch {exec cp ./${prj_name}/${prj_name}.runs/child_0_impl_1/${bithier}_pr_2_${pr_2_absdiff}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_absdiff}_partial.bit}
+   # child_1_impl_1
+   catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_0_${pr_0_filter2d_fifo}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_0_filter2d_fifo}_partial.bit}
+   catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_1_${pr_1_rgb2xyz}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_rgb2xyz}_partial.bit}
+   catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_2_${pr_2_add}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_add}_partial.bit}
+   # child_2_impl_1
+   catch {exec cp ./${prj_name}/${prj_name}.runs/child_2_impl_1/${bithier}_pr_2_${pr_2_bitand}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_bitand}_partial.bit}
+   # child_3_impl_1
+   catch {exec cp ./${prj_name}/${prj_name}.runs/child_3_impl_1/${bithier}_pr_2_${pr_2_subtract}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_subtract}_partial.bit}
+}
