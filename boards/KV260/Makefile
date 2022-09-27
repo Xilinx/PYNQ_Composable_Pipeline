@@ -39,8 +39,8 @@ clean:
 
 distclean: clean
 	rm -rf $(overlay_name) *.zip
-	rm *.dcp
-	rm *.bit
+	rm -rf *.dcp
+	rm -rf *.bit
 	rm -rf relocatable_modules
 
 version:
