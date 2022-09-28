@@ -44,3 +44,4 @@ def parameter():
 
 def pytest_configure():
     pytest.dfx_ip = parameter()
+    pytest.overlay = _overlay_file
