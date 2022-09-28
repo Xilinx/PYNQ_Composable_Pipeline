@@ -11,7 +11,7 @@ import time
 def test_diff_gaussians():
     app = DifferenceGaussians(pytest.overlay, VSource.OpenCV, VSink.DP)
     app.start()
-    time.sleep(10)
+    time.sleep(5)
     app.stop()
     assert True
 
@@ -19,7 +19,7 @@ def test_diff_gaussians():
 def test_corner():
     app = CornerDetect(pytest.overlay, VSource.OpenCV, VSink.DP)
     app.start()
-    time.sleep(10)
+    time.sleep(5)
     app.stop()
     assert True
 
@@ -27,7 +27,7 @@ def test_corner():
 def test_color():
     app = ColorDetect(pytest.overlay, VSource.OpenCV, VSink.DP)
     app.start()
-    time.sleep(10)
+    time.sleep(5)
     app.stop()
     assert True
 
@@ -35,6 +35,6 @@ def test_color():
 def test_edge():
     app = EdgeDetect(pytest.overlay, VSource.OpenCV, VSink.DP)
     app.start()
-    time.sleep(10)
+    time.sleep(5)
     app.stop()
     assert True
