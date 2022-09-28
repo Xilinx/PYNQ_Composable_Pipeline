@@ -1,3 +1,3 @@
 #!/bin/bash
 
-coverage run --source ../ -m pytest test_composable.py -vv && coverage report --show-missing
+coverage run --source ../ -m pytest . -vv && coverage report --show-missing
