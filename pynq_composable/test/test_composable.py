@@ -15,29 +15,6 @@ import shutil
 import time
 
 
-@pytest.fixture
-def create_overlay():
-    for i in range(5):
-        try:
-            ol = Overlay("cv_dfx_3_pr.bit")
-        except OSError as e:
-            if "Bitstream file" in str(e):
-                pytest.exit(str(e))
-            elif i != 4:
-                continue
-            raise OSError("Could not program the FPGA")
-
-    yield ol
-    ol.free()
-
-
-@pytest.fixture
-def create_composable(create_overlay):
-    ol = create_overlay
-    cpipe = ol.composable
-    yield ol, cpipe
-
-
 def test_overlay_type(create_overlay):
     ol = create_overlay
     assert type(ol) == Overlay
