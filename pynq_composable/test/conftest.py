@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from pynq import Overlay
+from pynq_composable import Composable
 import pytest
 
 
