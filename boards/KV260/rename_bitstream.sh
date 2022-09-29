@@ -17,6 +17,6 @@ do
     mv ${i} cv_dfx_3_pr_${mNewFName}
 done
 
-cp ../default_paths.json overlay/cv_dfx_3_pr_paths.json
+cp ../default_paths.json cv_dfx_3_pr_paths.json
 
 popd
