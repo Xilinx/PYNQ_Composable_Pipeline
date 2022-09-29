@@ -9,7 +9,7 @@ sed -i 's/8012/8013/g' $(ls *pr_1*.hwh)
 sed -i 's/8012/8014/g' $(ls *pr_2*.hwh)
 sed -i 's/8013/8014/g' $(ls *pr_2*.hwh)
 
-com=$(ls composable*)
+com=$(ls *_composable*)
 
 for i in ${com}
 do
