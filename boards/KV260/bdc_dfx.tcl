@@ -435,19 +435,23 @@ create_run child_2_impl_1 -parent_run impl_1 -flow {Vivado Implementation 2022} 
 create_run child_3_impl_1 -parent_run impl_1 -flow {Vivado Implementation 2022} -strategy Performance_NetDelay_low -pr_config config_5
 
 # Change global implementation strategy
-set_property strategy Performance_RefinePlacement [get_runs impl_1]
+if {$relocatable == 1} {
+   set_property strategy Performance_RefinePlacement [get_runs impl_1]
+} else {
+   set_property strategy Performance_Explore [get_runs impl_1]
+}
 
 set_property report_strategy {UltraFast Design Methodology Reports} [get_runs impl_1]
 
-
-# add custom script to build a shell for relocation
-#set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE Explore [get_runs impl_1]
-#set_property STEPS.ROUTE_DESIGN.ARGS.DIRECTIVE Explore [get_runs impl_1]
-add_files -fileset utils_1 -norecurse               assign_intf_cells_to_pblock.tcl
-add_files -fileset utils_1 -norecurse               adjust_pblock_preroute.tcl
-set_property STEPS.PLACE_DESIGN.TCL.PRE [ get_files assign_intf_cells_to_pblock.tcl -of [get_fileset utils_1] ] [get_runs impl_1]
-set_property STEPS.ROUTE_DESIGN.TCL.PRE [ get_files adjust_pblock_preroute.tcl -of [get_fileset utils_1] ] [get_runs impl_1]
-
+if {$relocatable == 1} {
+   # add custom script to build a shell for relocation
+   #set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE Explore [get_runs impl_1]
+   #set_property STEPS.ROUTE_DESIGN.ARGS.DIRECTIVE Explore [get_runs impl_1]
+   add_files -fileset utils_1 -norecurse               assign_intf_cells_to_pblock.tcl
+   add_files -fileset utils_1 -norecurse               adjust_pblock_preroute.tcl
+   set_property STEPS.PLACE_DESIGN.TCL.PRE [ get_files assign_intf_cells_to_pblock.tcl -of [get_fileset utils_1] ] [get_runs impl_1]
+   set_property STEPS.ROUTE_DESIGN.TCL.PRE [ get_files adjust_pblock_preroute.tcl -of [get_fileset utils_1] ] [get_runs impl_1]
+}
 
 ## downgrade the check for containment of nets in static. The check is supposed to be permanantly disable in 21.2, but it is not even in 22.1
 ##set_msg_config -id {[Constraints  18-4638]} -new_severity INFO
@@ -455,6 +459,7 @@ set_property STEPS.ROUTE_DESIGN.TCL.PRE [ get_files adjust_pblock_preroute.tcl -
 #set_msg_config -suppress -id {[Constraints  18-901]}
 set_msg_config -id {[Constraints  18-901]} -new_severity "WARNING"
 ##ERROR: [Constraints 18-901] HDPostRouteDRC-04: the net GND (or <const0>) does not honor the contain/exclude routing due to routing nodes:
+## https://support.xilinx.com/s/article/71963?language=en_US
 
 if {$relocatable == 0} {
    add_files -fileset utils_1 -norecurse               ignore_ground_check.tcl
