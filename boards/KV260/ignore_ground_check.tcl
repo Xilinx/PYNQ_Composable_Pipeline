@@ -1,0 +1,1 @@
+set_msg_config -id {[Constraints  18-901]} -new_severity "WARNING"

@@ -439,20 +439,30 @@ set_property strategy Performance_RefinePlacement [get_runs impl_1]
 
 set_property report_strategy {UltraFast Design Methodology Reports} [get_runs impl_1]
 
-if {$relocatable == 0} {
-   # add custom script to build a shell for relocation
-   #set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE Explore [get_runs impl_1]
-   #set_property STEPS.ROUTE_DESIGN.ARGS.DIRECTIVE Explore [get_runs impl_1]
-   add_files -fileset utils_1 -norecurse               assign_intf_cells_to_pblock.tcl
-   add_files -fileset utils_1 -norecurse               adjust_pblock_preroute.tcl
-   set_property STEPS.PLACE_DESIGN.TCL.PRE [ get_files assign_intf_cells_to_pblock.tcl -of [get_fileset utils_1] ] [get_runs impl_1]
-   set_property STEPS.ROUTE_DESIGN.TCL.PRE [ get_files adjust_pblock_preroute.tcl -of [get_fileset utils_1] ] [get_runs impl_1]
 
-   ## downgrade the check for containment of nets in static. The check is supposed to be permanantly disable in 21.2, but it is not even in 22.1
-   ##set_msg_config -id {[Constraints  18-4638]} -new_severity INFO
-   #set_msg_config -suppress -id {[Constraints  18-4638]}
-   set_msg_config -suppress -id {[Constraints  18-901]}
-   ##ERROR: [Constraints 18-901] HDPostRouteDRC-04: the net GND (or <const0>) does not honor the contain/exclude routing due to routing nodes:
+# add custom script to build a shell for relocation
+#set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE Explore [get_runs impl_1]
+#set_property STEPS.ROUTE_DESIGN.ARGS.DIRECTIVE Explore [get_runs impl_1]
+add_files -fileset utils_1 -norecurse               assign_intf_cells_to_pblock.tcl
+add_files -fileset utils_1 -norecurse               adjust_pblock_preroute.tcl
+set_property STEPS.PLACE_DESIGN.TCL.PRE [ get_files assign_intf_cells_to_pblock.tcl -of [get_fileset utils_1] ] [get_runs impl_1]
+set_property STEPS.ROUTE_DESIGN.TCL.PRE [ get_files adjust_pblock_preroute.tcl -of [get_fileset utils_1] ] [get_runs impl_1]
+
+
+## downgrade the check for containment of nets in static. The check is supposed to be permanantly disable in 21.2, but it is not even in 22.1
+##set_msg_config -id {[Constraints  18-4638]} -new_severity INFO
+#set_msg_config -suppress -id {[Constraints  18-4638]}
+#set_msg_config -suppress -id {[Constraints  18-901]}
+set_msg_config -id {[Constraints  18-901]} -new_severity "WARNING"
+##ERROR: [Constraints 18-901] HDPostRouteDRC-04: the net GND (or <const0>) does not honor the contain/exclude routing due to routing nodes:
+
+if {$relocatable == 0} {
+   add_files -fileset utils_1 -norecurse               ignore_ground_check.tcl
+   set_property STEPS.ROUTE_DESIGN.TCL.PRE [ get_files ignore_ground_check.tcl -of [get_fileset utils_1] ] [get_runs impl_1]
+   set_property STEPS.ROUTE_DESIGN.TCL.PRE [ get_files ignore_ground_check.tcl -of [get_fileset utils_1] ] [get_runs child_0_impl_1]
+   set_property STEPS.ROUTE_DESIGN.TCL.PRE [ get_files ignore_ground_check.tcl -of [get_fileset utils_1] ] [get_runs child_1_impl_1]
+   set_property STEPS.ROUTE_DESIGN.TCL.PRE [ get_files ignore_ground_check.tcl -of [get_fileset utils_1] ] [get_runs child_2_impl_1]
+   set_property STEPS.ROUTE_DESIGN.TCL.PRE [ get_files ignore_ground_check.tcl -of [get_fileset utils_1] ] [get_runs child_3_impl_1]
 }
 
 launch_runs impl_1 -to_step write_bitstream -jobs 16
