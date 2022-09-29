@@ -44,7 +44,6 @@ distclean: clean
 	rm -rf relocatable_modules
 
 version:
-	cp default_paths.json overlay/$(overlay_name)_paths.json
 	@echo "board = $$(basename "$(PWD)")" > overlay/version.txt
 	@echo "git_id = $$(git log --format="%H" -n 1)" >> overlay/version.txt
 	@echo "date  = $$(date +'%d %B %Y')" >> overlay/version.txt
@@ -53,6 +52,7 @@ version:
 	@echo "$$(md5sum $$(ls overlay/*bit overlay/*hwh))" >> overlay/version.txt
 
 zip: version
+	./rename_bitstream.sh
 	$(eval ver := $(shell grep "version" ../../pynq_composable/__init__.py | cut -d" " -f3 | tr -d \'\" | tr . _))
 	cp LICENSE overlay/LICENSE.txt
 	zip -r composable-video-pipeline-KV260-v$(ver).zip overlay/
