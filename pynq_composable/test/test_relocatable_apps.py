@@ -56,7 +56,7 @@ def generate_valid_permutations(dfx_ip: list, cpipe) -> list:
     """Generate all possible permutations"""
     all_permute = list(itertools.product(*pr_regions_support))
 
-    """Generate valid permute"""
+    """Generate all valid permute, not repeated DFX region"""
     valid_permute = []
     for idx in range(len(all_permute)):
         duplicate = False
@@ -80,7 +80,7 @@ def generate_valid_apps() -> list:
         for p in valid_permutation:
             list_dfx = []
             for idx in range(len(e[0])):
-                list_dfx.append(p[idx] + '/' +  e[0][idx])
+                list_dfx.append(p[idx] + '/' + e[0][idx])
             list_apps.append([list_dfx, e[1]])
 
     return list_apps
@@ -98,18 +98,3 @@ def test_app(app, create_composable):
     #video.stop()
     print(app)
     assert True
-
-
-"""
-self._fi2d0 = self._cpipe.filter2d_accel
-self._r2g = self._cpipe.rgb2gray_accel
-self._g2r = self._cpipe.gray2rgb_accel
-self._r2h = self._cpipe.rgb2hsv_accel
-self._ct = self._cpipe.colorthresholding_accel
-self._lut = self._cpipe.lut_accel
-self._dup = self._cpipe.duplicate_accel
-self._vii = self._cpipe.ps_video_in
-self._vio = self._cpipe.ps_video_out
-self._fi2d1 = self._cpipe.pr_0.filter2d_accel
-
-"""
