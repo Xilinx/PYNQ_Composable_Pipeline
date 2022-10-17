@@ -152,7 +152,7 @@ setup(
     },
     python_requires=">=3.8.0",
     install_requires=[
-        "pynq>=2.7.0",
+        "pynq>=3.0.0",
         "graphviz>=0.20",
         "pytest-dependency>=0.5.1",
         "pytest-timeout>=2.1.0",
