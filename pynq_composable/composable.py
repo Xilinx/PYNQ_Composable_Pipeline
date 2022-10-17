@@ -847,7 +847,7 @@ class Composable(DefaultHierarchy):
             try:
                 attr = super().__getattr__(name)
             except AttributeError:
-                attr = getattr(self._ol, name)
+                attr = getattr(self._ol, key)
             return attr
         else:
             raise AttributeError("\'{}\' object has no attribute \'{}\'"
