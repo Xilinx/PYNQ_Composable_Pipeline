@@ -343,11 +343,11 @@ save_bd_design
 
 
 ## PR 2 reconfigurable module 4
-set pr_2_bitand "composable_pr_2_bitand"
+set pr_2_bitwise "composable_pr_2_bitwise"
 set curdesign [current_bd_design]
-create_bd_design -boundary_from_container [get_bd_cells /composable/pr_2] ${pr_2_bitand}
+create_bd_design -boundary_from_container [get_bd_cells /composable/pr_2] ${pr_2_bitwise}
 current_bd_design $curdesign
-current_bd_design [get_bd_designs ${pr_2_bitand}]
+current_bd_design [get_bd_designs ${pr_2_bitwise}]
 
 set asr [ create_bd_cell -type ip -vlnv xilinx.com:ip:axi_register_slice:2.1 asr ]
 create_bd_cell -type ip -vlnv xilinx.com:hls:bitwise_and_accel:1.0 bitwise_and_accel
@@ -366,8 +366,8 @@ save_bd_design
 
 current_bd_design [get_bd_designs ${design_name}]
 # Define synthesis sources
-lappend list_rm ${pr_2_subtract} ${pr_2_absdiff} ${pr_2_add} ${pr_2_bitand}
-set bds "${pr_2_dilate_erode}.bd:${pr_2_subtract}.bd:${pr_2_absdiff}.bd:${pr_2_add}.bd:${pr_2_bitand}.bd"
+lappend list_rm ${pr_2_subtract} ${pr_2_absdiff} ${pr_2_add} ${pr_2_bitwise}
+set bds "${pr_2_dilate_erode}.bd:${pr_2_subtract}.bd:${pr_2_absdiff}.bd:${pr_2_add}.bd:${pr_2_bitwise}.bd"
 set_property -dict [list CONFIG.LIST_SYNTH_BD ${bds}] [get_bd_cells /composable/pr_2]
 validate_bd_design
 save_bd_design
@@ -412,7 +412,7 @@ create_pr_configuration -name config_3 -partitions \
 
 create_pr_configuration -name config_4 -partitions \
    [list \
-      ${design_name}_i/composable/pr_2:${pr_2_bitand}_inst_0 \
+      ${design_name}_i/composable/pr_2:${pr_2_bitwise}_inst_0 \
    ] -greyboxes [list \
       ${design_name}_i/composable/pr_0 \
       ${design_name}_i/composable/pr_1 \
@@ -461,4 +461,4 @@ catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_0_${p
 catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_1_${pr_1_rgb2xyz}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_1_rgb2xyz}_partial.bit}
 catch {exec cp ./${prj_name}/${prj_name}.runs/child_1_impl_1/${bithier}_pr_2_${pr_2_add}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_add}_partial.bit}
 # child_2_impl_1
-catch {exec cp ./${prj_name}/${prj_name}.runs/child_2_impl_1/${bithier}_pr_2_${pr_2_bitand}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_bitand}_partial.bit}
+catch {exec cp ./${prj_name}/${prj_name}.runs/child_2_impl_1/${bithier}_pr_2_${pr_2_bitwise}_inst_0_partial.bit ./${dest_dir}/${prj_name}_${pr_2_bitwise}_partial.bit}
