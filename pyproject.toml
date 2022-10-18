@@ -3,6 +3,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 [build-system]
-requires = ["setuptools", "wheel", "pynq>=2.8.0", "graphviz>=0.20",
+requires = ["setuptools", "wheel", "pynq>=3.0.0", "graphviz>=0.20",
             "pytest-dependency>=0.5.1", "pytest-timeout>=2.1.0",
             "deepdiff>=5.8.1", "coverage>=6.4.4"]
