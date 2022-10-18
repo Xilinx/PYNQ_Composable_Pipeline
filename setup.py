@@ -8,11 +8,14 @@ __copyright__ = "Copyright 2022, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
-from setuptools import setup, find_packages
-import os
-import shutil
+import hashlib
 import json
+import os
 from pynqutils.setup_utils import build_py, find_version, extend_package
+from setuptools import setup, find_packages
+import shutil
+import tempfile
+import urllib.request
 
 
 module_name = "pynq_composable"
@@ -73,17 +76,44 @@ def update_notebooks_display_port(module_name):
                     file.write(filedata)
 
 
+with open(module_name + '/overlay.link') as file:
+    overlay = json.load(file)
+
+
+def download_overlay(board, overlay_dest):
+    """Download precompiled overlay from the Internet"""
+    if board not in overlay.keys():
+        return
+
+    download_link = overlay[board]["url"]
+    md5sum = overlay[board].get("md5sum")
+    tmp_file = tempfile.mkstemp()[1]
+
+    with urllib.request.urlopen(download_link) as response, \
+            open(tmp_file, "wb") as out_file:
+        data = response.read()
+        out_file.write(data)
+    if md5sum:
+        file_md5sum = hashlib.md5()
+        with open(tmp_file, "rb") as out_file:
+            for chunk in iter(lambda: out_file.read(4096), b""):
+                file_md5sum.update(chunk)
+        if md5sum != file_md5sum.hexdigest():
+            os.remove(tmp_file)
+            raise ImportWarning("Incorrect checksum for file. The composable "
+                                "overlay will not be delivered")
+
+    shutil.unpack_archive(tmp_file, overlay_dest, "zip")
+
+
 if board:
     copy_notebooks(board_folder, module_name)
+    download_overlay(board, overlay_dest + '/overlay/')
 
 
 extend_package(module_name, data_files)
 update_notebooks_display_port(module_name + '/notebooks/')
 pkg_version = find_version("{}/__init__.py".format(module_name))
-
-
-with open(module_name + '/overlay.link') as file:
-    overlay = json.load(file)
 
 
 # Declare the overlay entry points only if the overlay can be downloaded
