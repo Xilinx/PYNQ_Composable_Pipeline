@@ -402,8 +402,6 @@ class EdgeDetect(PipelineApp):
     """
 
     _dfx_ip = [
-        'pr_0/dilate_accel',
-        'pr_1/dilate_accel',
         'pr_2/add_accel'
     ]
 
@@ -412,8 +410,6 @@ class EdgeDetect(PipelineApp):
     def _pipeline(self):
         """Logic to configure pipeline"""
 
-        self._di0 = self._cpipe.pr_0.dilate_accel
-        self._di1 = self._cpipe.pr_1.dilate_accel
         self._add = self._cpipe.pr_2.add_accel
         self._fi2d0.kernel_type = XvF2d.scharr_y
 
