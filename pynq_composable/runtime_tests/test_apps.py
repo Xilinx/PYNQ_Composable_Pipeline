@@ -8,32 +8,17 @@ import pytest
 import time
 
 
-def test_diff_gaussians():
-    app = DifferenceGaussians(pytest.overlay, VSource.OpenCV, VSink.DP)
-    app.start()
-    time.sleep(5)
-    app.stop()
-    assert True
+apps = [
+    "DifferenceGaussians(pytest.overlay, VSource.OpenCV, VSink.DP)",
+    "CornerDetect(pytest.overlay, VSource.OpenCV, VSink.DP)",
+    "ColorDetect(pytest.overlay, VSource.OpenCV, VSink.DP)",
+    "EdgeDetect(pytest.overlay, VSource.OpenCV, VSink.DP)"
+]
 
 
-def test_corner():
-    app = CornerDetect(pytest.overlay, VSource.OpenCV, VSink.DP)
-    app.start()
-    time.sleep(5)
-    app.stop()
-    assert True
-
-
-def test_color():
-    app = ColorDetect(pytest.overlay, VSource.OpenCV, VSink.DP)
-    app.start()
-    time.sleep(5)
-    app.stop()
-    assert True
-
-
-def test_edge():
-    app = EdgeDetect(pytest.overlay, VSource.OpenCV, VSink.DP)
+@pytest.mark.parametrize('obj', apps)
+def test_diff_gaussians(obj):
+    app = eval(obj)
     app.start()
     time.sleep(5)
     app.stop()
