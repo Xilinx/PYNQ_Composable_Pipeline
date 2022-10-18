@@ -414,8 +414,12 @@ class OpenCVPLVideo:
         """Threaded method to implement tie"""
 
         while self._running:
-            self._outframe[:] = self.readframe()
-            self._hdmi_out.writeframe(self._outframe)
+            try:
+                self._outframe[:] = self.readframe()
+                self._hdmi_out.writeframe(self._outframe)
+            except RuntimeError:
+                self._running = False
+                raise RuntimeError("Can't start thread")
 
 
 class OpenCVDPVideo(OpenCVPLVideo):
@@ -505,6 +509,7 @@ class OpenCVDPVideo(OpenCVPLVideo):
                 dpframe[:] = self.vdma.readchannel.readframe()
                 self._dp.writeframe(dpframe)
             except RuntimeError:
+                self._running = False
                 raise RuntimeError("Can't start thread")
 
 
