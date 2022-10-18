@@ -159,7 +159,7 @@ def test_data_movement_fifo(create_composable):
     assert np.array_equal(frame, res)
 
 
-@pytest.mark.timeout(40)
+@pytest.mark.timeout(60)
 @pytest.mark.dependency(depends=["test_parser"])
 def test_data_movement_lut_negative(create_composable):
     ol, cpipe = create_composable
