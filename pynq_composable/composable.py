@@ -504,12 +504,6 @@ class Composable(DefaultHierarchy):
         for i, l0 in enumerate(cle_list):
             if isinstance(l0, list):
                 key = self._relative_path(cle_list[i+1]._fullpath)
-                next_node = self._c_dict[key]
-                if len(l0) != len(next_node['mi']):
-                    raise SystemError("Node {} has {} input(s) and cannot meet"
-                                      "pipeline requirement of {} input(s)"
-                                      .format(key, len(next_node['mi']),
-                                              len(l0)))
                 for ii, l1 in enumerate(l0):
                     if not isinstance(l1, list):
                         raise SystemError("Branches must be represented as "
@@ -566,6 +560,15 @@ class Composable(DefaultHierarchy):
                                       "meet pipeline requirement of {} "
                                       "output(s)".format(l0._fullpath, len(si),
                                                          len(cle_list[i+1])))
+                elif (i + 2) <= len(cle_list) and  len(cle_list[i+1]) != \
+                    len((mi_next := self._c_dict[(
+                        self._relative_path(cle_list[i+2]._fullpath,
+                                            'mi'))]['mi'])):
+                    raise SystemError("Node {} has {} input(s) and cannot meet"
+                                      " pipeline requirement of {} input(s)"
+                                      .format(cle_list[i+2]._fullpath,
+                                              len(mi_next),
+                                              len((cle_list[i+1]))))
                 else:
                     for j in range(len(si)):
                         nextip = cle_list[i+1][j][0]
