@@ -245,7 +245,7 @@ class Composable(DefaultHierarchy):
             self._soft_reset = None
             self._dfx_control = None
 
-        parser = HWHComposable(self._hwh_name, self.axis_switch._fullpath)
+        parser = HWHComposable(self._hwh_name, self._switch._fullpath)
         self._c_dict = parser.c_dict
         self._dfx_dict = parser.dfx_dict
 
@@ -851,8 +851,11 @@ class Composable(DefaultHierarchy):
                 attr = getattr(self._ol, key)
             return attr
         else:
-            raise AttributeError("\'{}\' object has no attribute \'{}\'"
-                                 .format(type(self).__name__, name))
+            try:
+                return getattr(self._ol, key)
+            except AttributeError:
+                raise AttributeError("\'{}\' object has no attribute \'{}\'"
+                                      .format(type(self).__name__, name))
 
     def __dir__(self):
         return sorted(set(super().__dir__() +
