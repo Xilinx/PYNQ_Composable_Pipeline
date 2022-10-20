@@ -257,6 +257,7 @@ class Composable(DefaultHierarchy):
         self.graph.graph_attr['rankdir'] = 'LR'
         self._graph_debug = False
         self._current_pipeline = None
+        self._untapped_pipeline = None
         self._current_flat_pipeline = None
         self.__doc__ = _build_docstrings(self._hier, self._c_dict,
                                          self._dfx_dict, self._pipelinecrt)
@@ -817,17 +818,17 @@ class Composable(DefaultHierarchy):
                                   "not supported")
             new_list.append(self._current_pipeline[-1])
 
-        pipeline = self._current_pipeline.copy()
+        self._untapped_pipeline = self._current_pipeline.copy()
         self.compose(new_list)
-        self._current_pipeline = pipeline.copy()
 
     def untap(self) -> None:
         """Restores current pipeline after tap happened"""
 
-        if self._current_pipeline is None:
+        if self._untapped_pipeline is None:
             raise SystemError("There is nothing to untap")
 
-        self.compose(self._current_pipeline)
+        self.compose(self._untapped_pipeline)
+        self._untapped_pipeline = None
 
     def __getattr__(self, name):
         if self._dfx_dict is None:
