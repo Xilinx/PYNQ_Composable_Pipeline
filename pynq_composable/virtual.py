@@ -29,8 +29,9 @@ class DFXRegion:
                 return VirtualIP(self._cpipe, key)
             elif self._c_dict[key]['modtype'] in _mem_items:
                 return BufferIP(key)
-            else:
-                return getattr(self._ol, self._parent + key)
+            elif (ipname := self._parent + key) in self._ol.ip_dict.keys():
+                return getattr(self._ol, ipname)
+            return StreamingIP(ipname)
         else:
             raise ValueError("IP \'{}\' does not exist in partial region "
                              "\'{}\'".format(name, self.key))

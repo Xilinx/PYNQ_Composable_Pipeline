@@ -32,10 +32,7 @@ def test_dfx_region():
     assert isinstance(lut, virtual.VirtualIP)
     name = "rgb2gray_accel"
     setattr(dfx._ol, "composablepr_0/" + name, name)
-    rgb = dfx.rgb2gray_accel
-    rgb2 = getattr(dfx, name)
-    assert rgb == name
-    assert rgb2 == name
+    assert isinstance(dfx.rgb2gray_accel, virtual.StreamingIP)
 
 
 def test_dfx_buffer_ip():
