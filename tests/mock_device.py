@@ -52,6 +52,7 @@ class MockIPDevice(MockDeviceBase):
 
 
 class MockOverlay:
+    ip_dict = dict()
     pass
 
 
