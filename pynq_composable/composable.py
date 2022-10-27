@@ -445,7 +445,7 @@ class Composable(DefaultHierarchy):
         if fullpath not in self._default_ip.keys():
             return fullpath
 
-        for k, v in self._default_ip.items():
+        for _, v in self._default_ip.items():
             if v['fullpath'] == fullpath:
                 return v['cpath'][port]
 
@@ -819,7 +819,10 @@ class Composable(DefaultHierarchy):
             if len(self._c_dict[key]['si']) != 1:
                 raise SystemError("tap into an IP with multiple outputs is "
                                   "not supported")
-            new_list.append(self._current_pipeline[-1])
+
+            for _, v in self.c_dict.default.items():
+                if v.get('fullpath') == self._current_pipeline[-1]._fullpath:
+                    new_list.append(self._current_pipeline[-1])
 
         self._untapped_pipeline = self._current_pipeline.copy()
         self.compose(new_list)
