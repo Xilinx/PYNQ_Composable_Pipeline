@@ -560,7 +560,7 @@ class Composable(DefaultHierarchy):
                                       "meet pipeline requirement of {} "
                                       "output(s)".format(l0._fullpath, len(si),
                                                          len(cle_list[i+1])))
-                elif (i + 2) <= len(cle_list) and  len(cle_list[i+1]) != \
+                elif (i + 2) <= len(cle_list) and len(cle_list[i+1]) != \
                     len((mi_next := self._c_dict[(
                         self._relative_path(cle_list[i+2]._fullpath,
                                             'mi'))]['mi'])):
@@ -861,7 +861,7 @@ class Composable(DefaultHierarchy):
                 return getattr(self._ol, key)
             except AttributeError:
                 raise AttributeError("\'{}\' object has no attribute \'{}\'"
-                                      .format(type(self).__name__, name))
+                                     .format(type(self).__name__, name))
 
     def __dir__(self):
         return sorted(set(super().__dir__() +
