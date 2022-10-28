@@ -841,12 +841,9 @@ class Composable(DefaultHierarchy):
             return super().__getattr__(name)
         elif name in self._dfx_dict:
             return DFXRegion(self, name)
-        elif name in self._paths:
-            try:
-                attr = getattr(self._ol, self._paths[name]['fullpath'])
-            except AttributeError:
-                attr = super().__getattr__(self._paths[name]['fullpath'])
-            return attr
+        elif name in self._paths and\
+                self._ol.ip_dict.get(self._paths[name]['fullpath']):
+            return getattr(self._ol, self._paths[name]['fullpath'])
         elif (key := self._hier + name) not in self._ol.ip_dict.keys() and \
                 name in self._c_dict.keys():
             return StreamingIP(key)
