@@ -61,6 +61,11 @@ class MockIP:
         self.__setattr__(name, name)
 
 
+class MockDevice:
+    def __init__(self, name):
+        self.bitfile_name = name
+
+
 class MockCPipe:
     def __init__(self, hier='composable'):
         self._ol = MockOverlay
