@@ -507,7 +507,7 @@ class Composable(DefaultHierarchy):
 
         flat_list = _streamline_pipeline(cle_list)
 
-        slots = _count_slots(cle_list) # might need to count number of functions
+        slots = _count_slots(cle_list) 
         if slots > self._max_slots:
             raise SystemError("Number of slots in the list is bigger than {} "
                               "which are the max slots that hardware allows"
