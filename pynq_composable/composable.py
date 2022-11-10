@@ -8,18 +8,15 @@ import numpy as np
 import os
 from .parser import HWHComposable
 from pynq import DefaultIP, DefaultHierarchy
-from pynq.utils import ReprDict
+from pynqutils.runtime import ReprDict
 from .repr_dict import ReprDictComposable
+from .virtual import DFXRegion, StreamingIP, VirtualIP
 from typing import Type, Union
+import warnings
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
 __email__ = "pynq_support@xilinx.com"
-
-
-_mem_items = ['axis_register_slice', 'axis_data_fifo',
-              'fifo_generator', 'axis_dwidth_converter',
-              'axis_subset_converter']
 
 
 def _nest_level(pl: list) -> int:
@@ -34,7 +31,7 @@ def _nest_level(pl: list) -> int:
     return level + 1
 
 
-def _count_slots(pl: str) -> int:
+def _count_slots(pl: list) -> int:
     """Returns the number of elements in a list"""
 
     total = 0
@@ -68,14 +65,14 @@ def _find_index_in_list(pipeline: list, element: Type[DefaultIP]) \
     return None
 
 
-def _edge_label(ci: int, pi: int, debug: bool) -> str:
+def _edge_label(si: int, mi: int, debug: bool) -> str:
     """Generate edge label given"""
 
     return '<<font color=\"' + ('green' if debug else 'white') + '\">' + \
-           'ci=' + str(ci) + ' pi=' + str(pi) + '</font>>'
+           'si=' + str(si) + ' mi=' + str(mi) + '</font>>'
 
 
-def _get_ip_name_by_vlnv(description: str, vlnv: str) -> str:
+def _get_ip_name_by_vlnv(description: dict, vlnv: str) -> str:
     """Search IP by its VLNV and return its name"""
 
     for k, v in description['ip'].items():
@@ -83,6 +80,94 @@ def _get_ip_name_by_vlnv(description: str, vlnv: str) -> str:
         if ip_vlnv == vlnv:
             return k
     return None
+
+
+def _streamline_pipeline(pipe: list) -> list:
+    """
+    Flattens List
+    """
+    linear_pipe = [[], ]
+    for idx in range(len(pipe)):
+        element = pipe[idx]
+        if not isinstance(element, list):
+            linear_pipe[0].append(element)
+        else:
+            if len(element) < 2:
+                raise ValueError("branch needs at least two elements")
+            for idx2 in range(len(element)):
+                if idx2 > 0:
+                    linear_pipe.append([pipe[idx - 1]])
+                res = _streamline_pipeline(element[idx2])
+                for iii in range(len(res)):
+                    if iii > 0:
+                        if not res[iii] == [1]:
+                            linear_pipe.append(res[iii])
+                    else:
+                        if not res[iii] == [1]:
+                            linear_pipe[idx2].extend(res[iii])
+                if idx2 > 0 and idx + 1 < len(pipe):
+                    linear_pipe[idx2].append(pipe[idx + 1])
+    return linear_pipe
+
+
+def _build_docstrings(hier: str, c_dict: dict, dfx_dict: dict,
+                      pipelinecrt: str) -> str:
+    """Automated documentation string for a composable hierarchy
+
+    Parameters
+    ----------
+    hier : str
+        Hierarchy name.
+    c_dict : dict
+        Dictionary containing the IP connected to the AXI4-Stream Switch
+    dfx_dict : dict
+        Dictionary containing the DFX regions are associated control
+    pipelinecrt: str
+        AXI GPIO for pipeline control name
+    Returns
+    -------
+    str : The auto generated documentation string
+    """
+
+    lines = list()
+    lines.append("Auto generated documentation for the composable hierarchy"
+                 " \'{}\'".format(hier.strip('/')))
+
+    lines.append("The IP available for composition are:")
+    lines.append("")
+
+    lines.append("IP Blocks")
+    lines.append("---------")
+    lines.append("{: <35} | DFX".format("Name"))
+    lines.append(44*"-")
+    if c_dict:
+        for k, v in c_dict.items():
+            lines.append("{: <35} | {}".format(k, v['dfx']))
+    else:
+        lines.append("None")
+
+    lines.append("")
+    lines.append("DFX Regions")
+    lines.append("-----------")
+    if dfx_dict:
+        lines.append("{: <35} | DFX Decoupler".format("Name"))
+        lines.append(48*"-")
+        for k, v in dfx_dict.items():
+            lines.append("{: <35} | {}".format(k, v['decoupler']))
+    else:
+        lines.append("None")
+
+    lines.append("")
+    lines.append("Pipeline Control")
+    lines.append("----------------")
+    if pipelinecrt:
+        lines.append(hier + pipelinecrt)
+    else:
+        lines.append("None")
+
+    lines.append(" ")
+
+    return '\n    '.join(lines)
 
 
 class Composable(DefaultHierarchy):
@@ -98,19 +183,19 @@ class Composable(DefaultHierarchy):
     This class stores two dictionaries: c_dict and dfx_dict
 
     Each entry of the Composable dictionary (c_dict) is a mapping:
-    'name' -> {ci, pi, modtype, dfx, loaded, bitstream}, where
+    'name' -> {si, mi, modtype, dfx, loaded, bitstream}, where
     name (str) is the key of the entry.
-    ci (list) list of physical port in the switch the IP is connected to
-    pi (list) list of physical port in the switch the IP is connected from
+    si (list) list of physical port in the switch the IP is connected to
+    mi (list) list of physical port in the switch the IP is connected from
     modtype(str) IP type
     dfx (bool) IP is located in a DFX region
     loaded (bool) IP is loaded
     bitstream (str) location of the corresponding partial bitstream
 
-    Each entry of the PR dictionary (pr_dict) dictionary is a mapping:
+    Each entry of the DFX dictionary (dfx_dict) dictionary is a mapping:
     'name' -> {decoupler, gpio, ip}, where
     name (str) is the name of the partial region
-    decoupler (str) fullpath of the DFX decoupler that controls the pr region
+    decoupler (str) fullpath of the DFX decoupler that controls the dfx region
     gpio (dict) index of PS GPIO that control the DFX decoupler
     ip (dict) dictionary of partial bitstream and IP associated to the region
 
@@ -145,21 +230,21 @@ class Composable(DefaultHierarchy):
         to be next to bitstream file that was used to create the Overlay object
         The name convention for partial bitstreams and HWH file is
 
-        <bitstream_name>_<hierarchy>_<pr_region>_<pr_module_name>.{bit|hwh}
+        <bitstream_name>_<hierarchy>_<dfx_region>_<dfx_module_name>.{bit|hwh}
 
         For instance if the main bitstream is `base.bit` and there are two DFX
-        regions with the names `pr_0` and `pr_1` each of them with the same
+        regions with the names `dfx_0` and `dfx_1` each of them with the same
         two reconfigurable module, `function_1` and `function_2` the names
         should be as follow
 
-            base_composable_pr_0_function_1.bit
-            base_composable_pr_0_function_1.hwh
-            base_composable_pr_0_function_2.bit
-            base_composable_pr_0_function_2.hwh
-            base_composable_pr_1_function_1.bit
-            base_composable_pr_1_function_1.hwh
-            base_composable_pr_1_function_2.bit
-            base_composable_pr_1_function_2.hwh
+            base_composable_dfx_0_function_1.bit
+            base_composable_dfx_0_function_1.hwh
+            base_composable_dfx_0_function_2.bit
+            base_composable_dfx_0_function_2.hwh
+            base_composable_dfx_1_function_1.bit
+            base_composable_dfx_1_function_1.hwh
+            base_composable_dfx_1_function_2.bit
+            base_composable_dfx_1_function_2.hwh
 
         """
 
@@ -174,29 +259,36 @@ class Composable(DefaultHierarchy):
             _get_ip_name_by_vlnv(description, 'xilinx.com:ip:axis_switch:1.1')
         self._switch = getattr(self._ol, self._hier + switch_name)
         self._max_slots = self._switch.max_slots
-        pipelinecrt = \
+        self._enable_soft_reset = True
+        self._enable_dfx_decouple = True
+        self._pipelinecrt = \
             _get_ip_name_by_vlnv(description, 'xilinx.com:ip:axi_gpio:2.0')
-        if pipelinecrt:
-            self._pipecrtl = getattr(self._ol, self._hier + pipelinecrt)
-            self._soft_reset = self._pipecrtl.channel1
-            self._dfx_control = self._pipecrtl.channel2
+        if self._pipelinecrt:
+            pipecrtl = getattr(self._ol, self._hier + self._pipelinecrt)
+            self._soft_reset = pipecrtl.channel1
+            self._dfx_control = pipecrtl.channel2
         else:
+            self._enable_soft_reset = False
+            self._enable_dfx_decouple = False
             self._soft_reset = None
             self._dfx_control = None
 
-        parser = HWHComposable(self._hwh_name, self.axis_switch._fullpath)
+        parser = HWHComposable(self._hwh_name, self._switch._fullpath)
         self._c_dict = parser.c_dict
         self._dfx_dict = parser.dfx_dict
 
         self._paths = dict()
         self._default_paths()
-        self._switch.pi = self._sw_default
+        self._switch.mi = self._sw_default
 
         self.graph = Digraph()
         self.graph.graph_attr['rankdir'] = 'LR'
         self._graph_debug = False
         self._current_pipeline = None
+        self._untapped_pipeline = None
         self._current_flat_pipeline = None
+        self.__doc__ = _build_docstrings(self._hier, self._c_dict,
+                                         self._dfx_dict, self._pipelinecrt)
 
     @property
     def dfx_dict(self) -> dict:
@@ -216,9 +308,9 @@ class Composable(DefaultHierarchy):
         """Returns the c_dict dictionary
 
         All the IP cores connected to the AXI4-Stream Switch. Key is the name
-        of the IP; value is a dictionary mapping the producer and consumer to
+        of the IP; value is a dictionary mapping the manager and subordinate to
         the switch port, whether the IP is in a dfx region and loaded
-        {str: {'ci' : list, 'pi' : list, 'modtype': str,
+        {str: {'si' : list, 'mi' : list, 'modtype': str,
         'dfx': bool, 'loaded': bool, 'bitstream: str'}}.
         """
 
@@ -231,6 +323,46 @@ class Composable(DefaultHierarchy):
 
         return self._current_pipeline
 
+    @property
+    def soft_reset_mode(self):
+        """ Set the operation mode of the soft reset logic
+
+        Parameters
+        ----------
+        enable : bool
+            True: Soft reset command is issued
+            False: No soft reset is issued
+        """
+        return self._enable_soft_reset
+
+    @soft_reset_mode.setter
+    def soft_reset_mode(self, enable: bool):
+        if self._pipelinecrt:
+            self._enable_soft_reset = enable
+        elif enable:
+            warnings.warn("Can't enable soft reset logic as there is no "
+                          "associated hardware", UserWarning)
+
+    @property
+    def dfx_decouple_mode(self):
+        """ Set the operation mode of the dfx decouple logic
+
+        Parameters
+        ----------
+        enable : bool
+            True: DFX decouple commands are issued
+            False: No DFX decouple commands are issued
+        """
+        return self._enable_dfx_decouple
+
+    @dfx_decouple_mode.setter
+    def dfx_decouple_mode(self, enable: bool):
+        if self._pipelinecrt:
+            self._enable_dfx_decouple = enable
+        elif enable:
+            warnings.warn("Can't enable DFX decouple logic as there is no "
+                          "associated hardware", UserWarning)
+
     def _default_paths(self):
         """Get default paths from user file
 
@@ -242,6 +374,9 @@ class Composable(DefaultHierarchy):
         self._sw_default = np.ones(self._max_slots, dtype=np.int64) * -1
         filename = os.path.splitext(self._hwh_name)[0] + '_paths.json'
         if not os.path.isfile(filename):
+            warnings.warn("JSON file \'{}\' specifying default paths is not"
+                          " found. No datapath is not configured."
+                          .format(filename), UserWarning)
             return
 
         with open(filename, "r") as file:
@@ -249,12 +384,12 @@ class Composable(DefaultHierarchy):
         sw_default = jsondict[self._hier.replace('/', '')]
 
         for k, v in sw_default.items():
-            self._sw_default[v['pi']['port']] = v['ci']['port']
+            self._sw_default[v['mi']['port']] = v['si']['port']
 
         paths = dict()
         for k, v in sw_default.items():
             for kk, vv in v.items():
-                key = k + ('_in' if kk == 'ci' else '_out')
+                key = k + ('_in' if kk == 'si' else '_out')
                 paths[key] = {
                     kk: vv['port'],
                     'Description': vv['Description'],
@@ -263,13 +398,13 @@ class Composable(DefaultHierarchy):
 
         c_dict = self._c_dict.copy()
         for k, v in paths.items():
+            si = v.get('si')
+            mi = v.get('mi')
             for kk, vv in self._c_dict.items():
-                ci = v.get('ci')
-                pi = v.get('pi')
-                cii = vv.get('ci')
-                pii = vv.get('pi')
-                if (ci is not None and cii is not None and ci in cii) or \
-                   (pi is not None and pii is not None and pi in pii):
+                sii = vv.get('si')
+                mii = vv.get('mi')
+                if (si is not None and sii is not None and si in sii) or \
+                   (mi is not None and mii is not None and mi in mii):
                     if kk in c_dict.keys():
                         c_dict.pop(kk)
                     v['fullpath'] = kk
@@ -280,7 +415,7 @@ class Composable(DefaultHierarchy):
                         self._default_ip[kk] = c_dict[k].copy()
                     if 'cpath' not in self._default_ip[kk].keys():
                         self._default_ip[kk]['cpath'] = dict()
-                    key, delkey = ('ci', 'pi') if pi is None else ('pi', 'ci')
+                    key, delkey = ('si', 'mi') if mi is None else ('mi', 'si')
                     if c_dict[k].get(delkey):
                         c_dict[k].pop(delkey)
                     self._default_ip[kk]['cpath'][key] = k
@@ -304,7 +439,7 @@ class Composable(DefaultHierarchy):
         Parameters
         ----------
         partial_region : str
-            The name of the hierarchical block corresponding to the PR region.
+            The name of the hierarchical block corresponding to the DRF region.
         partial_bit : str
             The name of the partial bitstream.
         """
@@ -316,7 +451,7 @@ class Composable(DefaultHierarchy):
         self._set_loaded(dfx_dict)
 
     def _unload_region_from_ip_dict(self, partial_region: str) -> None:
-        """Unset loaded attribute for all of the IP of provided region"""
+        """Unset loaded attribute for all the IP of provided region"""
 
         for k in self._c_dict.keys():
             if partial_region in k:
@@ -328,7 +463,7 @@ class Composable(DefaultHierarchy):
         for ip in dfx_dict:
             self._c_dict[ip]['loaded'] = True
 
-    def _relative_path(self, fullpath: str, port: str = 'ci') -> str:
+    def _relative_path(self, fullpath: str, port: str = 'si') -> str:
         """Return relative path of an IP within the hierarchy
 
         If the IP is in the default paths, return proper name
@@ -338,9 +473,11 @@ class Composable(DefaultHierarchy):
         if fullpath not in self._default_ip.keys():
             return fullpath
 
-        for k, v in self._default_ip.items():
+        for _, v in self._default_ip.items():
             if v['fullpath'] == fullpath:
                 return v['cpath'][port]
+
+
 
     def compose(self, cle_list: list) -> None:
         """Configure design to implement required dataflow pipeline
@@ -367,19 +504,12 @@ class Composable(DefaultHierarchy):
                                 ---> e ----
         """
 
-        if not isinstance(cle_list, list):
-            raise TypeError("The composable pipeline must be a list")
+        if not isinstance(cle_list, list):  #Keep
+            raise TypeError("The composable pipeline must be a list") #Keep
 
-        levels = _nest_level(cle_list)
+        flat_list = _streamline_pipeline(cle_list)
 
-        if levels > 3:
-            raise SystemError("Data flow pipeline with a nest levels bigger "
-                              "than 3 is not supported. {}".format(levels))
-        elif levels % 2 == 0:
-            raise SystemError("Data flow pipeline with an even nest"
-                              " levels is not supported. {}".format(levels))
-
-        slots = _count_slots(cle_list)
+        slots = _count_slots(cle_list) # might need to count number of functions
         if slots > self._max_slots:
             raise SystemError("Number of slots in the list is bigger than {} "
                               "which are the max slots that hardware allows"
@@ -387,126 +517,96 @@ class Composable(DefaultHierarchy):
 
         switch_conf = np.ones(self._max_slots, dtype=np.int64) * -1
 
-        flat_list = list()
+
         graph = Digraph(
             node_attr={'shape': 'box'},
             edge_attr={'color': 'green'},
             graph_attr={'rankdir': self.graph.graph_attr['rankdir']}
-            )
+        )
         gdebug = self._graph_debug
-        for i, l0 in enumerate(cle_list):
-            if isinstance(l0, list):
-                key = self._relative_path(cle_list[i+1]._fullpath)
-                next_node = self._c_dict[key]
-                if len(l0) != len(next_node['pi']):
-                    raise SystemError("Node {} has {} input(s) and cannot meet"
-                                      "pipeline requirement of {} input(s)"
-                                      .format(key, len(next_node['pi']),
-                                              len(l0)))
-                for ii, l1 in enumerate(l0):
-                    if not isinstance(l1, list):
-                        raise SystemError("Branches must be represented as "
-                                          "list of list")
-                    for iii, l2 in enumerate(l1):
-                        ip = cle_list[i][ii][iii]
-                        if ip == 1:
-                            continue
-                        flat_list.append(ip)
-                        ci = self._c_dict[
-                            self._relative_path(ip._fullpath)]['ci'][0]
-                        if iii == len(l1) - 1:
-                            consumer = key
-                            pi = self._c_dict[consumer]['pi'][ii]
-                        else:
-                            consumer = self._relative_path(
-                                cle_list[i][ii][iii+1]._fullpath)
-                            pi = self._c_dict[consumer]['pi'][0]
 
-                        if not np.where(switch_conf == ci)[0].size:
-                            switch_conf[pi] = ci
-                            graph.edge(self._relative_path(ip._fullpath),
-                                       consumer,
-                                       label=_edge_label(ci, pi, gdebug))
-                        else:
-                            raise SystemError("IP: {} is already being used in"
-                                              " the provided pipeline. An IP "
-                                              "instance can only be used once"
-                                              .format(ip._fullpath))
-            else:
-                ip = cle_list[i]
-                flat_list.append(ip)
-                if i == len(cle_list) - 1:
+
+
+        pipeline_branches = dict()
+
+        in_use = dict()
+        for linear_pipeline in flat_list:
+            for i, l0 in enumerate(linear_pipeline):
+                ip = linear_pipeline[i]
+
+                if i == len(linear_pipeline) - 1:
                     break
-                ci = self._c_dict[(path := self._relative_path(ip._fullpath,
-                                                               'ci'))]['ci']
-                if not isinstance(cle_list[i+1], list):
-                    pi = self._c_dict[(key :=
-                                      self._relative_path(
-                                        cle_list[i+1]._fullpath, 'pi'))]['pi']
+                si = self._c_dict[(path := self._relative_path(ip._fullpath,'si'))]['si']
 
-                    if not np.where(switch_conf == ci[0])[0].size:
-                        switch_conf[pi[0]] = ci[0]
-                        graph.edge(path, key,
-                                   label=_edge_label(ci[0], pi[0], gdebug))
+
+                nextip = linear_pipeline[i+1]
+
+                nextkey = self._relative_path(nextip._fullpath)
+                mi = self._c_dict[nextkey]['mi']
+
+                if len(si) > 1:
+                    if path not in pipeline_branches.keys():
+                        value = si[0]
+                        pipeline_branches[path] = {'si': si[1:]}
                     else:
-                        raise SystemError("IP: {} is already being used in the"
-                                          " provided pipeline. An IP instance "
-                                          "can only be used once"
-                                          .format(ip._fullpath))
-
-                elif len(cle_list[i+1]) != len(ci):
-                    raise SystemError("Node {} has {} output(s) and cannot "
-                                      "meet pipeline requirement of {} "
-                                      "output(s)".format(l0._fullpath, len(ci),
-                                                         len(cle_list[i+1])))
+                        value = pipeline_branches[path]['si'][0]
+                        new_si = pipeline_branches[path]['si'][1:0]
+                        if len(new_si) > 0:
+                            pipeline_branches[path]['si'] = new_si
+                        else:
+                            pipeline_branches.pop(path)
                 else:
-                    for j in range(len(ci)):
-                        nextip = cle_list[i+1][j][0]
-                        if nextip != 1:
-                            nextkey = self._relative_path(nextip._fullpath)
-                            pi = self._c_dict[nextkey]['pi'][0]
+                    value = si[0]
+                if len(mi) > 1:
+                    if nextkey not in pipeline_branches.keys():
+                        index = mi[0]
+                        pipeline_branches[nextkey] = {'mi': mi[1:]}
+                    else:
+                        index = pipeline_branches[nextkey]['mi'][0]
+                        new_mi = pipeline_branches[nextkey]['mi'][1:0]
+                        if len(new_mi) > 0:
+                            pipeline_branches[nextkey]['mi'] = new_mi
                         else:
-                            nextip = cle_list[i+2]
-                            nextkey = self._relative_path(nextip._fullpath)
-                            pi = self._c_dict[nextkey]['pi'][j]
+                            pipeline_branches.pop(nextkey)
+                else:
+                    index = mi[0]
 
-                        if not np.where(switch_conf == ci[j])[0].size:
-                            switch_conf[pi] = ci[j]
-                            graph.edge(self._relative_path(ip._fullpath),
-                                       self._relative_path(nextip._fullpath),
-                                       label=_edge_label(ci[j], pi, gdebug))
-                        else:
-                            raise SystemError("IP: {} is already being used "
-                                              "in the provided pipeline. An IP"
-                                              " instance can only be used once"
-                                              .format(ip._fullpath))
+                if not np.where(switch_conf == value)[0].size:
+                    switch_conf[index] = value
+                    graph.edge(self._relative_path(ip._fullpath),
+                               self._relative_path(nextip._fullpath),
+                               label=_edge_label(value, index, gdebug))
+                else:
+                    raise SystemError("IP: {} is already being used "
+                                      "in the provided pipeline. An IP"
+                                      " instance can only be used once"
+                                      .format(ip._fullpath))
 
-        if self._soft_reset:
+        if self._soft_reset and self._enable_soft_reset:
             self._soft_reset[0].write(1)
             self._soft_reset[0].write(0)
 
         self._configure_switch(switch_conf)
-
+        """
         for idx, ip in enumerate(flat_list):
-            port = 'pi' if idx == len(flat_list)-1 else 'ci'
+            port = 'mi' if idx == len(flat_list)-1 else 'si'
             key = self._relative_path(ip._fullpath, port)
             if self._c_dict[key]["dfx"]:
                 graph.node(key,
                            _attributes={"color": "blue", "fillcolor": "cyan",
                                         "style": "filled"})
-            if not isinstance(ip, UnloadedIP):
-                if hasattr(ip, "start"):
-                    ip.start()
-            else:
+            if hasattr(ip, "start"):
+                ip.start()
+            elif isinstance(ip, VirtualIP) and not ip.is_loaded:
                 raise AttributeError("IP {} is not loaded, load IP before "
                                      "composing a pipeline"
                                      .format(ip._fullpath))
-
+        """
         self._current_pipeline = cle_list
         self._current_flat_pipeline = flat_list
         self.graph = graph
 
-    def loadIP(self, dfx_list: list) -> None:
+    def load(self, dfx_list: list) -> None:
         """Download dfx IP onto the corresponding partial regions
 
         Parameters
@@ -516,8 +616,8 @@ class Composable(DefaultHierarchy):
             contain either a string with the fullname or the IP object
 
             Examples:
-                [cpipe.pr_0.fast_accel, cpipe.pr_1.dilate_accel]
-                ['pr_0/fast_accel', 'pr_1/dilate_accel']
+                [cpipe.dfx_0.fast_accel, cpipe.dfx_1.dilate_accel]
+                ['dfx_0/fast_accel', 'dfx_1/dilate_accel']
         """
 
         bit_dict = dict()
@@ -547,7 +647,8 @@ class Composable(DefaultHierarchy):
         for pr in bit_dict:
             if not bit_dict[pr]['loaded']:
                 decoupler = self._dfx_control[self._dfx_dict[pr]['decouple']]
-                if self._dfx_control and decoupler:
+                if self._dfx_control and decoupler and \
+                        self._enable_dfx_decouple:
                     decoupler.write(1)
                 for i in range(5):
                     try:
@@ -560,7 +661,8 @@ class Composable(DefaultHierarchy):
                                            "downloaded"
                                            .format(bit_dict[pr]['bitstream']))
 
-                if self._dfx_control and decoupler:
+                if self._dfx_control and decoupler and \
+                        self._enable_dfx_decouple:
                     decoupler.write(0)
 
     def remove(self, iplist: list = None) -> None:
@@ -572,8 +674,8 @@ class Composable(DefaultHierarchy):
             List of IP to be removed from the current pipeline
 
             Examples:
-                [cpipe.pr_0.erode]
-                [cpipe.pr_1.filter2d, cpipe.pr_fork.duplicate]
+                [cpipe.erode]
+                [cpipe.filter2d, cpipe.duplicate]
         """
 
         if self._current_pipeline is None:
@@ -604,8 +706,8 @@ class Composable(DefaultHierarchy):
             Second: index
 
             Examples:
-                ([cpipe.pr_0.erode], 3)
-                ([cpipe.pr_1.filter2d, cpipe.pr_fork.duplicate], 2)
+                ([cpipe.erode], 3)
+                ([cpipe.filter2d, cpipe.duplicate], 2)
         """
 
         if not isinstance(iptuple, tuple):
@@ -639,7 +741,7 @@ class Composable(DefaultHierarchy):
             Second: new IP object
 
             Examples:
-                (cpipe.pr_0.erode, cpipe.pr_1.dilate)
+                (cpipe.erode, cpipe.dilate)
         """
 
         if not isinstance(replaceip, tuple):
@@ -663,7 +765,7 @@ class Composable(DefaultHierarchy):
     def tap(self, ip: Union[Type[DefaultIP], int] = None) -> None:
         """Observe the output of an IP object in the current pipeline
 
-        Tap into the output of any of the IP cores in the current pipeline
+        Tap into the output of the IP cores in the current pipeline
         Note that tap is not supported in a branch
 
         You can tap by passing the IP name or the index of the IP in the list.
@@ -676,9 +778,9 @@ class Composable(DefaultHierarchy):
             Either an IP object in the current pipeline to be tapped or
             index of IP object in the current pipeline to be tapped
 
-        Examples:
-            tap(cpipe.pr_1.dilate)
-            tap(6)
+            Examples:
+                tap(cpipe.dilate)
+                tap(6)
         """
 
         if self._current_pipeline is None:
@@ -705,42 +807,49 @@ class Composable(DefaultHierarchy):
 
         if index < len(self._current_pipeline)-1:
             key = self._relative_path(ip._fullpath)
-            if len(self._c_dict[key]['ci']) != 1:
+            if len(self._c_dict[key]['si']) != 1:
                 raise SystemError("tap into an IP with multiple outputs is "
                                   "not supported")
-            new_list.append(self._current_pipeline[-1])
 
-        pipeline = self._current_pipeline.copy()
+            for _, v in self.c_dict.default.items():
+                if v.get('fullpath') == self._current_pipeline[-1]._fullpath:
+                    new_list.append(self._current_pipeline[-1])
+
+        self._untapped_pipeline = self._current_pipeline.copy()
         self.compose(new_list)
-        self._current_pipeline = pipeline.copy()
 
     def untap(self) -> None:
         """Restores current pipeline after tap happened"""
 
-        if self._current_pipeline is None:
+        if self._untapped_pipeline is None:
             raise SystemError("There is nothing to untap")
 
-        self.compose(self._current_pipeline)
+        self.compose(self._untapped_pipeline)
+        self._untapped_pipeline = None
 
     def __getattr__(self, name):
         if self._dfx_dict is None:
             return super().__getattr__(name)
         elif name in self._dfx_dict:
             return DFXRegion(self, name)
-        elif name in self._paths:
-            try:
-                attr = getattr(self._ol, self._paths[name]['fullpath'])
-            except AttributeError:
-                attr = super().__getattr__(self._paths[name]['fullpath'])
-            return attr
-        elif (key := self._hier + name) not in self._ol.ip_dict.keys():
+        elif name in self._paths and\
+                self._ol.ip_dict.get(self._paths[name]['fullpath']):
+            return getattr(self._ol, self._paths[name]['fullpath'])
+        elif (key := self._hier + name) not in self._ol.ip_dict.keys() and \
+                name in self._c_dict.keys():
             return StreamingIP(key)
-        else:
+        elif name in self._c_dict:
             try:
                 attr = super().__getattr__(name)
             except AttributeError:
-                attr = getattr(self._ol, name)
+                attr = getattr(self._ol, key)
             return attr
+        else:
+            try:
+                return getattr(self._ol, key)
+            except AttributeError:
+                raise AttributeError("\'{}\' object has no attribute \'{}\'"
+                                     .format(type(self).__name__, name))
 
     def __dir__(self):
         return sorted(set(super().__dir__() +
@@ -758,58 +867,4 @@ class Composable(DefaultHierarchy):
                     self._sw_default[idx] not in switch_conf:
                 switch_conf[idx] = self._sw_default[idx]
 
-        self._switch.pi = switch_conf
-
-
-class DFXRegion:
-    """Class that wraps attributes for IP objects on DFX regions"""
-
-    def __init__(self, cpipe: Composable, name: str):
-        self._ol = cpipe._ol
-        self._parent = cpipe._hier
-        self._c_dict = cpipe._c_dict
-        self.key = name
-
-    def __getattr__(self, name: str):
-        key = self.key + '/' + name
-        if key in self._c_dict.keys():
-            if not self._c_dict[key]['loaded']:
-                return UnloadedIP(key)
-            elif self._c_dict[key]['modtype'] in _mem_items:
-                return BufferIP(key)
-            else:
-                return getattr(self._ol, self._parent + key)
-        else:
-            raise ValueError("IP \'{}\' does not exist in partial region "
-                             "\'{}\'".format(name, self.key))
-
-
-class StreamingIP:
-    """Handles Streaming only IP"""
-
-    def __init__(self, name: str):
-        self._fullpath = name
-
-
-class UnloadedIP:
-    """Handles IP objects that are not yet loaded into the hardware
-
-    This can be consider a virtual IP object
-    """
-
-    def __init__(self, path: str):
-        self._fullpath = path
-
-
-class BufferIP:
-    """Handles IP objects that are of buffering type
-
-    Expose fullpath attribute for buffering type IP such as:
-
-        a) FIFOs
-
-        b) Slice registers.
-    """
-
-    def __init__(self, path: str):
-        self._fullpath = path
+        self._switch.mi = switch_conf
