@@ -524,16 +524,15 @@ class Composable(DefaultHierarchy):
         gdebug = self._graph_debug
 
         pipeline_branches = dict()
-
-        in_use = dict()
+        
         for linear_pipeline in flat_list:
             for i, l0 in enumerate(linear_pipeline):
                 ip = linear_pipeline[i]
 
                 if i == len(linear_pipeline) - 1:
                     break
-                si = self._c_dict[(path := self._relative_path(ip._fullpath,'si'))]['si']
-
+                si = self._c_dict[(path := self._relative_path
+                     (ip._fullpath,'si'))]['si']
 
                 nextip = linear_pipeline[i+1]
 
