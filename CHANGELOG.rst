@@ -1,6 +1,31 @@
 PYNQ Composable Overlays ChangeLog
 ----------------------------------
 
+Added
+.....
+
+1.1.0
+~~~~~
+
+* Move to Vivado 2022.1
+* Support for Block Design Containers
+* Enhance handling of IP within the DFX regions
+* Fixes in the video handling class
+* Enhance ``DifferenceGaussians`` app
+* New ``EdgeDetect`` app
+* Copy button on RTD
+* Replace ``pi`` with ``mi`` for manager interface
+* Replace ``ci`` with ``si`` for subordinate interface
+* Replace terminology with Manger and Subordinate
+* Replace ``loadIP`` with ``load``
+* Include attribute ``.control`` to enable/disable the pipeline control logic
+* Replace ``xvF2d`` with ``XvF2d`` and ``xvLut`` with ``XvLut``
+
+1.0.2
+~~~~~
+
+Do not register overlay when the overlay is not available for download
+
 1.0.0
 ~~~~~
 Added

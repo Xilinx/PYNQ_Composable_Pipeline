@@ -22,6 +22,8 @@ The key modules are:
     the AXI4-Stream Switch.
   * :mod:`pynq_composable.parser` - This module parses the metadata in the hwh
     files and provide the ``c_dict`` and ``dfx_dict`` dictionaries.
+  * :mod:`pynq_composable.virtual` - This module handles IP which are not yet
+    loaded or do not have an AXI4-Lite interface.
 
 .. toctree::
     :hidden:
@@ -29,3 +31,4 @@ The key modules are:
     modules/composable.rst
     modules/switch.rst
     modules/parser.rst
+    modules/virtual.rst

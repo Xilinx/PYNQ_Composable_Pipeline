@@ -81,7 +81,6 @@ def _get_ip_name_by_vlnv(description: dict, vlnv: str) -> str:
             return k
     return None
 
-
 def _streamline_pipeline(pipe: list) -> list:
     """
     Flattens List
@@ -108,7 +107,6 @@ def _streamline_pipeline(pipe: list) -> list:
                 if idx2 > 0 and idx + 1 < len(pipe):
                     linear_pipe[idx2].append(pipe[idx + 1])
     return linear_pipe
-
 
 def _build_docstrings(hier: str, c_dict: dict, dfx_dict: dict,
                       pipelinecrt: str) -> str:
@@ -524,8 +522,6 @@ class Composable(DefaultHierarchy):
             graph_attr={'rankdir': self.graph.graph_attr['rankdir']}
         )
         gdebug = self._graph_debug
-
-
 
         pipeline_branches = dict()
 

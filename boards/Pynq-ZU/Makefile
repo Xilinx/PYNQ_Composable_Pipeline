@@ -1,13 +1,16 @@
-# Copyright (C) 2021 Xilinx, Inc
+# Copyright (C) 2022 Xilinx, Inc
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-overlay_name := cv_dfx_4_pr
+overlay_name := cv_dfx_3_pr
 
-all: vision_ip pynq_hls project dict version
+all: submodule vision_ip pynq_hls project dict version
 	@echo
 	@tput setaf 2 ; echo "Built $(overlay_name) successfully!"; tput sgr0;
 	@echo
+
+submodule:
+	cd ../../ && git submodule init && git submodule update
 
 vision_ip:
 	make -C ip/vitis_vision/ DEVICE=zynq-us -j4
@@ -36,7 +39,7 @@ version:
 zip:
 	$(eval ver := $(shell grep "version" ../../pynq_composable/__init__.py | cut -d" " -f3 | tr -d \'\" | tr . _))
 	cp LICENSE overlay/LICENSE.txt
-	zip -r composable-video-pipeline-Pynq-ZU-v$(ver).zip overlay/
+	zip -r -j composable-video-pipeline-Pynq-ZU-v$(ver).zip overlay/
 
 dict:
-	python3 ../../pynq_composable/parser.py --hwh overlay/$(overlay_name).hwh
+	cd overlay/ && python3 ../../../pynq_composable/parser.py --hwh $(overlay_name).hwh

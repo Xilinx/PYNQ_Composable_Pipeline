@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Xilinx, Inc
+# Copyright (C) 2022 Xilinx, Inc
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -10,20 +10,20 @@ from pynq_composable import switch
 import pytest
 
 __author__ = "Mario Ruiz"
-__copyright__ = "Copyright 2021, Xilinx"
+__copyright__ = "Copyright 2022, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 desc = {"parameters":
-        {"C_BASEADDR": "0x0", "C_HIGHADDR": "0xFFFF", "C_NUM_MI_SLOTS": 8},
+        {"C_BASEADDR": "0x0", "C_HIGHADDR": "0xFFFF", "NUM_MI": 8},
         "phys_addr": 0x0, "addr_range": 0xFFFF}
 
-test_data = [(np.arange(desc["parameters"]["C_NUM_MI_SLOTS"], dtype=np.int64),
+test_data = [(np.arange(desc["parameters"]["NUM_MI"], dtype=np.int64),
               {'64': 0, '68': 1, '72': 2, '76': 3, '80': 4, '84': 5, '88': 6,
                '92': 7, '0': 2}),
              (np.arange(5, dtype=np.int64),
               {'64': 0, '68': 1, '72': 2, '76': 3, '80': 4, '84': 1 << 31,
                '88': 1 << 31, '92': 1 << 31, '0': 2}),
-             (np.ones(desc["parameters"]["C_NUM_MI_SLOTS"], dtype=np.int64)*-1,
+             (np.ones(desc["parameters"]["NUM_MI"], dtype=np.int64)*-1,
               {'64': 1 << 31, '68': 1 << 31, '72': 1 << 31, '76': 1 << 31,
                '80': 1 << 31, '84': 1 << 31, '88': 1 << 31, '92': 1 << 31,
                '0': 2}),
@@ -54,47 +54,47 @@ def ipdevice(registerip):
 def test_wrong_type(ipdevice):
     sw = switch.StreamSwitch(desc)
     with pytest.raises(TypeError) as excinfo:
-        sw.pi = np.ones(5, dtype=np.int32)
+        sw.mi = np.ones(5, dtype=np.int32)
     assert str(excinfo.value) == "Numpy array must be np.int64 dtype"
 
 
 def test_too_long(ipdevice):
     sw = switch.StreamSwitch(desc)
     with pytest.raises(ValueError) as excinfo:
-        sw.pi = np.ones(20, dtype=np.int64)
+        sw.mi = np.ones(20, dtype=np.int64)
     assert str(excinfo.value) == "Provided numpy array is bigger than number "\
-        "of slots {}".format(desc["parameters"]["C_NUM_MI_SLOTS"])
+        "of slots {}".format(desc["parameters"]["NUM_MI"])
 
 
 def test_too_short(ipdevice):
     sw = switch.StreamSwitch(desc)
     with pytest.raises(ValueError) as excinfo:
-        sw.pi = np.ones(0, dtype=np.int64)
+        sw.mi = np.ones(0, dtype=np.int64)
     assert str(excinfo.value) == "Input numpy array must be at least one "\
         "element long"
 
 
 def test_data0(ipdevice):
     sw = switch.StreamSwitch(desc)
-    sw.pi = test_data[0][0]
+    sw.mi = test_data[0][0]
     assert ipdevice.ip.memory == test_data[0][1]
 
 
 def test_data_smaller_array(ipdevice):
     sw = switch.StreamSwitch(desc)
-    sw.pi = test_data[1][0]
+    sw.mi = test_data[1][0]
     assert ipdevice.ip.memory == test_data[1][1]
 
 
 def test_data_disable0(ipdevice):
     sw = switch.StreamSwitch(desc)
-    sw.pi = test_data[2][0]
+    sw.mi = test_data[2][0]
     assert ipdevice.ip.memory == test_data[2][1]
 
 
 def test_data_disable1(ipdevice):
     sw = switch.StreamSwitch(desc)
-    sw.pi = test_data[3][0]
+    sw.mi = test_data[3][0]
     assert ipdevice.ip.memory == test_data[3][1]
 
 
@@ -112,6 +112,6 @@ def test_data_all_disabled(ipdevice):
 
 def test_data_return(ipdevice):
     sw = switch.StreamSwitch(desc)
-    tvector = np.arange(desc["parameters"]["C_NUM_MI_SLOTS"], dtype=np.int64)
-    sw.pi = tvector
-    assert np.array_equal(sw.pi, tvector)
+    tvector = np.arange(desc["parameters"]["NUM_MI"], dtype=np.int64)
+    sw.mi = tvector
+    assert np.array_equal(sw.mi, tvector)

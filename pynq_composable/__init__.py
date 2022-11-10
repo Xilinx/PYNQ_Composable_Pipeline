@@ -11,6 +11,7 @@ from .apps import CornerDetect
 from .apps import ColorDetect
 from .apps import Filter2DApp
 from .apps import LutApp
+from .apps import EdgeDetect
 from .video import VideoStream
 from .video import VSource
 from .video import VSink
@@ -20,4 +21,4 @@ from .libs import *
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
 __email__ = "pynq_support@xilinx.com"
-__version__ = '1.0.2'
+__version__ = '1.1.0'

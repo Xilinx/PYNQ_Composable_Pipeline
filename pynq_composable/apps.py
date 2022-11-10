@@ -1,11 +1,11 @@
-# Copyright (C) 2021 Xilinx, Inc
+# Copyright (C) 2022 Xilinx, Inc
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
 from pynq import Overlay
 from pynq.lib.video import VideoMode
 from .video import VideoStream, VSource, VSink
-from .libs import xvF2d, xvLut
+from .libs import XvF2d, XvLut
 from ipywidgets import VBox, HBox, IntRangeSlider, FloatSlider, interact, \
     interactive_output, IntSlider, Dropdown
 from IPython.display import display
@@ -16,7 +16,7 @@ import os
 import warnings
 
 __author__ = "Mario Ruiz"
-__copyright__ = "Copyright 2021, Xilinx"
+__copyright__ = "Copyright 2022, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
@@ -33,7 +33,7 @@ class PipelineApp:
 
     _dfx_ip = None
 
-    def __init__(self, bitfile_name, source: VSource = VSource.HDMI,
+    def __init__(self, bitfile_name: str, source: VSource = VSource.HDMI,
                  sink: VSink = VSink.HDMI, file: int = 0,
                  videomode: VideoMode = None):
         """Return a PipelineApp object
@@ -96,6 +96,7 @@ class PipelineApp:
         self._r2h = self._cpipe.rgb2hsv_accel
         self._ct = self._cpipe.colorthresholding_accel
         self._lut = self._cpipe.lut_accel
+        self._dup = self._cpipe.duplicate_accel
         self._app_pipeline = [self._vii, self._vio]
 
     def stop(self):
@@ -120,7 +121,7 @@ class PipelineApp:
         """
 
         if self._dfx_ip:
-            self._cpipe.loadIP(self._dfx_ip)
+            self._cpipe.load(self._dfx_ip)
         self._pipeline()
         self._cpipe.compose(self._app_pipeline)
         self._video.start()
@@ -149,8 +150,7 @@ class DifferenceGaussians(PipelineApp):
     """
 
     _dfx_ip = [
-        'pr_fork/duplicate_accel',
-        'pr_join/subtract_accel',
+        'pr_2/subtract_accel',
         'pr_0/filter2d_accel'
     ]
 
@@ -160,32 +160,39 @@ class DifferenceGaussians(PipelineApp):
         Download partial bitstreams and configure pipeline
         """
 
-        self._dup = self._cpipe.pr_fork.duplicate_accel
-        self._sub = self._cpipe.pr_join.subtract_accel
+        self._sub = self._cpipe.pr_2.subtract_accel
         self._fi2d1 = self._cpipe.pr_0.filter2d_accel
 
-        self.sigma0 = 0.5
-        self._fi2d0.kernel_type = xvF2d.gaussian_blur
-        self.sigma1 = 7
-        self._fi2d1.kernel_type = xvF2d.gaussian_blur
+        self._fi2d0.kernel_type = XvF2d.gaussian_blur
+        self._fi2d1.kernel_type = XvF2d.gaussian_blur
+        self._lut.kernel_type = XvLut.threshold
+        self._play(0.5, 1.3, 20)
 
         self._app_pipeline = [self._vii, self._fi2d0, self._dup,
-                              [[self._fi2d1], [1]], self._sub, self._vio]
+                              [[self._fi2d1], [1]], self._sub, self._lut,
+                              self._vio]
 
-    def _play(self, sigma0, sigma1):
+    def _play(self, sigma0, sigma1, thres):
+        val = np.ones((2, 3, 3), dtype=np.uint8)
+        val[0][:] = thres
+        val[1][:] = 255
         self._fi2d0.sigma = sigma0
         self._fi2d1.sigma = sigma1
+        self._lut.threshold = val
 
     def play(self):
         """ Exposes runtime configurations to the user
         Displays two sliders to change the sigma value of each Gaussian Filter
         """
 
-        sigma0 = FloatSlider(min=0.1, max=10, value=0.5,
+        sigma0 = FloatSlider(min=0.1, max=2, value=0.5,
                              description='\u03C3\u2080')
-        sigma1 = FloatSlider(min=0.1, max=10, value=7,
+        sigma1 = FloatSlider(min=0.4, max=2, value=1.3,
                              description='\u03C3\u2081')
-        interact(self._play, sigma0=sigma0, sigma1=sigma1)
+        thres = IntSlider(min=1, max=254, value=20,
+                          description='Threshold')
+
+        interact(self._play, sigma0=sigma0, sigma1=sigma1, thres=thres)
 
 
 class CornerDetect(PipelineApp):
@@ -196,8 +203,7 @@ class CornerDetect(PipelineApp):
     _dfx_ip = [
         'pr_0/fast_accel',
         'pr_1/cornerHarris_accel',
-        'pr_fork/duplicate_accel',
-        'pr_join/add_accel'
+        'pr_2/add_accel'
     ]
     _algorithm = 'Fast'
 
@@ -209,11 +215,11 @@ class CornerDetect(PipelineApp):
 
         self._fast = self._cpipe.pr_0.fast_accel
         self._harr = self._cpipe.pr_1.cornerHarris_accel
-        self._add = self._cpipe.pr_join.add_accel
-        self._dup = self._cpipe.pr_fork.duplicate_accel
+        self._add = self._cpipe.pr_2.add_accel
 
-        self._app_pipeline = [self._vii, self._dup, [[self._r2g, self._fast,
-                              self._g2r], [1]], self._add, self._vio]
+        self._app_pipeline = [self._vii, self._dup,
+                              [[self._r2g, self._fast, self._g2r], [1]],
+                              self._add, self._vio]
 
     def _swap(self):
         if self._algorithm == 'Fast':
@@ -240,16 +246,17 @@ class CornerDetect(PipelineApp):
             self._k_harris.disabled = False
             self._harr.k = k_harris
 
+    _thr = IntSlider(min=0, max=255, step=1, value=20)
+    _k_harris = FloatSlider(min=0, max=0.2, step=0.002, value=0.04,
+                            description='\u03BA')
+
     def play(self):
         """ Exposes runtime configurations to the user
 
         Displays one drop down menu to select the Corner Detect Algorithm.
-        It also displays two sliders to change the the threshold and K value
+        It also displays two sliders to change the threshold and K value
         for the algorithms.
         """
-        self._thr = IntSlider(min=0, max=255, step=1, value=20)
-        self._k_harris = FloatSlider(min=0, max=0.2, step=0.002, value=0.04,
-                                     description='\u03BA')
         interact(self._play, algorithm=['Fast', 'Harris'],
                  threshold=self._thr, k_harris=self._k_harris)
 
@@ -263,8 +270,7 @@ class ColorDetect(PipelineApp):
     _dfx_ip = [
         'pr_0/dilate_accel',
         'pr_1/dilate_accel',
-        'pr_fork/duplicate_accel',
-        'pr_join/bitwise_and_accel'
+        'pr_2/bitwise_and_accel'
     ]
     _c_space = 'HSV'
     _output = 'Color Detect'
@@ -280,8 +286,7 @@ class ColorDetect(PipelineApp):
         self._di0 = self._cpipe.pr_0.dilate_accel
         self._er1 = self._cpipe.pr_1.erode_accel
         self._di1 = self._cpipe.pr_1.dilate_accel
-        self._band = self._cpipe.pr_join.bitwise_and_accel
-        self._dup = self._cpipe.pr_fork.duplicate_accel
+        self._band = self._cpipe.pr_2.bitwise_and_accel
 
         self._app_pipeline = [self._vii, self._dup, [[self._r2h, self._ct,
                               self._er0, self._di0, self._di1, self._er1,
@@ -390,6 +395,63 @@ class ColorDetect(PipelineApp):
         display(ui, out)
 
 
+class EdgeDetect(PipelineApp):
+    """ Edge detect video pipeline application
+    This class wraps the functionality to implement an edge detect
+    video pipeline application
+    """
+
+    _dfx_ip = [
+        'pr_2/add_accel'
+    ]
+
+    _mask = 'Edges'
+
+    def _pipeline(self):
+        """Logic to configure pipeline"""
+
+        self._add = self._cpipe.pr_2.add_accel
+        self._fi2d0.kernel_type = XvF2d.scharr_y
+
+        self._app_pipeline = [self._vii, self._r2g, self._fi2d0, self._ct,
+                              self._g2r, self._vio]
+        self._app_pipeline1 = [self._vii, self._dup, [[self._r2g, self._fi2d0,
+                               self._ct, self._g2r], [1]], self._add,
+                               self._vio]
+
+    def _play(self, thres, e, o):
+        lower_thr = np.ones((3, 3), dtype=np.uint8) * np.uint8(thres)
+        upper_thr = np.ones((3, 3), dtype=np.uint8) * 255
+        self._ct.lower_thr = lower_thr
+        self._ct.upper_thr = upper_thr
+        self._fi2d0.kernel_type = e
+        if o != self._mask:
+            if o == 'Edges':
+                self._cpipe.compose(self._app_pipeline)
+            else:
+                self._cpipe.compose(self._app_pipeline1)
+            self._mask = o
+
+    def play(self):
+        """Exposes runtime configurations to the user
+
+        Displays threshold slider to change the intensity threshold
+        """
+        edge = Dropdown(options=[XvF2d.edge_x, XvF2d.sobel_x, XvF2d.sobel_y,
+                                 XvF2d.scharr_x, XvF2d.scharr_y,
+                                 XvF2d.prewitt_y], value=XvF2d.scharr_y,
+                        description='Kernel')
+        output = Dropdown(options=['Edges', 'Edges on video'],
+                          value='Edges', description='Output Video')
+        threshold = IntSlider(value=100, min=1, max=255,
+                              description='Threshold')
+
+        out = interactive_output(self._play,
+                                 {'thres': threshold, 'e': edge, 'o': output})
+        ui = HBox([edge, threshold, output])
+        display(ui, out)
+
+
 class InterruptTimer(object):
     """ Threaded interrupt
 
@@ -427,11 +489,11 @@ class InterruptTimer(object):
 
 
 class Filter2DApp(PipelineApp):
-    """ This class wraps the functionality to implement the Filter2D IP in and
-    expose kernel configurability through the buttons on the board
+    """ This class wraps the functionality to implement the Filter2D IP and
+    exposes kernel configuration through the buttons on the board
     """
 
-    def __init__(self, bitfile_name, source: VSource = VSource.HDMI):
+    def __init__(self, bitfile_name: str, source: VSource = VSource.HDMI):
         """Return a Filter2DApp object
 
         Parameters
@@ -443,7 +505,7 @@ class Filter2DApp(PipelineApp):
         """
 
         super().__init__(bitfile_name=bitfile_name, source=source)
-        self._fi2d0.kernel_type = xvF2d.identity
+        self._fi2d0.kernel_type = XvF2d.identity
         self._buttons = self._ol.btns_gpio.channel1
         self._leds = self._ol.leds_gpio.channel1
         self._timer = InterruptTimer(0.3, self._play)
@@ -458,16 +520,16 @@ class Filter2DApp(PipelineApp):
 
     def _play(self):
         buttons = int(self._buttons.read())
-        index = buttons % len(xvF2d)
+        index = buttons % len(XvF2d)
         if self._index != index:
-            self._fi2d0.kernel_type = xvF2d(index)
+            self._fi2d0.kernel_type = XvF2d(index)
             self._leds[0:4].write(index)
             self._index = index
 
     def play(self):
         """ Exposes runtime configurations to the user
 
-        Enables user iteration by changing the on board buttons
+        Enables user iteration by pressing the on-board buttons
         """
 
         self._timer.start()
@@ -477,10 +539,10 @@ class Filter2DApp(PipelineApp):
 
 class LutApp(PipelineApp):
     """ This class wraps the functionality to implement the LUT IP and
-    expose kernel configurability through the switches on the board
+    exposes kernel configuration through the switches on the board
     """
 
-    def __init__(self, bitfile_name, source: VSource = VSource.HDMI):
+    def __init__(self, bitfile_name: str, source: VSource = VSource.HDMI):
         """Return a LutApp object
 
         Parameters
@@ -492,7 +554,7 @@ class LutApp(PipelineApp):
         """
 
         super().__init__(bitfile_name=bitfile_name, source=source)
-        self._lut.kernel_type = xvLut.negative
+        self._lut.kernel_type = XvLut.negative
         self._switches = self._ol.switches_gpio.channel1
         self._leds = self._ol.leds_gpio.channel1
         self._timer = InterruptTimer(0.3, self._play)
@@ -507,16 +569,16 @@ class LutApp(PipelineApp):
 
     def _play(self):
         switches = int(self._switches.read())
-        index = switches % len(xvLut)
+        index = switches % len(XvLut)
         if self._index != index:
-            self._lut.kernel_type = xvLut(index)
+            self._lut.kernel_type = XvLut(index)
             self._leds[0:4].write(index)
             self._index = index
 
     def play(self):
         """ Exposes runtime configurations to the user
 
-        Enables user iteration by changing the on board switches
+        Enables user iteration by moving the on-board switches
         """
 
         self._timer.start()

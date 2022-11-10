@@ -17,7 +17,7 @@
 #define NMS 1
 #define MAXCORNERS 1024
 
-typedef xf::cv::ap_axiu<DATA_WIDTH,1,1,1> interface_t;
+typedef ap_axiu<DATA_WIDTH,1,1,1> interface_t;
 typedef hls::stream<interface_t> stream_t;
 
 

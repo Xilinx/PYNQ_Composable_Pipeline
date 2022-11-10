@@ -1,0 +1,22 @@
+{
+	"Pynq-Z2": {
+		"url": "https://www.xilinx.com/bin/public/openDownload?filename=composable-video-pipeline-Pynq-Z2-v1_0_0.zip",
+		"md5sum": "45421bd8844749a219fd7147af17e9d6",
+		"unpack": true
+	},
+	"Pynq-Z1": {
+		"url": "https://www.xilinx.com/bin/public/openDownload?filename=composable-video-pipeline-Pynq-Z2-v1_0_0.zip",
+		"md5sum": "45421bd8844749a219fd7147af17e9d6",
+		"unpack": true
+	},
+	"Pynq-ZU": {
+		"url": "https://www.xilinx.com/bin/public/openDownload?filename=composable-video-pipeline-Pynq-ZU-v1_0_0.zip",
+		"md5sum": "0ad2da3dfda6d3392d4845f18404dc3c",
+		"unpack": true
+	},
+	"KV260": {
+		"url": "https://www.xilinx.com/bin/public/openDownload?filename=composable-video-pipeline-KV260-v1_1_0.zip",
+		"md5sum": "d30f0f1006e1e1c783781a75dbdb95c6",
+		"unpack": true
+	}
+}

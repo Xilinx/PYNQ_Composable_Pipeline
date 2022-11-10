@@ -3,29 +3,43 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 
-import pytest
 import hashlib
 import pickle as pkl
-import sys
 from pynq_composable import parser
+import pytest
+import shutil
 
 __author__ = "Mario Ruiz"
 __copyright__ = "Copyright 2021, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
-hwhfilename = "tests/cv_dfx_2pipes.hwh"
-pklfile0 = "tests/cv_dfx_2pipes_pipeline0.pkl"
-pklfile1 = "tests/cv_dfx_2pipes_pipeline1.pkl"
+hwhfilename = "tests/files/cv_dfx_2pipes.hwh"
+pklfile0 = "tests/files/cv_dfx_2pipes_pipeline0.pkl"
+pklfile1 = "tests/files/cv_dfx_2pipes_pipeline1.pkl"
 
-with open(pklfile0, "rb") as file:
-    _cached_digest0, _c_dict0, _dfx_dict0 = pkl.load(file)
 
-with open(pklfile1, "rb") as file:
-    _cached_digest1, _c_dict1, _dfx_dict1 = pkl.load(file)
+@pytest.fixture
+def temporary_path(tmp_path):
+    dir = tmp_path / 'hwh'
+    shutil.copytree('tests/files/', dir)
+    yield dir, dir / "cv_dfx_2pipes.hwh"
 
-with open(hwhfilename, 'rb') as file:
-    hwhdigest = hashlib.md5(file.read()).hexdigest()
+
+def _get_hwh_digest(filename):
+    with open(filename, 'rb') as file:
+        hwhdigest = hashlib.md5(file.read()).hexdigest()
+    return hwhdigest
+
+
+def _get_pickled_dict(filename):
+    with open(filename, "rb") as file:
+        return pkl.load(file)
+
+
+_hwhdigest = _get_hwh_digest(hwhfilename)
+_cached_digest0, _c_dict0, _dfx_dict0 = _get_pickled_dict(pklfile0)
+_cached_digest1, _c_dict1, _dfx_dict1 = _get_pickled_dict(pklfile1)
 
 
 def test_file():
@@ -36,25 +50,46 @@ def test_file():
         "[Errno 2] No such file or directory: 'nofile.hwh'"
 
 
-def test_bad_switch():
+def test_bad_switch(temporary_path):
     switch = "badswitch"
     with pytest.raises(AttributeError) as attrinfo:
-        parser.HWHComposable(hwhfilename, switch, False)
+        parser.HWHComposable(temporary_path[1], switch, False)
     assert str(attrinfo.value) == \
         "AXI4-Switch {} does not exist in the hwh file".format(switch)
 
 
-def test_switch0():
+def test_switch0(temporary_path):
     switch = "pipeline0/axis_switch"
-    hwhparser = parser.HWHComposable(hwhfilename, switch, False)
+    hwhparser = parser.HWHComposable(temporary_path[1], switch, False)
     assert _c_dict0 == hwhparser.c_dict
     assert _dfx_dict0 == hwhparser.dfx_dict
-    assert hwhdigest == _cached_digest0
+    assert _hwhdigest == _cached_digest0
 
 
-def test_switch1():
+def test_switch1(temporary_path):
     switch = "pipeline1/axis_switch"
-    hwhparser = parser.HWHComposable(hwhfilename, switch, False)
+    hwhparser = parser.HWHComposable(temporary_path[1], switch, False, True)
     assert _c_dict1 == hwhparser.c_dict
     assert _dfx_dict1 == hwhparser.dfx_dict
-    assert hwhdigest == _cached_digest1
+    assert _hwhdigest == _cached_digest1
+
+
+def test_dfx(temporary_path):
+    filename = temporary_path[0] / "cv_dfx_3_pr.hwh"
+    pklfile_composable = temporary_path[0] / "cv_dfx_3_pr_composable.pkl"
+    switch = "composable/axis_switch"
+    _, c_dict, dfx_dict = _get_pickled_dict(pklfile_composable)
+    hwhparser = parser.HWHComposable(filename, switch, False, True)
+
+    from deepdiff import DeepDiff
+    excludedRegex = [r"root\[\'.*'\]\['bitstream'\]"]
+    diff = DeepDiff(c_dict, hwhparser.c_dict,
+                    exclude_regex_paths=excludedRegex)
+    assert not diff
+    excludedRegex = [
+        r"root\[\'.*'\]\['rm'\]\[\'.*'\]\[\'.*'\]\['bitstream'\]"
+    ]
+    diff = DeepDiff(dfx_dict, hwhparser.dfx_dict,
+                    exclude_regex_paths=excludedRegex)
+
+    assert not diff

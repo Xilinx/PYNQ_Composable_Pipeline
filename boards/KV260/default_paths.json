@@ -1,21 +1,21 @@
 {
     "composable": {
         "ps_video": {
-            "ci": {
+            "si": {
                         "port": 0,
                         "Description": "PS Video input path"
                 },
-            "pi": {
+            "mi": {
                         "port": 0,
                         "Description": "PS Video output path"
             }
         },
         "mipi": {
-            "ci": {
+            "si": {
                         "port": 1,
                         "Description": "MIPI frontend PL path"
                 },
-            "pi": {
+            "mi": {
                         "port": 1,
                         "Description": "MIPI frontend PS path"
             }

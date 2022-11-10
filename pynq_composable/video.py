@@ -9,7 +9,7 @@ import json
 import os
 from pynq import Overlay
 from pynq.lib.video import DrmDriver, VideoMode, PIXEL_RGB
-from pynq.lib.video.clocks import *
+from pynq.lib.video.clocks import DP159, SI_5324C
 from pynq.ps import CPU_ARCH, ZU_ARCH, ZYNQ_ARCH
 from time import sleep
 import threading
@@ -25,7 +25,7 @@ __email__ = "pynq_support@xilinx.com"
 
 
 class VSource(Enum):
-    """Suported input video sources"""
+    """Supported input video sources"""
 
     OpenCV = auto()
     HDMI = auto()
@@ -33,7 +33,7 @@ class VSource(Enum):
 
 
 class VSink(Enum):
-    """Suported output video sinks"""
+    """Supported output video sinks"""
 
     HDMI = auto()
     DP = auto()
@@ -90,8 +90,8 @@ class PLPLVideo:
             Input video source. Valid values [VSource.HDMI, VSource.MIPI]
         """
 
-        VSourceources = [VSource.HDMI, VSource.MIPI]
-        if source not in VSourceources:
+        vsourceources = [VSource.HDMI, VSource.MIPI]
+        if source not in vsourceources:
             raise ValueError("{} is not supported".format(source))
         elif ol.device.name != 'Pynq-ZU' and source != VSource.HDMI:
             raise ValueError("Device {} only supports {} as input source "
@@ -102,7 +102,7 @@ class PLPLVideo:
         self._started = None
 
         if ol.device.name == 'Pynq-ZU':
-            # Deassert HDMI clock reset
+            # De-assert HDMI clock reset
             ol.hdmi_tx_control.channel2[0].write(1)
             # Wait 200 ms for the clock to come out of reset
             sleep(0.2)
@@ -184,8 +184,8 @@ class PLDPVideo:
             Input video source. Valid values [VSource.HDMI, VSource.MIPI]
         """
 
-        VSourceources = [VSource.HDMI, VSource.MIPI]
-        if source not in VSourceources:
+        vsourceources = [VSource.HDMI, VSource.MIPI]
+        if source not in vsourceources:
             raise ValueError("{} is not supported".format(source))
 
         if CPU_ARCH != ZU_ARCH:
@@ -231,7 +231,7 @@ class PLDPVideo:
             while self._thread.is_alive():
                 sleep(0.05)
             self._source_in.close()
-            self._dp.stop()
+            self._dp.close()
             self._started = False
             self._pause = False
 
@@ -306,7 +306,7 @@ class OpenCVPLVideo:
         self._started = None
 
         if ol.device.name == 'Pynq-ZU':
-            # Deassert HDMI clock reset
+            # De-assert HDMI clock reset
             ol.hdmi_tx_control.channel2[0].write(1)
             # Wait 200 ms for the clock to come out of reset
             sleep(0.2)
@@ -380,7 +380,7 @@ class OpenCVPLVideo:
             self._running = False
 
     def close(self):
-        """Uninitialise the drivers, stopping the pipeline beforehand"""
+        """Un-initialise the drivers, stopping the pipeline beforehand"""
 
         self.stop()
 
@@ -414,8 +414,12 @@ class OpenCVPLVideo:
         """Threaded method to implement tie"""
 
         while self._running:
-            self._outframe[:] = self.readframe()
-            self._hdmi_out.writeframe(self._outframe)
+            try:
+                self._outframe[:] = self.readframe()
+                self._hdmi_out.writeframe(self._outframe)
+            except RuntimeError:
+                self._running = False
+                raise RuntimeError("Can't start thread")
 
 
 class OpenCVDPVideo(OpenCVPLVideo):
@@ -471,9 +475,10 @@ class OpenCVDPVideo(OpenCVPLVideo):
             self._running = False
             while self._thread.is_alive():
                 sleep(0.05)
+            self._videoIn.release()
             self.vdma.writechannel.stop()
             self.vdma.readchannel.stop()
-            self._dp.stop()
+            self._dp.close()
             self._started = False
 
     def _tie(self):
@@ -504,6 +509,7 @@ class OpenCVDPVideo(OpenCVPLVideo):
                 dpframe[:] = self.vdma.readchannel.readframe()
                 self._dp.writeframe(dpframe)
             except RuntimeError:
+                self._running = False
                 raise RuntimeError("Can't start thread")
 
 

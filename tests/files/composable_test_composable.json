@@ -1,0 +1,129 @@
+[
+    {
+        "f0": {
+            "si": [0],
+            "mi": [0],
+            "dfx": false,
+            "loaded": true,
+            "modtype": "f0"
+        },
+        "f1": {
+            "si": [1],
+            "mi": [1],
+            "dfx": false,
+            "loaded": true,
+            "modtype": "f1"
+        },
+        "f2": {
+            "si": [2],
+            "mi": [2],
+            "dfx": false,
+            "loaded": true,
+            "modtype": "f2"
+        },
+        "f3": {
+            "si": [3],
+            "mi": [3],
+            "dfx": false,
+            "loaded": true,
+            "modtype": "f3"
+        },
+        "f4": {
+            "si": [4],
+            "mi": [4],
+            "dfx": false,
+            "loaded": true,
+            "modtype": "f4"
+        },
+        "f5": {
+            "si": [5],
+            "mi": [5],
+            "dfx": false,
+            "loaded": true,
+            "modtype": "f5"
+        },
+        "f6": {
+            "si": [6],
+            "mi": [6],
+            "dfx": false,
+            "loaded": true,
+            "modtype": "f6"
+        },
+        "f7": {
+            "si": [7],
+            "mi": [7],
+            "dfx": false,
+            "loaded": true,
+            "modtype": "f7"
+        },
+        "join": {
+            "si": [8],
+            "mi": [8, 9],
+            "dfx": false,
+            "loaded": true,
+            "modtype": "join"
+        },
+        "fork": {
+            "si": [9, 10],
+            "mi": [10],
+            "dfx": false,
+            "loaded": true,
+            "modtype": "fork"
+        },
+        "pr/f8": {
+            "si": [11],
+            "mi": [11],
+            "dfx": true,
+            "loaded": false,
+            "modtype": "f8",
+            "bitstream": "files/pr_f8.bit"
+        },
+        "pr/f9": {
+            "si": [11],
+            "mi": [11],
+            "dfx": true,
+            "loaded": true,
+            "modtype": "f9",
+            "bitstream": "files/pr_f9.bit"
+        },        
+        "source_data": {
+            "si": [12],
+            "dfx": false,
+            "loaded": true,
+            "modtype": "source"
+        },
+        "sink_data": {
+            "mi": [12],
+            "dfx": false,
+            "loaded": true,
+            "modtype": "sink"
+        }
+    },
+    {
+        "pr": {
+            "decoupler": "/composable/dfx_decouplers/dfx_decoupler_pr",
+            "rm": {
+                "f9.bit": {
+                    "pr/f9": {
+                        "interface": [
+                            "/pr/stream_in",
+                            "/pr/stream_in"
+                        ],
+                        "modtype": "f9",
+                        "bitstream": "files/pr_f9.bit"
+                    }
+                },
+                "f8.bit": {
+                    "pr/f8": {
+                        "interface": [
+                            "/pr/stream_in",
+                            "/pr/stream_in"
+                        ],
+                        "modtype": "f8",
+                        "bitstream": "files/pr_f8.bit"
+                    }
+                }                
+            }
+        }
+    }
+]

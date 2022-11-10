@@ -13,3 +13,5 @@ ipython
 nbsphinx
 myst_parser
 sphinx_copybutton
+pynqmetadata
+pynqutils

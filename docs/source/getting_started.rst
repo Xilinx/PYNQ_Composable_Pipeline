@@ -36,7 +36,7 @@ Once the installation is done, you can deliver the notebooks by running
 
 .. code-block:: bash
 
-  pynq-get-notebooks pynq-composable -p $PYNQ_JUPYTER_NOTEBOOKS
+  pynq-get-notebooks pynq_composable -p $PYNQ_JUPYTER_NOTEBOOKS
 
 Get Help
 ========

@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Xilinx, Inc
+# Copyright (C) 2022 Xilinx, Inc
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
@@ -11,7 +11,7 @@ from pynq.ps import CPU_ARCH, ZU_ARCH
 import struct
 
 __author__ = "Mario Ruiz"
-__copyright__ = "Copyright 2021, Xilinx"
+__copyright__ = "Copyright 2022, Xilinx"
 __email__ = "pynq_support@xilinx.com"
 
 
@@ -78,7 +78,8 @@ class VitisVisionIP(DefaultIP):
     @property
     def rows(self) -> int:
         """Image height"""
-        return self._rows
+        rows = int(self.read(self._rows_offset))
+        return rows
 
     @rows.setter
     def rows(self, rows: int):
@@ -93,7 +94,8 @@ class VitisVisionIP(DefaultIP):
     @property
     def cols(self) -> int:
         """Image width"""
-        return self._cols
+        cols = int(self.read(self._cols_offset))
+        return cols
 
     @cols.setter
     def cols(self, cols: int):
@@ -106,7 +108,7 @@ class VitisVisionIP(DefaultIP):
         self.write(self._cols_offset, int(self._cols))
 
 
-class xvF2d(Enum):
+class XvF2d(Enum):
     """Supported filter2D kernels"""
     identity = 0
     edge_x = 1
@@ -136,7 +138,7 @@ class Filter2d(VitisVisionIP):
         self._quantize_error = 0
         self._shift = 0
 
-        self._kernel_type = xvF2d.identity
+        self._kernel_type = XvF2d.identity
         self._sigma = 1.0
 
     def _gaussianBlur(self):
@@ -185,7 +187,7 @@ class Filter2d(VitisVisionIP):
 
         self._sigma = float(sigma)
 
-        if self._kernel_type == xvF2d.gaussian_blur:
+        if self._kernel_type == XvF2d.gaussian_blur:
             self._kernel, self._shift = \
                 self._quantiseKernel(self._gaussianBlur())
             self._populateKernel()
@@ -195,49 +197,49 @@ class Filter2d(VitisVisionIP):
         return self._kernel_type
 
     @kernel_type.setter
-    def kernel_type(self, kernel_type: xvF2d):
-        if kernel_type not in xvF2d:
+    def kernel_type(self, kernel_type: XvF2d):
+        if kernel_type not in XvF2d:
             raise ValueError("Kernel type unknown")
 
         self._shift = 0
-        if kernel_type == xvF2d.identity:
+        if kernel_type == XvF2d.identity:
             self._kernel = np.array([[0, 0, 0], [0, 1, 0], [0, 0, 0]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.edge_x:
+        elif kernel_type == XvF2d.edge_x:
             self._kernel = np.array([[0, -1, 0], [-1, 4, -1], [0, -1, 0]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.edge_y:
+        elif kernel_type == XvF2d.edge_y:
             self._kernel = np.array([[1, 0, -1], [0, 4, 0], [-1, 0, 1]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.edge:
+        elif kernel_type == XvF2d.edge:
             self._kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.sobel_x:
+        elif kernel_type == XvF2d.sobel_x:
             self._kernel = np.array([[1, 0, -1], [2, 0, -2], [1, 0, -1]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.sobel_y:
+        elif kernel_type == XvF2d.sobel_y:
             self._kernel = np.array([[1, 2, 1], [0, 0, 0], [-1, -2, -1]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.sharpen:
+        elif kernel_type == XvF2d.sharpen:
             self._kernel = np.array([[0, -1, 0], [-1, 5, -1], [0, -1, 0]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.scharr_x:
+        elif kernel_type == XvF2d.scharr_x:
             self._kernel = np.array([[3, 0, -3], [10, 0, -10], [3, 0, -3]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.scharr_y:
+        elif kernel_type == XvF2d.scharr_y:
             self._kernel = np.array([[3, 10, 3], [0, 0, 0], [-3, -10, -3]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.prewitt_x:
+        elif kernel_type == XvF2d.prewitt_x:
             self._kernel = np.array([[1, 0, -1], [1, 0, -1], [1, 0, -1]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.prewitt_y:
+        elif kernel_type == XvF2d.prewitt_y:
             self._kernel = np.array([[1, 1, 1], [0, 0, 0], [-1, -1, -1]],
                                     dtype=np.int16)
-        elif kernel_type == xvF2d.median_blur:
+        elif kernel_type == XvF2d.median_blur:
             self._kernel, self._shift = \
                 self._quantiseKernel(self._medianBlur())
             self._shift -= 1
-        elif kernel_type == xvF2d.gaussian_blur:
+        elif kernel_type == XvF2d.gaussian_blur:
             self._kernel, self._shift = \
                 self._quantiseKernel(self._gaussianBlur())
 
@@ -295,7 +297,7 @@ class GaussianBlur(VitisVisionIP):
         self.write(0x20, _float2int(aux))
 
 
-class colorThreshold(VitisVisionIP):
+class ColorThreshold(VitisVisionIP):
     """Color Thresholding IP driver
     lower_thr and upper_thr are a numpy array, each row corresponds to a
     channel in the pixel.
@@ -381,7 +383,7 @@ class colorThreshold(VitisVisionIP):
         self._populateThreshold()
 
 
-class inRange(VitisVisionIP):
+class InRange(VitisVisionIP):
     """inRange"""
 
     bindto = ['xilinx.com:hls:inRange_accel:1.0']
@@ -527,7 +529,7 @@ class CornerHarris(VitisVisionIP):
         self.write(0x28, int(self._k))
 
 
-class xvLut(Enum):
+class XvLut(Enum):
     """Supported LUT kernels"""
     identity = 0
     negative = 1
@@ -541,7 +543,7 @@ class xvLut(Enum):
 class PixelLut(VitisVisionIP):
     """Lut IP"""
 
-    bindto = ['xilinx.com:hls:LUT_accel:1.0']
+    bindto = ['xilinx.com:hls:LUT_accel:1.0', 'xilinx.com:hls:lut_accel:1.0']
 
     def __init__(self, description):
         super().__init__(description=description)
@@ -549,7 +551,7 @@ class PixelLut(VitisVisionIP):
         self.step = 8
         self.offset = 32
         self._shape = self._lut.shape
-        self.kernel_type = xvLut.negative
+        self.kernel_type = XvLut.negative
         self._threshold = np.random.randint(0, 255, (2, 3, 3), dtype=np.uint8)
 
     def _negative(self):
@@ -599,7 +601,7 @@ class PixelLut(VitisVisionIP):
 
     @property
     def threshold(self):
-        """Set an retrieve threshold ndarray
+        """Set and retrieve threshold ndarray
 
         The first index indicates
 
@@ -624,30 +626,30 @@ class PixelLut(VitisVisionIP):
             )
 
         self._threshold = matrix
-        self.kernel_type = xvLut.threshold
+        self.kernel_type = XvLut.threshold
 
     @property
     def kernel_type(self):
         return self._kernel_type
 
     @kernel_type.setter
-    def kernel_type(self, kernel_type: xvLut):
-        if kernel_type not in xvLut:
+    def kernel_type(self, kernel_type: XvLut):
+        if kernel_type not in XvLut:
             raise ValueError("Kernel type unknown")
 
-        if kernel_type == xvLut.negative:
+        if kernel_type == XvLut.negative:
             self._negative()
-        elif kernel_type == xvLut.identity:
+        elif kernel_type == XvLut.identity:
             self._identity()
-        elif kernel_type == xvLut.binary_threshold:
+        elif kernel_type == XvLut.binary_threshold:
             self._binary_threshold()
-        elif kernel_type == xvLut.group_bin:
+        elif kernel_type == XvLut.group_bin:
             self._group_bin()
-        elif kernel_type == xvLut.offset:
+        elif kernel_type == XvLut.offset:
             self._offset()
-        elif kernel_type == xvLut.threshold:
+        elif kernel_type == XvLut.threshold:
             self._custom_threshold()
-        elif kernel_type == xvLut.random:
+        elif kernel_type == XvLut.random:
             self._lut = np.random.randint(0, 255, self._shape, dtype=np.uint8)
 
         self._kernel_type = kernel_type

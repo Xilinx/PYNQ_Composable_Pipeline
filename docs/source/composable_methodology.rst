@@ -121,7 +121,7 @@ You can see an example of these connection in the image below.
 
 The :attr:`pynq_composable.composable.Composable.dfx_dict` will automatically
 populate this information from the design. When you download a partial
-bitstream you will use the :meth:`pynq_composable.composable.Composable.loadIP`.
+bitstream you will use the :meth:`pynq_composable.composable.Composable.load`.
 This method will decouple the Reconfigurable Partition before downloading the
 partial bitstream.
 

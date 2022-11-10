@@ -22,21 +22,9 @@ set_property RESET_AFTER_RECONFIG true [get_pblocks pblock_pr_1]
 set_property SNAPPING_MODE ON [get_pblocks pblock_pr_1]
 set_property IS_SOFT FALSE [get_pblocks pblock_pr_1]
 
-create_pblock pblock_pr_join
-add_cells_to_pblock [get_pblocks pblock_pr_join] [get_cells -quiet [list video_cp_i/composable/pr_join]]
-resize_pblock [get_pblocks pblock_pr_join] -add {SLICE_X94Y100:SLICE_X101Y149}
-set_property RESET_AFTER_RECONFIG true [get_pblocks pblock_pr_join]
-set_property SNAPPING_MODE ON [get_pblocks pblock_pr_join]
-set_property IS_SOFT FALSE [get_pblocks pblock_pr_join]
-
-create_pblock pblock_pr_fork
-add_cells_to_pblock [get_pblocks pblock_pr_fork] [get_cells -quiet [list video_cp_i/composable/pr_fork]]
-resize_pblock [get_pblocks pblock_pr_fork] -add {SLICE_X84Y100:SLICE_X93Y149}
-resize_pblock [get_pblocks pblock_pr_fork] -add {DSP48_X3Y40:DSP48_X3Y59}
-resize_pblock [get_pblocks pblock_pr_fork] -add {RAMB18_X4Y40:RAMB18_X4Y59}
-resize_pblock [get_pblocks pblock_pr_fork] -add {RAMB36_X4Y20:RAMB36_X4Y29}
-set_property RESET_AFTER_RECONFIG true [get_pblocks pblock_pr_fork]
-set_property SNAPPING_MODE ON [get_pblocks pblock_pr_fork]
-set_property IS_SOFT FALSE [get_pblocks pblock_pr_fork]
-
-
+create_pblock pblock_pr_2
+add_cells_to_pblock [get_pblocks pblock_pr_2] [get_cells -quiet [list video_cp_i/composable/pr_2]]
+resize_pblock [get_pblocks pblock_pr_2] -add {SLICE_X94Y100:SLICE_X101Y149}
+set_property RESET_AFTER_RECONFIG true [get_pblocks pblock_pr_2]
+set_property SNAPPING_MODE ON [get_pblocks pblock_pr_2]
+set_property IS_SOFT FALSE [get_pblocks pblock_pr_2]

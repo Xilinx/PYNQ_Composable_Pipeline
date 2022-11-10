@@ -49,3 +49,52 @@ class MockIPDevice(MockDeviceBase):
 
     def write_registers(self, address, data):
         return self.ip.write(address + self.ip.base, data)
+
+
+class MockOverlay:
+    ip_dict = dict()
+    pass
+
+
+class MockIP:
+    def __init__(self, name):
+        self.__setattr__(name, name)
+
+
+class MockDevice:
+    def __init__(self, name):
+        self.bitfile_name = name
+
+
+class MockCPipe:
+    def __init__(self, hier='composable'):
+        self._ol = MockOverlay
+        self._hier = hier
+
+    _c_dict = {
+        "filter2d_accel": {
+            "dfx": False,
+            "loaded": True,
+            "modtype": "filter2d_accel"
+        },
+        "pr_0/lut_accel": {
+            "dfx": True,
+            "loaded": False,
+            "modtype": "lut_accel"
+        },
+        "pr_0/rgb2gray_accel": {
+            "dfx": True,
+            "loaded": True,
+            "modtype": "rgb2gray_accel"
+        },
+        "pr_0rgb2gray_accel": {
+            "dfx": True,
+            "loaded": True,
+            "modtype": "rgb2gray_accel"
+        },
+        "pr_0/fifo": {
+            "dfx": False,
+            "loaded": True,
+            "modtype": "axis_data_fifo"
+        },
+    }

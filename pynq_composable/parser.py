@@ -7,6 +7,7 @@ from typing import Union
 import re
 import os
 import glob
+import json
 import hashlib
 import pickle as pkl
 import argparse
@@ -56,7 +57,10 @@ def _find_connected_node(slot: dict, tree: ElementTree) -> tuple:
                     s['fullname'] = fullname
                     s['modtype'] = n_type
                     s['name'] = name
-                    if 'xilinx.com:module_ref' in n.get('VLNV'):
+                    vlnv = n.get('VLNV')
+                    bdtype = n.get('BDTYPE')
+                    if (vlnv and 'xilinx.com:module_ref' in vlnv) or \
+                            (bdtype == "BLOCK_CONTAINER"):
                         s['interface'] = fullname + '/' + name
 
                     return s, n_type in (_mem_items + _dfx_item)
@@ -64,15 +68,16 @@ def _find_connected_node(slot: dict, tree: ElementTree) -> tuple:
     return s, False
 
 
-def _dfx_get_oposite_port(port: str) -> str:
+def _dfx_get_opposite_port(port: str) -> str:
     """Get corresponding opposite port for a dfx decoupler"""
 
     return 's' + port[2::] if 'rp' in port else 'rp' + port[1::]
 
 
-def _get_dfxdecoupler_decouple_gpio_pin(signame: str,
-                        tree: ElementTree,
-                        module: ElementTree.Element=None) -> Union[int, None]:
+def _get_dfx_decouple_gpio_pin(signame: str,
+                               tree: ElementTree,
+                               module: ElementTree.Element = None) \
+                                -> Union[int, None]:
     """Find the gpio pins that controls the DFX decoupler pin"""
 
     search_term = "MODULES/*PORTS/*/[@SIGNAME=\'" + signame + "\']....."
@@ -88,14 +93,17 @@ def _get_dfxdecoupler_decouple_gpio_pin(signame: str,
                                  .format(signame))
             return din_to
         elif 'xilinx.com:ip:xpm_cdc_gen' in vlnv and m != module:
-            return _get_dfxdecoupler_decouple_gpio_pin(
+            return _get_dfx_decouple_gpio_pin(
                 m.find("./PORTS/*[@NAME='src_in']").get('SIGNAME'), tree, m)
+        elif 'xilinx.com:ip:axi_gpio' in vlnv:
+            return 0
     return None
 
 
-def _get_dfxdecoupler_status_gpio_pin(signame: str,
-                        tree: ElementTree,
-                        module: ElementTree.Element=None) -> Union[int, None]:
+def _get_dfx_status_gpio_pin(signame: str,
+                             tree: ElementTree,
+                             module: ElementTree.Element = None) \
+                                -> Union[int, None]:
     """Find the gpio pins that gets the DFX status pin"""
 
     search_term = "MODULES/*PORTS/*/[@SIGNAME=\'" + signame + "\']....."
@@ -103,10 +111,13 @@ def _get_dfxdecoupler_status_gpio_pin(signame: str,
     for m in node:
         if 'xilinx.com:ip:xlconcat' in (vlnv := m.get('VLNV')):
             return int(re.findall(r'\d+',
-                m.find(f"./PORTS/*[@SIGNAME='{signame}']").get('NAME'))[0])
+                       m.find(f"./PORTS/*[@SIGNAME='{signame}']")
+                        .get('NAME'))[0])
         elif 'xilinx.com:ip:xpm_cdc_gen' in vlnv and m != module:
-            return _get_dfxdecoupler_status_gpio_pin(
+            return _get_dfx_status_gpio_pin(
                 m.find("./PORTS/*[@NAME='dest_out']").get('SIGNAME'), tree, m)
+        elif 'xilinx.com:ip:axi_gpio' in vlnv:
+            return 0
     return None
 
 
@@ -185,7 +196,7 @@ class HWHComposable:
         of the IP; value is a dictionary mapping the producer and consumer to
         the switch port, whether the IP is in a dfx region and loaded
 
-        {str: {'ci' : list, 'pi' : list, 'modtype': str,
+        {str: {'si' : list, 'mi' : list, 'modtype': str,
         'dfx': bool, 'loaded': bool, 'bitstream: str'}}
 
     dfx_dict : dict
@@ -219,7 +230,8 @@ class HWHComposable:
         base_composable_pr_1_function_2.hwh
 
     """
-    def __init__(self, hwh_file: str, switch_name: str, cache=True):
+    def __init__(self, hwh_file: str, switch_name: str, cache=True,
+                 debug=False):
         """Return a new HWHComposable object.
 
         Performs a hardware discovery where the different IP cores connected
@@ -234,6 +246,8 @@ class HWHComposable:
             AXI4-Stream Switch name
         cache : bool
             Use cache file
+        debug : bool
+            Dump plain json file
         """
 
         self._hwh_name = hwh_file
@@ -248,8 +262,10 @@ class HWHComposable:
             hwhdigest = hashlib.md5(file.read()).hexdigest()
         cached_digest = None
 
-        pklfile = os.path.splitext(self._hwh_name)[0] + '_' + \
-            self._hier + '.pkl'
+        basename = os.path.splitext(self._hwh_name)[0] + '_' + \
+            self._hier.replace('/', '_')
+        pklfile = basename + '.pkl'
+        jsonfile = basename + '.json'
         if os.path.isfile(pklfile) and cache:
             with open(pklfile, "rb") as file:
                 cached_digest, self.c_dict, self.dfx_dict = pkl.load(file)
@@ -260,6 +276,9 @@ class HWHComposable:
             self._insert_dfx_ip()
             with open(pklfile, "wb") as file:
                 pkl.dump([hwhdigest, self.c_dict, self.dfx_dict], file)
+            if debug:
+                with open(jsonfile, "w") as file:
+                    json.dump([self.c_dict, self.dfx_dict], file, indent=4)
 
     def _hardware_discovery(self) -> None:
         """Discover how functions are connected to the switch"""
@@ -300,10 +319,10 @@ class HWHComposable:
             search_term = "MODULES/*/[@FULLNAME=\'" + fullname + "\']"
             node = tree.find(search_term)
             mod_type = node.get('MODTYPE')
-            oposite_port = _dfx_get_oposite_port(switch_conn[port]['name'])
+            opposite_port = _dfx_get_opposite_port(switch_conn[port]['name'])
             for bus in node.iter("BUSINTERFACE"):
                 b_type = _normalize_type(bus.get('TYPE'))
-                vnvl = bus.get('VLNV')
+                vlnv = bus.get('VLNV')
                 busname = bus.get('BUSNAME')
                 name = bus.get('NAME')
                 if mod_type in _mem_items and port_type == b_type and \
@@ -317,7 +336,7 @@ class HWHComposable:
                         del deep_exp[0]
                     break
                 elif mod_type in _dfx_item and port_type == b_type and \
-                        vnvl == _axis_vlnv and oposite_port == name:
+                        vlnv == _axis_vlnv and opposite_port == name:
                     switch_conn[port]['busname'] = busname
                     switch_conn[port]['type'] = b_type
                     switch_conn[port]['dfx'] = True
@@ -337,7 +356,7 @@ class HWHComposable:
                 continue
             p = int(re.findall(r'\d+', d)[0])
             port_type = switch_conn[d]['type']
-            k = 'pi' if port_type == 'INITIATOR' else 'ci'
+            k = 'mi' if port_type == 'INITIATOR' else 'si'
             if not switch_conn[d]['dfx']:
                 key = switch_conn[d]['fullname'].lstrip('/')
                 dictionary = static_dict
@@ -346,7 +365,7 @@ class HWHComposable:
                 if not key:
                     key = switch_conn[d].get('fullname')
                 dictionary = default_dfx_dict
-            key = key.replace(self._hier, '').lstrip('/')
+            key = key.replace(self._hier, '', 1).lstrip('/')
             if key not in static_dict.keys():
                 dictionary[key] = dict()
 
@@ -374,7 +393,7 @@ class HWHComposable:
         DFX regions
             - decoupler name
             - decouple gpio pin that control the decoupler
-            - status gpio pin, decupler status
+            - status gpio pin, decoupler status
             - reconfigurable module (rm), list of partial bitstreams and their
               available IP
         If the design has no DFX region the dictionary will be empty
@@ -394,9 +413,9 @@ class HWHComposable:
             decoupler = dfx_dict[d]['decoupler']
             search_term = "MODULES/*/[@FULLNAME=\'" + decoupler + "\']"
             node = tree.find(search_term)
-            dfx_dict[d]['decouple'] = _get_dfxdecoupler_decouple_gpio_pin(
+            dfx_dict[d]['decouple'] = _get_dfx_decouple_gpio_pin(
                 node.find("./PORTS/*[@NAME='decouple']").get('SIGNAME'), tree)
-            dfx_dict[d]['status'] = _get_dfxdecoupler_status_gpio_pin(
+            dfx_dict[d]['status'] = _get_dfx_status_gpio_pin(
                 node.find("./PORTS/*[@NAME='decouple_status']")
                 .get('SIGNAME'), tree)
 
@@ -405,7 +424,8 @@ class HWHComposable:
     def _partial_bitstreams_discovery(self) -> None:
         """Search for partial bitstreams and add them to the dictionary"""
 
-        filelist = glob.glob(self._dir_name + '/*.bit')
+        path = '' if self._dir_name == '' else self._dir_name + '/'
+        filelist = glob.glob(path + '*.bit')
         working_list = filelist.copy()
 
         for key in self.dfx_dict:
@@ -426,10 +446,10 @@ class HWHComposable:
         into the self.c_dict
         """
 
+        path = '' if self._dir_name == '' else self._dir_name + '/'
         for r in self.dfx_dict:
             for b in self.dfx_dict[r].get('rm', list()):
-                hwh_name = self._dir_name + '/' + \
-                    os.path.splitext(b)[0] + '.hwh'
+                hwh_name = path + os.path.splitext(b)[0] + '.hwh'
                 if os.path.exists(hwh_name):
                     dfx_dict = _dfx_ip_discovery(r, hwh_name)
                     self.dfx_dict[r]['rm'][b] = dfx_dict
@@ -445,17 +465,17 @@ class HWHComposable:
             updated_dict[k] = dict()
             for i in dfx_dict[k]['interface']:
                 key = i.lstrip('/')
-                if 'pi' in self._default_dfx_dict[key].keys():
-                    if 'pi' not in updated_dict[k].keys():
+                if 'mi' in self._default_dfx_dict[key].keys():
+                    if 'mi' not in updated_dict[k].keys():
                         port = list()
 
-                    port.append(self._default_dfx_dict[key]['pi'][0])
-                    updated_dict[k]['pi'] = port
+                    port.append(self._default_dfx_dict[key]['mi'][0])
+                    updated_dict[k]['mi'] = port
                 else:
-                    if 'ci' not in updated_dict[k].keys():
+                    if 'si' not in updated_dict[k].keys():
                         port = list()
-                    port.append(self._default_dfx_dict[key]['ci'][0])
-                    updated_dict[k]['ci'] = port
+                    port.append(self._default_dfx_dict[key]['si'][0])
+                    updated_dict[k]['si'] = port
 
             updated_dict[k]['modtype'] = dfx_dict[k]['modtype']
             updated_dict[k]['bitstream'] = dfx_dict[k]['bitstream']
@@ -467,14 +487,11 @@ class HWHComposable:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Generate composable cached file"
-    )
-    parser.add_argument(
-        "--hwh", help="global hwh file", required=True
-    )
+        description="Generate composable cached file")
+    parser.add_argument("--hwh", help="global hwh file", required=True)
+    parser.add_argument("-d", help="Dump plain json file", action='store_true',
+                        required=False)
     args = parser.parse_args()
-
-    print(args.hwh)
 
     tree = ElementTree.parse(args.hwh)
     tree_root = tree.getroot()
@@ -483,5 +500,5 @@ if __name__ == "__main__":
         mod_type = mod.get('MODTYPE')
         if mod_type == 'axis_switch':
             switch_name = mod.get('FULLNAME').lstrip('/')
-            HWHComposable(args.hwh, switch_name, False)
+            HWHComposable(args.hwh, switch_name, cache=False, debug=args.d)
             print("Cache file for {} generated".format(switch_name))

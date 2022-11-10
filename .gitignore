@@ -8,12 +8,15 @@
 .Xil/
 *.vhlsprj
 NA/
-cv_dfx_4_pr/
+cv_dfx_3_pr/
 overlay/
-overlay.zip
 .coverage
 junit/
 __pycache__/
 docs/build/
 *.dtbo
 *.zip
+hd_visual/
+.vscode/
+tests/files/composable_test.pkl
+tests/files/composable_test_composable.pkl
