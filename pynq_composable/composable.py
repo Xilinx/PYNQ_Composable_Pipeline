@@ -568,7 +568,6 @@ class Composable(DefaultHierarchy):
                             in_used_mi.pop(nextkey)
                 else:
                     index = mi[0]
-
                 if not np.where(switch_conf == value)[0].size:
                     switch_conf[index] = value
                     graph.edge(self._relative_path(ip._fullpath),
@@ -579,6 +578,12 @@ class Composable(DefaultHierarchy):
                                       "in the provided pipeline. An IP"
                                       " instance can only be used once"
                                       .format(ip._fullpath))
+        if in_used_mi or in_used_si:
+            raise SystemError("Not all IPs within the pipeline "
+                              "were assigned. IP(s): {} {} "
+                              "are not connected correctly. "
+                              "Pipeline is invalid"
+                              .format(in_used_si, in_used_mi))
         if self._soft_reset and self._enable_soft_reset:
             self._soft_reset[0].write(1)
             self._soft_reset[0].write(0)
