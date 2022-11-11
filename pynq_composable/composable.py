@@ -81,6 +81,7 @@ def _get_ip_name_by_vlnv(description: dict, vlnv: str) -> str:
             return k
     return None
 
+
 def _streamline_pipeline(pipe: list) -> list:
     """
     Flattens List
@@ -107,6 +108,7 @@ def _streamline_pipeline(pipe: list) -> list:
                 if idx2 > 0 and idx + 1 < len(pipe):
                     linear_pipe[idx2].append(pipe[idx + 1])
     return linear_pipe
+
 
 def _build_docstrings(hier: str, c_dict: dict, dfx_dict: dict,
                       pipelinecrt: str) -> str:
@@ -475,8 +477,6 @@ class Composable(DefaultHierarchy):
             if v['fullpath'] == fullpath:
                 return v['cpath'][port]
 
-
-
     def compose(self, cle_list: list) -> None:
         """Configure design to implement required dataflow pipeline
 
@@ -502,67 +502,64 @@ class Composable(DefaultHierarchy):
                                 ---> e ----
         """
 
-        if not isinstance(cle_list, list):  #Keep
-            raise TypeError("The composable pipeline must be a list") #Keep
+        if not isinstance(cle_list, list):
+            raise TypeError("The composable pipeline must be a list")
 
         flat_list = _streamline_pipeline(cle_list)
-
-        slots = _count_slots(cle_list) 
+        slots = _count_slots(cle_list)
         if slots > self._max_slots:
             raise SystemError("Number of slots in the list is bigger than {} "
                               "which are the max slots that hardware allows"
                               .format(self._max_slots))
 
         switch_conf = np.ones(self._max_slots, dtype=np.int64) * -1
-
-
         graph = Digraph(
             node_attr={'shape': 'box'},
             edge_attr={'color': 'green'},
             graph_attr={'rankdir': self.graph.graph_attr['rankdir']}
         )
         gdebug = self._graph_debug
-
-        pipeline_branches = dict()
-        
+        in_used_si = dict()
+        in_used_mi = dict()
         for linear_pipeline in flat_list:
             for i, l0 in enumerate(linear_pipeline):
                 ip = linear_pipeline[i]
-
                 if i == len(linear_pipeline) - 1:
                     break
+
                 si = self._c_dict[(path := self._relative_path
-                     (ip._fullpath,'si'))]['si']
-
+                                  (ip._fullpath, 'si'))]['si']
                 nextip = linear_pipeline[i+1]
-
                 nextkey = self._relative_path(nextip._fullpath)
                 mi = self._c_dict[nextkey]['mi']
-
                 if len(si) > 1:
-                    if path not in pipeline_branches.keys():
+                    if path not in in_used_si.keys():
                         value = si[0]
-                        pipeline_branches[path] = {'si': si[1:]}
+                        in_used_si[path] = {'si': si[1:]}
+
                     else:
-                        value = pipeline_branches[path]['si'][0]
-                        new_si = pipeline_branches[path]['si'][1:0]
+                        value = in_used_si[path]['si'][0]
+                        new_si = in_used_si[path]['si'][1:0]
+
                         if len(new_si) > 0:
-                            pipeline_branches[path]['si'] = new_si
+                            in_used_si[path]['si'] = new_si
+
                         else:
-                            pipeline_branches.pop(path)
+                            in_used_si.pop(path)
                 else:
                     value = si[0]
+
                 if len(mi) > 1:
-                    if nextkey not in pipeline_branches.keys():
+                    if nextkey not in in_used_mi.keys():
                         index = mi[0]
-                        pipeline_branches[nextkey] = {'mi': mi[1:]}
+                        in_used_mi[nextkey] = {'mi': mi[1:]}
                     else:
-                        index = pipeline_branches[nextkey]['mi'][0]
-                        new_mi = pipeline_branches[nextkey]['mi'][1:0]
+                        index = in_used_mi[nextkey]['mi'][0]
+                        new_mi = in_used_mi[nextkey]['mi'][1:0]
                         if len(new_mi) > 0:
-                            pipeline_branches[nextkey]['mi'] = new_mi
+                            in_used_mi[nextkey]['mi'] = new_mi
                         else:
-                            pipeline_branches.pop(nextkey)
+                            in_used_mi.pop(nextkey)
                 else:
                     index = mi[0]
 
@@ -576,27 +573,11 @@ class Composable(DefaultHierarchy):
                                       "in the provided pipeline. An IP"
                                       " instance can only be used once"
                                       .format(ip._fullpath))
-
         if self._soft_reset and self._enable_soft_reset:
             self._soft_reset[0].write(1)
             self._soft_reset[0].write(0)
 
         self._configure_switch(switch_conf)
-        """
-        for idx, ip in enumerate(flat_list):
-            port = 'mi' if idx == len(flat_list)-1 else 'si'
-            key = self._relative_path(ip._fullpath, port)
-            if self._c_dict[key]["dfx"]:
-                graph.node(key,
-                           _attributes={"color": "blue", "fillcolor": "cyan",
-                                        "style": "filled"})
-            if hasattr(ip, "start"):
-                ip.start()
-            elif isinstance(ip, VirtualIP) and not ip.is_loaded:
-                raise AttributeError("IP {} is not loaded, load IP before "
-                                     "composing a pipeline"
-                                     .format(ip._fullpath))
-        """
         self._current_pipeline = cle_list
         self._current_flat_pipeline = flat_list
         self.graph = graph
