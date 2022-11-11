@@ -84,9 +84,17 @@ def _get_ip_name_by_vlnv(description: dict, vlnv: str) -> str:
 
 def _streamline_pipeline(pipe: list) -> list:
     """
-    Flattens List
+    _streamline_pipeline breaks up pipelines that
+    contain branches into multiple linear (flat)
+    lists.
+
+    Doing this makes it easier to configure the
+    AXI switch that connect different IP
     """
     linear_pipe = [[], ]
+    if 1 in pipe:
+        pipe.remove(1)
+
     for idx in range(len(pipe)):
         element = pipe[idx]
         if not isinstance(element, list):
@@ -100,11 +108,9 @@ def _streamline_pipeline(pipe: list) -> list:
                 res = _streamline_pipeline(element[idx2])
                 for iii in range(len(res)):
                     if iii > 0:
-                        if not res[iii] == [1]:
-                            linear_pipe.append(res[iii])
+                        linear_pipe.append(res[iii])
                     else:
-                        if not res[iii] == [1]:
-                            linear_pipe[idx2].extend(res[iii])
+                        linear_pipe[idx2].extend(res[iii])
                 if idx2 > 0 and idx + 1 < len(pipe):
                     linear_pipe[idx2].append(pipe[idx + 1])
     return linear_pipe
