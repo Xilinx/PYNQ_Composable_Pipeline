@@ -586,18 +586,20 @@ class Composable(DefaultHierarchy):
                     index = mi[0]
                 if not np.where(switch_conf == value)[0].size:
                     if switch_conf[index] != -1:
-                        raise SystemError("cannot meet pipeline requirement of 2 input")
+                        raise SystemError("cannot meet pipeline"
+                                          "requirement of 2 input")
                     switch_conf[index] = value
                     graph.edge(self._relative_path(ip._fullpath),
                                self._relative_path(nextip._fullpath),
                                label=_edge_label(value, index, gdebug))
                 else:
                     if max_si != max_mi:
-                        raise SystemError("cannot meet pipeline requirement of 2 output")
+                        raise SystemError("cannot meet pipeline"
+                                          "requirement of 2 output")
                     raise SystemError("IP: {} is already being used "
                                       "in the provided pipeline. An IP"
                                       " instance can only be used once"
-                                       .format(ip._fullpath))
+                                      .format(ip._fullpath))
         if in_use_mi or in_use_si:
             raise SystemError("Not all IPs within the pipeline "
                               "were assigned. IP(s): {} {} "
