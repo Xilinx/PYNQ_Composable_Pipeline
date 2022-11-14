@@ -599,7 +599,7 @@ class Composable(DefaultHierarchy):
                     raise SystemError("IP: {} is already being used "
                                       "in the provided pipeline. An IP"
                                       " instance can only be used once"
-                                       .format(ip._fullpath))
+                                      .format(ip._fullpath))
         if in_use_mi or in_use_si:
             raise SystemError("Not all IPs within the pipeline "
                               "were assigned. IP(s): {} {} "
