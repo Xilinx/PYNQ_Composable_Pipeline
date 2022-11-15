@@ -92,13 +92,12 @@ def _streamline_pipeline(pipe: list) -> list:
     AXI switch that connect different IP
     """
     linear_pipe = [[], ]
-    if 1 in pipe:
-        pipe.remove(1)
 
     for idx in range(len(pipe)):
         element = pipe[idx]
         if not isinstance(element, list):
-            linear_pipe[0].append(element)
+            if element != 1:
+                linear_pipe[0].append(element)
         else:
             if len(element) < 2:
                 raise ValueError("branch needs at least two elements")
@@ -510,7 +509,7 @@ class Composable(DefaultHierarchy):
 
         if not isinstance(cle_list, list):
             raise TypeError("The composable pipeline must be a list")
-        flat_list = _streamline_pipeline(cle_list)
+
         slots = _count_slots(cle_list)
         if slots > self._max_slots:
             raise SystemError("Number of slots in the list is bigger than {} "
@@ -518,7 +517,7 @@ class Composable(DefaultHierarchy):
                               .format(self._max_slots))
 
         switch_conf = np.ones(self._max_slots, dtype=np.int64) * -1
-
+        flat_list = _streamline_pipeline(cle_list)
         graph = Digraph(
             node_attr={'shape': 'box'},
             edge_attr={'color': 'green'},
@@ -527,23 +526,6 @@ class Composable(DefaultHierarchy):
         gdebug = self._graph_debug
         in_use_si = dict()
         in_use_mi = dict()
-
-        max_si = 0
-        max_mi = 0
-
-        for flatten_pipeline in flat_list:
-            for i, l1 in enumerate(flatten_pipeline):
-                ip = flatten_pipeline[i]
-                path = self._relative_path(ip._fullpath)
-                if 'si' in self._c_dict[path]:
-                    si = self._c_dict[path]['si']
-                    if len(si) > max_si:
-                        max_si = len(si)
-                if 'mi' in self._c_dict[path]:
-                    mi = self._c_dict[path]['mi']
-                    if len(mi) > max_mi:
-                        max_mi = len(mi)
-
         for linear_pipeline in flat_list:
             for i, l0 in enumerate(linear_pipeline):
                 ip = linear_pipeline[i]
@@ -555,58 +537,57 @@ class Composable(DefaultHierarchy):
                 nextip = linear_pipeline[i+1]
                 nextkey = self._relative_path(nextip._fullpath)
                 mi = self._c_dict[nextkey]['mi']
-                if len(si) > 1:
-                    if path not in in_use_si.keys():
-                        value = si[0]
-                        in_use_si[path] = {'si': si[1:]}
-
-                    else:
-                        value = in_use_si[path]['si'][0]
-                        new_si = in_use_si[path]['si'][1:0]
-
-                        if len(new_si) > 0:
-                            in_use_si[path]['si'] = new_si
-
-                        else:
-                            in_use_si.pop(path)
-                else:
+                if path not in in_use_si.keys():
                     value = si[0]
+                    in_use_si[path] = {'si': si[1:]}
 
-                if len(mi) > 1:
-                    if nextkey not in in_use_mi.keys():
-                        index = mi[0]
-                        in_use_mi[nextkey] = {'mi': mi[1:]}
-                    else:
-                        index = in_use_mi[nextkey]['mi'][0]
-                        new_mi = in_use_mi[nextkey]['mi'][1:0]
-                        if len(new_mi) > 0:
-                            in_use_mi[nextkey]['mi'] = new_mi
-                        else:
-                            in_use_mi.pop(nextkey)
                 else:
+                    if len(in_use_si[path]['si']) == 0:
+                        raise SystemError("cannot meet pipeline "
+                                          "requirement of 2 output")
+                    value = in_use_si[path]['si'][0]
+                    in_use_si[path]['si'] = in_use_si[path]['si'][1:0]
+
+                if nextkey not in in_use_mi.keys():
                     index = mi[0]
-                if not np.where(switch_conf == value)[0].size:
-                    if switch_conf[index] != -1:
+                    in_use_mi[nextkey] = {'mi': mi[1:]}
+                else:
+                    if len(in_use_mi[nextkey]['mi']) == 0:
                         raise SystemError("cannot meet pipeline "
                                           "requirement of 2 input")
+                    index = in_use_mi[nextkey]['mi'][0]
+                    in_use_mi[nextkey]['mi'] = in_use_mi[nextkey]['mi'][1:0]
+
+                if not np.where(switch_conf == value)[0].size:
                     switch_conf[index] = value
                     graph.edge(self._relative_path(ip._fullpath),
                                self._relative_path(nextip._fullpath),
                                label=_edge_label(value, index, gdebug))
                 else:
-                    if max_si != max_mi:
-                        raise SystemError("cannot meet pipeline "
-                                          "requirement of 2 output")
                     raise SystemError("IP: {} is already being used "
                                       "in the provided pipeline. An IP"
                                       " instance can only be used once"
                                       .format(ip._fullpath))
-        if in_use_mi or in_use_si:
-            raise SystemError("Not all IPs within the pipeline "
-                              "were assigned. IP(s): {} {} "
-                              "are not connected correctly. "
-                              "Pipeline is invalid"
-                              .format(in_use_si, in_use_mi))
+
+        for linear_pipeline in flat_list:
+            for i, l0 in enumerate(linear_pipeline):
+                ip = linear_pipeline[i]
+                path = self._relative_path(ip._fullpath)
+                if path in in_use_si:
+                    if in_use_si[path]['si']:
+                        raise SystemError("Not all IPs within the pipeline "
+                                          "were assigned. IP: {} "
+                                          "are not connected correctly. "
+                                          "Pipeline is invalid"
+                                          .format(in_use_si))
+                if path in in_use_mi:
+                    if in_use_mi[path]['mi']:
+                        raise SystemError("Not all IPs within the pipeline "
+                                          "were assigned. IP: {} "
+                                          "are not connected correctly. "
+                                          "Pipeline is invalid"
+                                          .format(in_use_mi))
+
         if self._soft_reset and self._enable_soft_reset:
             self._soft_reset[0].write(1)
             self._soft_reset[0].write(0)

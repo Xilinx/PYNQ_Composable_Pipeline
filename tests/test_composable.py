@@ -80,8 +80,11 @@ pipes_join_exc = [
 pipes_fork_exc = [
     "[cpipe.f1, [[cpipe.f3], [1]], cpipe.join , cpipe.f2]",
     "[cpipe.f1, [[1], [cpipe.f3]], cpipe.join, cpipe.f2]",
-    "[cpipe.f1, [[1], [1]], cpipe.join, cpipe.f2]"
+    "[cpipe.f1, [[1], [1]], cpipe.join, cpipe.f2]",
+    "[cpipe.f1, [[cpipe.f3, [[cpipe.f4], [1]]], [1]], cpipe.f2]"
 ]
+
+
 
 
 @pytest.mark.parametrize('pipeline', pipes_join_exc)
@@ -99,6 +102,14 @@ def test_composable_exception_fork(hierarchy, pipeline):
         cpipe.compose(eval(pipeline))
     assert "cannot meet pipeline requirement of 2 output" in str(excinfo.value)
 
+'''    
+@pytest.mark.parametrize('pipeline', broken_pipelines)
+def test_composable_exception_connection(hierarchy, broken_pipelines):
+    cpipe, _ = hierarchy
+    with pytest.raises(SystemError) as excinfo:
+        cpipe.compose(eval(pipeline))
+    assert "Not all IPs within the pipeline were assigned" in str(excinfo.value)
+'''
 
 def test_composable_exception_reused_linear(hierarchy):
     cpipe, _ = hierarchy
@@ -165,14 +176,6 @@ def test_composable_exception_compose(hierarchy):
     with pytest.raises(TypeError) as excinfo:
         cpipe.compose((cpipe.f1, cpipe.f2))
     assert "The composable pipeline must be a list" in str(excinfo.value)
-
-
-def test_composable_exception_multiple_levels(hierarchy):
-    cpipe, _ = hierarchy
-    with pytest.raises(SystemError) as excinfo:
-        cpipe.compose([cpipe.f1, [[cpipe.f3, [[cpipe.f4], [1]]], [1]],
-                      cpipe.f2])
-    assert "Data flow pipeline with a nest levels big" in str(excinfo.value)
 
 
 def test_composable_exception_multiple_bad_slots(hierarchy):
