@@ -518,6 +518,7 @@ class Composable(DefaultHierarchy):
                               .format(self._max_slots))
 
         switch_conf = np.ones(self._max_slots, dtype=np.int64) * -1
+
         graph = Digraph(
             node_attr={'shape': 'box'},
             edge_attr={'color': 'green'},
@@ -611,6 +612,23 @@ class Composable(DefaultHierarchy):
             self._soft_reset[0].write(0)
 
         self._configure_switch(switch_conf)
+
+        for linear_pipeline in flat_list:
+            for idx, ip in enumerate(linear_pipeline):
+                port = 'mi' if idx == len(linear_pipeline) - 1 else 'si'
+                key = self._relative_path(ip._fullpath, port)
+                if self._c_dict[key]["dfx"]:
+                    graph.node(key,
+                               _attributes={"color": "blue",
+                                            "fillcolor": "cyan",
+                                            "style": "filled"})
+                if hasattr(ip, "start"):
+                    ip.start()
+                elif isinstance(ip, VirtualIP) and not ip.is_loaded:
+                    raise AttributeError("IP {} is not loaded, load IP before "
+                                         "composing a pipeline"
+                                         .format(ip._fullpath))
+
         self._current_pipeline = cle_list
         self._current_flat_pipeline = flat_list
         self.graph = graph
