@@ -16,6 +16,7 @@ apps = [
 ]
 
 
+@pytest.mark.skipif(not pytest.webcam, reason="Web Camera is not detected")
 @pytest.mark.parametrize('obj', apps)
 def test_diff_gaussians(obj):
     app = eval(obj)

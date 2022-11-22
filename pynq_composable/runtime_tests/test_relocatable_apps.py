@@ -25,11 +25,11 @@ app_construct = [
 
     (['dilate', 'dilate', 'bitand'], ['ps_video_in', 'duplicate_accel',
      [['rgb2gray_accel', 'colorthresholding_accel', 'pr/erode', 'pr/dilate',
-     'pr/dilate', 'pr/erode'], [1]], 'pr/bitwise', 'ps_video_out']),
+       'pr/dilate', 'pr/erode'], [1]], 'pr/bitwise', 'ps_video_out']),
 
     (['add'], ['ps_video_in', 'duplicate_accel',
      [['rgb2gray_accel', 'filter2d_accel', 'colorthresholding_accel',
-     'gray2rgb_accel'], [1]], 'pr/add_accel', 'ps_video_out']),
+       'gray2rgb_accel'], [1]], 'pr/add_accel', 'ps_video_out']),
 ]
 
 
@@ -126,6 +126,8 @@ def get_dfx_regions_to_download(dfx, cpipe) -> list:
     return dfx_regions
 
 
+@pytest.mark.skipif(not pytest.webcam and not pytest.videofile,
+                    reason="Web Camera or Video file not found")
 @pytest.mark.parametrize('app', valid_apps)
 def test_app(app, create_composable):
     """ This test will compose the apps and start a video stream
@@ -137,7 +139,8 @@ def test_app(app, create_composable):
     cpipe.load(dfx_regions)
     app_obj = convert_string_to_ip_object(app[1], cpipe)
     cpipe.compose(app_obj)
-    video = VideoStream(ol, VSource.OpenCV, VSink.DP, '../mountains.mp4')
+    file = '../mountains.mp4' if pytest.videofile else 0
+    video = VideoStream(ol, VSource.OpenCV, VSink.DP, file=file)
     try:
         video.start()
         time.sleep(5)

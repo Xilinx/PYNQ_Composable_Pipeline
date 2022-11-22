@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+import cv2 as cv
 from pynq import Overlay
 from pynq_composable import Composable
 import pytest
@@ -43,6 +44,15 @@ def parameter():
     return dfx_ip
 
 
+def webcam_present(file=0):
+    webcam = cv.VideoCapture(file)
+    status = webcam is not None and webcam.isOpened()
+    webcam.release()
+    return status
+
+
 def pytest_configure():
     pytest.dfx_ip = parameter()
+    pytest.webcam = webcam_present(0)
+    pytest.videofile = webcam_present('../mountains.mp4')
     pytest.overlay = _overlay_file
