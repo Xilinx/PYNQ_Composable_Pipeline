@@ -82,6 +82,43 @@ def _get_ip_name_by_vlnv(description: dict, vlnv: str) -> str:
     return None
 
 
+def _streamline_pipeline(pipe: list) -> list:
+    """Flattens branches into multiple linear pipelines
+
+    Parameters
+    ----------
+    pipe: list
+    Describes how IPs are connected in this pipeline.
+    Returns
+    ----------
+    linear_pipeline: list
+    Describes how IPs are connected in this pipeline in a flat way.
+    Branches are describe as lists of lists.
+    """
+    linear_pipe = [[], ]
+
+    for idx in range(len(pipe)):
+        element = pipe[idx]
+        if not isinstance(element, list):
+            if element != 1:
+                linear_pipe[0].append(element)
+        else:
+            if len(element) < 2:
+                raise ValueError("branch needs at least two elements")
+            for idx2 in range(len(element)):
+                if idx2 > 0:
+                    linear_pipe.append([pipe[idx - 1]])
+                res = _streamline_pipeline(element[idx2])
+                for iii in range(len(res)):
+                    if iii > 0:
+                        linear_pipe.append(res[iii])
+                    else:
+                        linear_pipe[idx2].extend(res[iii])
+                if idx2 > 0 and idx + 1 < len(pipe):
+                    linear_pipe[idx2].append(pipe[idx + 1])
+    return linear_pipe
+
+
 def _build_docstrings(hier: str, c_dict: dict, dfx_dict: dict,
                       pipelinecrt: str) -> str:
     """Automated documentation string for a composable hierarchy
@@ -477,15 +514,6 @@ class Composable(DefaultHierarchy):
         if not isinstance(cle_list, list):
             raise TypeError("The composable pipeline must be a list")
 
-        levels = _nest_level(cle_list)
-
-        if levels > 3:
-            raise SystemError("Data flow pipeline with a nest levels bigger "
-                              "than 3 is not supported. {}".format(levels))
-        elif levels % 2 == 0:
-            raise SystemError("Data flow pipeline with an even nest"
-                              " levels is not supported. {}".format(levels))
-
         slots = _count_slots(cle_list)
         if slots > self._max_slots:
             raise SystemError("Number of slots in the list is bigger than {} "
@@ -493,124 +521,96 @@ class Composable(DefaultHierarchy):
                               .format(self._max_slots))
 
         switch_conf = np.ones(self._max_slots, dtype=np.int64) * -1
-
-        flat_list = list()
+        flat_list = _streamline_pipeline(cle_list)
         graph = Digraph(
             node_attr={'shape': 'box'},
             edge_attr={'color': 'green'},
             graph_attr={'rankdir': self.graph.graph_attr['rankdir']}
-            )
+        )
         gdebug = self._graph_debug
-        for i, l0 in enumerate(cle_list):
-            if isinstance(l0, list):
-                key = self._relative_path(cle_list[i+1]._fullpath)
-                for ii, l1 in enumerate(l0):
-                    if not isinstance(l1, list):
-                        raise SystemError("Branches must be represented as "
-                                          "list of list")
-                    for iii, l2 in enumerate(l1):
-                        ip = cle_list[i][ii][iii]
-                        if ip == 1:
-                            continue
-                        flat_list.append(ip)
-                        si = self._c_dict[
-                            self._relative_path(ip._fullpath)]['si'][0]
-                        if iii == len(l1) - 1:
-                            consumer = key
-                            mi = self._c_dict[consumer]['mi'][ii]
-                        else:
-                            consumer = self._relative_path(
-                                cle_list[i][ii][iii+1]._fullpath)
-                            mi = self._c_dict[consumer]['mi'][0]
-
-                        if not np.where(switch_conf == si)[0].size:
-                            switch_conf[mi] = si
-                            graph.edge(self._relative_path(ip._fullpath),
-                                       consumer,
-                                       label=_edge_label(si, mi, gdebug))
-                        else:
-                            raise SystemError("IP: {} is already being used in"
-                                              " the provided pipeline. An IP "
-                                              "instance can only be used once"
-                                              .format(ip._fullpath))
-            else:
-                ip = cle_list[i]
-                flat_list.append(ip)
-                if i == len(cle_list) - 1:
+        in_use_si = dict()
+        in_use_mi = dict()
+        for linear_pipeline in flat_list:
+            for i, l0 in enumerate(linear_pipeline):
+                ip = linear_pipeline[i]
+                if i == len(linear_pipeline) - 1:
                     break
-                si = self._c_dict[(path := self._relative_path(ip._fullpath,
-                                                               'si'))]['si']
-                if not isinstance(cle_list[i+1], list):
-                    mi = self._c_dict[(key :=
-                                      self._relative_path(
-                                        cle_list[i+1]._fullpath, 'mi'))]['mi']
 
-                    if not np.where(switch_conf == si[0])[0].size:
-                        switch_conf[mi[0]] = si[0]
-                        graph.edge(path, key,
-                                   label=_edge_label(si[0], mi[0], gdebug))
-                    else:
-                        raise SystemError("IP: {} is already being used in the"
-                                          " provided pipeline. An IP instance "
-                                          "can only be used once"
-                                          .format(ip._fullpath))
+                si = self._c_dict[(path := self._relative_path
+                                  (ip._fullpath, 'si'))]['si']
+                nextip = linear_pipeline[i+1]
+                nextkey = self._relative_path(nextip._fullpath)
+                mi = self._c_dict[nextkey]['mi']
+                if path not in in_use_si.keys():
+                    value = si[0]
+                    in_use_si[path] = {'si': si[1:]}
 
-                elif len(cle_list[i+1]) != len(si):
-                    raise SystemError("Node {} has {} output(s) and cannot "
-                                      "meet pipeline requirement of {} "
-                                      "output(s)".format(l0._fullpath, len(si),
-                                                         len(cle_list[i+1])))
-                elif (i + 2) <= len(cle_list) and len(cle_list[i+1]) != \
-                    len((mi_next := self._c_dict[(
-                        self._relative_path(cle_list[i+2]._fullpath,
-                                            'mi'))]['mi'])):
-                    raise SystemError("Node {} has {} input(s) and cannot meet"
-                                      " pipeline requirement of {} input(s)"
-                                      .format(cle_list[i+2]._fullpath,
-                                              len(mi_next),
-                                              len((cle_list[i+1]))))
                 else:
-                    for j in range(len(si)):
-                        nextip = cle_list[i+1][j][0]
-                        if nextip != 1:
-                            nextkey = self._relative_path(nextip._fullpath)
-                            mi = self._c_dict[nextkey]['mi'][0]
-                        else:
-                            nextip = cle_list[i+2]
-                            nextkey = self._relative_path(nextip._fullpath)
-                            mi = self._c_dict[nextkey]['mi'][j]
+                    if len(in_use_si[path]['si']) == 0:
+                        raise SystemError("Node {} has {} free output(s) "
+                                          "and cannot meet pipeline "
+                                          "requirement of output(s)"
+                                          .format(path,
+                                                  len(in_use_si[path]['si']))
+                                          )
+                    value = in_use_si[path]['si'][0]
+                    in_use_si[path]['si'] = in_use_si[path]['si'][1:0]
 
-                        if not np.where(switch_conf == si[j])[0].size:
-                            switch_conf[mi] = si[j]
-                            graph.edge(self._relative_path(ip._fullpath),
-                                       self._relative_path(nextip._fullpath),
-                                       label=_edge_label(si[j], mi, gdebug))
-                        else:
-                            raise SystemError("IP: {} is already being used "
-                                              "in the provided pipeline. An IP"
-                                              " instance can only be used once"
-                                              .format(ip._fullpath))
+                if nextkey not in in_use_mi.keys():
+                    index = mi[0]
+                    in_use_mi[nextkey] = {'mi': mi[1:]}
+                else:
+                    if len(in_use_mi[nextkey]['mi']) == 0:
+                        raise SystemError("Node {} has {} free input(s) "
+                                          "and cannot meet pipeline "
+                                          "requirement of input(s)"
+                                          .format(nextkey,
+                                                  len(in_use_mi[nextkey]
+                                                      ['mi']))
+                                          )
+                    index = in_use_mi[nextkey]['mi'][0]
+                    in_use_mi[nextkey]['mi'] = in_use_mi[nextkey]['mi'][1:0]
+                switch_conf[index] = value
+                graph.edge(self._relative_path(ip._fullpath),
+                           self._relative_path(nextip._fullpath),
+                           label=_edge_label(value, index, gdebug))
+
+        for path in in_use_si:
+            if in_use_si[path]['si']:
+                raise SystemError("Not all IPs within the pipeline "
+                                  "were assigned. IP: {} "
+                                  "are not connected correctly. "
+                                  "Pipeline is invalid"
+                                  .format(in_use_si))
+        for path in in_use_mi:
+            if in_use_mi[path]['mi']:
+                raise SystemError("Not all IPs within the pipeline "
+                                  "were assigned. IP: {} "
+                                  "are not connected correctly. "
+                                  "Pipeline is invalid"
+                                  .format(in_use_mi))
+
+        for linear_pipeline in flat_list:
+            for idx, ip in enumerate(linear_pipeline):
+                port = 'mi' if idx == len(linear_pipeline) - 1 else 'si'
+                key = self._relative_path(ip._fullpath, port)
+                if self._c_dict[key]["dfx"]:
+                    graph.node(key,
+                               _attributes={"color": "blue",
+                                            "fillcolor": "cyan",
+                                            "style": "filled"})
+                if hasattr(ip, "start"):
+                    ip.start()
+                elif isinstance(ip, VirtualIP) and not ip.is_loaded:
+                    raise AttributeError("IP {} is not loaded, load IP before "
+                                         "composing a pipeline"
+                                         .format(ip._fullpath))
 
         if self._soft_reset and self._enable_soft_reset:
             self._soft_reset[0].write(1)
             self._soft_reset[0].write(0)
 
         self._configure_switch(switch_conf)
-
-        for idx, ip in enumerate(flat_list):
-            port = 'mi' if idx == len(flat_list)-1 else 'si'
-            key = self._relative_path(ip._fullpath, port)
-            if self._c_dict[key]["dfx"]:
-                graph.node(key,
-                           _attributes={"color": "blue", "fillcolor": "cyan",
-                                        "style": "filled"})
-            if hasattr(ip, "start"):
-                ip.start()
-            elif isinstance(ip, VirtualIP) and not ip.is_loaded:
-                raise AttributeError("IP {} is not loaded, load IP before "
-                                     "composing a pipeline"
-                                     .format(ip._fullpath))
-
         self._current_pipeline = cle_list
         self._current_flat_pipeline = flat_list
         self.graph = graph

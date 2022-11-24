@@ -80,7 +80,13 @@ pipes_join_exc = [
 pipes_fork_exc = [
     "[cpipe.f1, [[cpipe.f3], [1]], cpipe.join , cpipe.f2]",
     "[cpipe.f1, [[1], [cpipe.f3]], cpipe.join, cpipe.f2]",
-    "[cpipe.f1, [[1], [1]], cpipe.join, cpipe.f2]"
+    "[cpipe.f1, [[1], [1]], cpipe.join, cpipe.f2]",
+    "[cpipe.f1, [[cpipe.f3, [[cpipe.f4], [1]]], [1]], cpipe.f2]"
+]
+
+broken_pipelines = [
+    "[cpipe.f1, cpipe.f3, cpipe.join, cpipe.f2]",
+    "[cpipe.f1, cpipe.fork, cpipe.f3, cpipe.f2]"
 ]
 
 
@@ -89,7 +95,7 @@ def test_composable_exception_join(hierarchy, pipeline):
     cpipe, _ = hierarchy
     with pytest.raises(SystemError) as excinfo:
         cpipe.compose(eval(pipeline))
-    assert "cannot meet pipeline requirement of 2 input" in str(excinfo.value)
+    assert "cannot meet pipeline requirement of" in str(excinfo.value)
 
 
 @pytest.mark.parametrize('pipeline', pipes_fork_exc)
@@ -97,29 +103,15 @@ def test_composable_exception_fork(hierarchy, pipeline):
     cpipe, _ = hierarchy
     with pytest.raises(SystemError) as excinfo:
         cpipe.compose(eval(pipeline))
-    assert "cannot meet pipeline requirement of 2 output" in str(excinfo.value)
+    assert "cannot meet pipeline requirement of" in str(excinfo.value)
 
 
-def test_composable_exception_reused_linear(hierarchy):
+@pytest.mark.parametrize('pipeline', broken_pipelines)
+def test_composable_exception_connection(hierarchy, pipeline):
     cpipe, _ = hierarchy
     with pytest.raises(SystemError) as excinfo:
-        cpipe.compose([cpipe.f1, cpipe.f2, cpipe.f1, cpipe.f5])
-    assert "An IP instance can only be used once" in str(excinfo.value)
-
-
-def test_composable_exception_reused_branch(hierarchy):
-    cpipe, _ = hierarchy
-    with pytest.raises(SystemError) as excinfo:
-        cpipe.compose([cpipe.f1, cpipe.fork, [[cpipe.f1], [1]], cpipe.join])
-    assert "An IP instance can only be used once" in str(excinfo.value)
-
-
-def test_composable_exception_reused2(hierarchy):
-    cpipe, _ = hierarchy
-    with pytest.raises(SystemError) as excinfo:
-        cpipe.compose([cpipe.f1, cpipe.fork, [[1], [cpipe.f1]], cpipe.join])
-    assert "An IP instance can only be used once" in str(excinfo.value)
-
+        cpipe.compose(eval(pipeline))
+    assert "Not all IPs within the pipeline were assigned" in str(excinfo.value)
 
 pipelines = [
     ("[cpipe.f0, cpipe.f1, cpipe.f2, cpipe.f3, cpipe.f4, cpipe.f5, cpipe.f6,\
@@ -165,14 +157,6 @@ def test_composable_exception_compose(hierarchy):
     with pytest.raises(TypeError) as excinfo:
         cpipe.compose((cpipe.f1, cpipe.f2))
     assert "The composable pipeline must be a list" in str(excinfo.value)
-
-
-def test_composable_exception_multiple_levels(hierarchy):
-    cpipe, _ = hierarchy
-    with pytest.raises(SystemError) as excinfo:
-        cpipe.compose([cpipe.f1, [[cpipe.f3, [[cpipe.f4], [1]]], [1]],
-                      cpipe.f2])
-    assert "Data flow pipeline with a nest levels big" in str(excinfo.value)
 
 
 def test_composable_exception_multiple_bad_slots(hierarchy):
