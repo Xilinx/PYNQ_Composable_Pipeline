@@ -85,7 +85,7 @@
             "loaded": true,
             "modtype": "f9",
             "bitstream": "files/pr_f9.bit"
-        },        
+        },
         "source_data": {
             "si": [12],
             "dfx": false,
@@ -129,7 +129,7 @@
                         "modtype": "f8",
                         "bitstream": "files/pr_f8.bit"
                     }
-                }                
+                }
             }
         }
     }
