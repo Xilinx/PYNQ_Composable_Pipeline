@@ -589,11 +589,6 @@ class Composable(DefaultHierarchy):
                                   "Pipeline is invalid"
                                   .format(in_use_mi))
 
-        if self._soft_reset and self._enable_soft_reset:
-            self._soft_reset[0].write(1)
-            self._soft_reset[0].write(0)
-
-        self._configure_switch(switch_conf)
 
         for linear_pipeline in flat_list:
             for idx, ip in enumerate(linear_pipeline):
@@ -611,6 +606,11 @@ class Composable(DefaultHierarchy):
                                          "composing a pipeline"
                                          .format(ip._fullpath))
 
+        if self._soft_reset and self._enable_soft_reset:
+            self._soft_reset[0].write(1)
+            self._soft_reset[0].write(0)
+
+        self._configure_switch(switch_conf)
         self._current_pipeline = cle_list
         self._current_flat_pipeline = flat_list
         self.graph = graph
