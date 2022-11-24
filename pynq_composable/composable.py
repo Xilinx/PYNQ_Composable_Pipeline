@@ -84,12 +84,17 @@ def _get_ip_name_by_vlnv(description: dict, vlnv: str) -> str:
 
 def _streamline_pipeline(pipe: list) -> list:
     """
-    _streamline_pipeline breaks up pipelines that
-    contain branches into multiple linear (flat)
-    lists.
+    Breaks up pipelines that contain branches into multiple flat lists.
 
-    Doing this makes it easier to configure the
-    AXI switch that connect different IP
+    Parameters
+    ----------
+    pipe: list
+    Describes how IPs are connected in this pipeline.
+    Returns
+    ----------
+    linear_pipeline: list
+    Describes how IPs are connected in this pipeline in a flat way.
+    Branches are describe as lists of lists.
     """
     linear_pipe = [[], ]
 
