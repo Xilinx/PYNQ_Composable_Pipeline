@@ -574,24 +574,20 @@ class Composable(DefaultHierarchy):
                                       " instance can only be used once"
                                       .format(ip._fullpath))
 
-        for linear_pipeline in flat_list:
-            for i, l0 in enumerate(linear_pipeline):
-                ip = linear_pipeline[i]
-                path = self._relative_path(ip._fullpath)
-                if path in in_use_si:
-                    if in_use_si[path]['si']:
-                        raise SystemError("Not all IPs within the pipeline "
-                                          "were assigned. IP: {} "
-                                          "are not connected correctly. "
-                                          "Pipeline is invalid"
-                                          .format(in_use_si))
-                if path in in_use_mi:
-                    if in_use_mi[path]['mi']:
-                        raise SystemError("Not all IPs within the pipeline "
-                                          "were assigned. IP: {} "
-                                          "are not connected correctly. "
-                                          "Pipeline is invalid"
-                                          .format(in_use_mi))
+        for path in in_use_si:
+            if in_use_si[path]['si']:
+                raise SystemError("Not all IPs within the pipeline "
+                                  "were assigned. IP: {} "
+                                  "are not connected correctly. "
+                                  "Pipeline is invalid"
+                                  .format(in_use_si))
+        for path in in_use_mi:
+            if in_use_mi[path]['mi']:
+                raise SystemError("Not all IPs within the pipeline "
+                                  "were assigned. IP: {} "
+                                  "are not connected correctly. "
+                                  "Pipeline is invalid"
+                                  .format(in_use_mi))
 
         if self._soft_reset and self._enable_soft_reset:
             self._soft_reset[0].write(1)
