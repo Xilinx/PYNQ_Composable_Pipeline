@@ -83,8 +83,7 @@ def _get_ip_name_by_vlnv(description: dict, vlnv: str) -> str:
 
 
 def _streamline_pipeline(pipe: list) -> list:
-    """
-    Breaks up pipelines that contain branches into multiple flat lists.
+    """Flattens branches into multiple linear pipelines
 
     Parameters
     ----------
@@ -548,8 +547,12 @@ class Composable(DefaultHierarchy):
 
                 else:
                     if len(in_use_si[path]['si']) == 0:
-                        raise SystemError("cannot meet pipeline "
-                                          "requirement of 2 output")
+                        raise SystemError("Node {} has {} free output(s) "
+                                          "and cannot meet pipeline "
+                                          "requirement of output(s)"
+                                          .format(path,
+                                                  len(in_use_si[path]['si']))
+                                          )
                     value = in_use_si[path]['si'][0]
                     in_use_si[path]['si'] = in_use_si[path]['si'][1:0]
 
@@ -558,21 +561,19 @@ class Composable(DefaultHierarchy):
                     in_use_mi[nextkey] = {'mi': mi[1:]}
                 else:
                     if len(in_use_mi[nextkey]['mi']) == 0:
-                        raise SystemError("cannot meet pipeline "
-                                          "requirement of 2 input")
+                        raise SystemError("Node {} has {} free input(s) "
+                                          "and cannot meet pipeline "
+                                          "requirement of input(s)"
+                                          .format(nextkey,
+                                                  len(in_use_mi[nextkey]
+                                                      ['mi']))
+                                          )
                     index = in_use_mi[nextkey]['mi'][0]
                     in_use_mi[nextkey]['mi'] = in_use_mi[nextkey]['mi'][1:0]
-
-                if not np.where(switch_conf == value)[0].size:
-                    switch_conf[index] = value
-                    graph.edge(self._relative_path(ip._fullpath),
-                               self._relative_path(nextip._fullpath),
-                               label=_edge_label(value, index, gdebug))
-                else:
-                    raise SystemError("IP: {} is already being used "
-                                      "in the provided pipeline. An IP"
-                                      " instance can only be used once"
-                                      .format(ip._fullpath))
+                switch_conf[index] = value
+                graph.edge(self._relative_path(ip._fullpath),
+                           self._relative_path(nextip._fullpath),
+                           label=_edge_label(value, index, gdebug))
 
         for path in in_use_si:
             if in_use_si[path]['si']:
@@ -588,7 +589,6 @@ class Composable(DefaultHierarchy):
                                   "are not connected correctly. "
                                   "Pipeline is invalid"
                                   .format(in_use_mi))
-
 
         for linear_pipeline in flat_list:
             for idx, ip in enumerate(linear_pipeline):
