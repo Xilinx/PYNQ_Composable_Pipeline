@@ -50,6 +50,7 @@ class MockOverlayComposable(MockOverlay):
                                   'fullpath': 'composable/pr/f9',
                                   'registers': {}
                                  })
+        self.f8 = virtual.DFXRegion(self, 'composable/pr/f8')
 
     def __getattr__(self, name):
         # TODO check why composable is included two times
@@ -57,6 +58,8 @@ class MockOverlayComposable(MockOverlay):
             return self.sw
         elif 'f9' in name:
             return self.f9
+        elif 'f8' in name:
+            return self.f8
         return super()
 
 
@@ -170,7 +173,13 @@ pipelines = [
      {'0': 2, '64': 13, '68': 1 << 31, '72': 3, '76': 8, '80': 1 << 31,
       '84': 1 << 31, '88': 1 << 31, '92': 1 << 31, '96': 0, '100': 14,
       '104': 7, '108': 1 << 31, '112': 1 << 31, '116': 9,
-      '120': 10})
+      '120': 10}),
+
+    ("[cpipe.f7, cpipe.fork, [[cpipe.f9], [1]], cpipe.join, cpipe.f0]",
+     {'0': 2, '64': 8, '68': 1 << 31, '72': 1 << 31, '76': 1 << 31,
+      '80': 1 << 31, '84': 1 << 31, '88': 1 << 31, '92': 1 << 31, '96': 11,
+      '100': 10, '104': 7, '108': 9, '112': 1 << 31, '116': 1 << 31,
+      '120': 1 << 31})
 ]
 
 
@@ -189,6 +198,13 @@ def test_composable_exception_multiple_bad_slots(hierarchy):
                        cpipe.f5, cpipe.f1, cpipe.f2, cpipe.f3, cpipe.f4,
                        cpipe.f1])
     assert "Number of slots in the list is bigger than" in str(excinfo.value)
+
+
+def test_composable_exception_compose_unloaded_ip(hierarchy):
+    cpipe, _ = hierarchy
+    with pytest.raises(AttributeError) as excinfo:
+        cpipe.compose([cpipe.source_data, cpipe.pr.f8, cpipe.sink_data])
+    assert "is not loaded, load IP before composing" in str(excinfo.value)
 
 
 @pytest.mark.parametrize('pipeline', pipelines)
