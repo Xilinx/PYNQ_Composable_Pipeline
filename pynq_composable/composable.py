@@ -528,67 +528,51 @@ class Composable(DefaultHierarchy):
             graph_attr={'rankdir': self.graph.graph_attr['rankdir']}
         )
         gdebug = self._graph_debug
-        in_use_si = dict()
-        in_use_mi = dict()
+        in_use = dict()
         for linear_pipeline in flat_list:
-            for i, l0 in enumerate(linear_pipeline):
-                ip = linear_pipeline[i]
+            for i, ip in enumerate(linear_pipeline):
                 if i == len(linear_pipeline) - 1:
                     break
-
-                si = self._c_dict[(path := self._relative_path
-                                  (ip._fullpath, 'si'))]['si']
+                ckey = self._relative_path(ip._fullpath, 'si')
+                si = self._c_dict[ckey]['si']
                 nextip = linear_pipeline[i+1]
-                nextkey = self._relative_path(nextip._fullpath)
-                mi = self._c_dict[nextkey]['mi']
-                if path not in in_use_si.keys():
-                    value = si[0]
-                    in_use_si[path] = {'si': si[1:]}
+                nkey = self._relative_path(nextip._fullpath)
+                mi = self._c_dict[nkey]['mi']
 
-                else:
-                    if len(in_use_si[path]['si']) == 0:
-                        raise SystemError("Node {} has {} free output(s) "
-                                          "and cannot meet pipeline "
-                                          "requirement of output(s)"
-                                          .format(path,
-                                                  len(in_use_si[path]['si']))
-                                          )
-                    value = in_use_si[path]['si'][0]
-                    in_use_si[path]['si'] = in_use_si[path]['si'][1:0]
+                if ckey not in in_use.keys():
+                    in_use[ckey] = {'si': si}
+                elif 'si' not in in_use[ckey].keys():
+                    in_use[ckey]['si'] = si
 
-                if nextkey not in in_use_mi.keys():
-                    index = mi[0]
-                    in_use_mi[nextkey] = {'mi': mi[1:]}
-                else:
-                    if len(in_use_mi[nextkey]['mi']) == 0:
-                        raise SystemError("Node {} has {} free input(s) "
-                                          "and cannot meet pipeline "
-                                          "requirement of input(s)"
-                                          .format(nextkey,
-                                                  len(in_use_mi[nextkey]
-                                                      ['mi']))
-                                          )
-                    index = in_use_mi[nextkey]['mi'][0]
-                    in_use_mi[nextkey]['mi'] = in_use_mi[nextkey]['mi'][1:0]
+                if (lensi := len(in_use[ckey]['si'])) == 0:
+                    raise SystemError(f'Node {ckey} has {lensi} free '
+                                      'output(s) and cannot meet pipeline '
+                                      'requirement of output(s)')
+
+                value = in_use[ckey]['si'][0]
+                in_use[ckey]['si'] = in_use[ckey]['si'][1:]
+
+                if nkey not in in_use.keys():
+                    in_use[nkey] = {'mi': mi}
+                elif 'mi' not in in_use[nkey].keys():
+                    in_use[nkey]['mi'] = mi
+
+                if (lenmi := len(in_use[nkey]['mi'])) == 0:
+                    raise SystemError(f'Node {nkey} has {lenmi} free '
+                                      'input(s) and cannot meet pipeline '
+                                      'requirement of input(s)')
+
+                index = in_use[nkey]['mi'][0]
+                in_use[nkey]['mi'] = in_use[nkey]['mi'][1:]
                 switch_conf[index] = value
                 graph.edge(self._relative_path(ip._fullpath),
                            self._relative_path(nextip._fullpath),
                            label=_edge_label(value, index, gdebug))
 
-        for path in in_use_si:
-            if in_use_si[path]['si']:
-                raise SystemError("Not all IPs within the pipeline "
-                                  "were assigned. IP: {} "
-                                  "are not connected correctly. "
-                                  "Pipeline is invalid"
-                                  .format(in_use_si))
-        for path in in_use_mi:
-            if in_use_mi[path]['mi']:
-                raise SystemError("Not all IPs within the pipeline "
-                                  "were assigned. IP: {} "
-                                  "are not connected correctly. "
-                                  "Pipeline is invalid"
-                                  .format(in_use_mi))
+        for key in in_use:
+            if in_use[key].get('si') or in_use[key].get('mi'):
+                raise SystemError(f'IP: \'{key}\' within the pipeline was not'
+                                  ' connected correctly. Pipeline is invalid')
 
         for linear_pipeline in flat_list:
             for idx, ip in enumerate(linear_pipeline):
