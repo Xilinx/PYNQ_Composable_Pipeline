@@ -111,7 +111,8 @@ def test_composable_exception_connection(hierarchy, pipeline):
     cpipe, _ = hierarchy
     with pytest.raises(SystemError) as excinfo:
         cpipe.compose(eval(pipeline))
-    assert "Not all IPs within the pipeline were assigned" in str(excinfo.value)
+    assert "pipeline was not connected correctly." in str(excinfo.value)
+
 
 pipelines = [
     ("[cpipe.f0, cpipe.f1, cpipe.f2, cpipe.f3, cpipe.f4, cpipe.f5, cpipe.f6,\
