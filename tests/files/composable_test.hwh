@@ -80,6 +80,12 @@
       "phys_addr":11264,
       "addr_range":1024,
       "fullpath":"composable/dual"
+     },
+      "composable/pr/f9":{
+        "type":"xilinx.com:hls:f9:1.0",
+        "phys_addr":12288,
+        "addr_range":1024,
+        "fullpath":"composable/pr/f9"
      }
    },
    "fullpath":"composable",

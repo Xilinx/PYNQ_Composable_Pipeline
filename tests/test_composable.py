@@ -44,11 +44,19 @@ class MockOverlayComposable(MockOverlay):
         self.sw._fullpath = desc['fullpath']
         self.hierarchies = {'composable': {'ip': None}}
         self.ip_dict = dict()
+        self.f9 = pynq.DefaultIP({
+                                  'phys_addr': 12288,
+                                  'addr_range': 1024,
+                                  'fullpath': 'composable/pr/f9',
+                                  'registers': {}
+                                 })
 
     def __getattr__(self, name):
         # TODO check why composable is included two times
         if 'composable/axis_switch' in name:
             return self.sw
+        elif 'f9' in name:
+            return self.f9
         return super()
 
 
