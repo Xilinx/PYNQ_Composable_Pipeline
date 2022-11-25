@@ -536,7 +536,7 @@ class Composable(DefaultHierarchy):
                 ckey = self._relative_path(ip._fullpath, 'si')
                 si = self._c_dict[ckey]['si']
                 nextip = linear_pipeline[i+1]
-                nkey = self._relative_path(nextip._fullpath)
+                nkey = self._relative_path(nextip._fullpath, 'mi')
                 mi = self._c_dict[nkey]['mi']
 
                 if ckey not in in_use.keys():
@@ -565,8 +565,7 @@ class Composable(DefaultHierarchy):
                 index = in_use[nkey]['mi'][0]
                 in_use[nkey]['mi'] = in_use[nkey]['mi'][1:]
                 switch_conf[index] = value
-                graph.edge(self._relative_path(ip._fullpath),
-                           self._relative_path(nextip._fullpath),
+                graph.edge(ckey, nkey,
                            label=_edge_label(value, index, gdebug))
 
         for key in in_use:
