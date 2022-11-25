@@ -38,13 +38,18 @@ with open('tests/files/composable_test.hwh') as f:
     hier_desc['device'] = MockDevice(f.name)
 
 
+class DefaultIPStart(pynq.DefaultIP):
+    def start(self):
+        pass
+
+
 class MockOverlayComposable(MockOverlay):
     def __init__(self, desc):
         self.sw = switch.StreamSwitch(desc)
         self.sw._fullpath = desc['fullpath']
         self.hierarchies = {'composable': {'ip': None}}
         self.ip_dict = dict()
-        self.f9 = pynq.DefaultIP({
+        self.f9 = DefaultIPStart({
                                   'phys_addr': 12288,
                                   'addr_range': 1024,
                                   'fullpath': 'composable/pr/f9',
