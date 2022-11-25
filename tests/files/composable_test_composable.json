@@ -98,12 +98,12 @@
             "loaded": true,
             "modtype": "sink"
         },
-        "fj": {
+        "dual": {
             "si": [13, 14],
             "mi": [13, 14],
             "dfx": false,
             "loaded": true,
-            "modtype": "fj"
+            "modtype": "dual"
         }
     },
     {

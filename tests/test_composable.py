@@ -156,12 +156,12 @@ pipelines = [
       '104': 7, '108': 1 << 31, '112': 1 << 31, '116': 1 << 31,
       '120': 1 << 31}),
 
-    ("[cpipe.f7, cpipe.fj, [[cpipe.f5, cpipe.f6], [cpipe.f0]], cpipe.fj, \
-       cpipe.f3, cpipe.f2]",
-     {'0': 2, '64': 8, '68': 1 << 31, '72': 0, '76': 1 << 31, '80': 1 << 31,
-      '84': 1 << 31, '88': 1 << 31, '92': 1 << 31, '96': 9, '100': 10,
-      '104': 7, '108': 1 << 31, '112': 1 << 31, '116': 1 << 31,
-      '120': 1 << 31})
+    ("[cpipe.f7, cpipe.fork, [[cpipe.dual, cpipe.f0], [cpipe.dual]], \
+        cpipe.join, cpipe.f3, cpipe.f2]",
+     {'0': 2, '64': 13, '68': 1 << 31, '72': 3, '76': 8, '80': 1 << 31,
+      '84': 1 << 31, '88': 1 << 31, '92': 1 << 31, '96': 0, '100': 14,
+      '104': 7, '108': 1 << 31, '112': 1 << 31, '116': 9,
+      '120': 10})
 ]
 
 
@@ -186,7 +186,10 @@ def test_composable_exception_multiple_bad_slots(hierarchy):
 def test_composable_pipeline(hierarchy, pipeline):
     cpipe, ipdevice = hierarchy
     pipe = eval(pipeline[0])
+    cpipe._graph_debug = True
     cpipe.compose(pipe)
+    name = f'pipeline{pipelines.index(pipeline)}'
+    cpipe.graph.render(format='png', outfile=f'tests/graph_output/{name}.png')
     assert ipdevice.ip.memory == pipeline[1]
 
 

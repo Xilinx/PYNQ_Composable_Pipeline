@@ -75,11 +75,11 @@
       "addr_range":1024,
       "fullpath":"composable/sink_data"
      },
-     "composable/fj":{
-      "type":"xilinx.com:hls:fj:1.0",
+     "composable/dual":{
+      "type":"xilinx.com:hls:dual:1.0",
       "phys_addr":11264,
       "addr_range":1024,
-      "fullpath":"composable/fj"
+      "fullpath":"composable/dual"
      }
    },
    "fullpath":"composable",
