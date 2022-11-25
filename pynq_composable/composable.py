@@ -582,9 +582,7 @@ class Composable(DefaultHierarchy):
                                _attributes={"color": "blue",
                                             "fillcolor": "cyan",
                                             "style": "filled"})
-                if hasattr(ip, "start"):
-                    ip.start()
-                elif isinstance(ip, VirtualIP) and not ip.is_loaded:
+                if isinstance(ip, VirtualIP) and not ip.is_loaded:
                     raise AttributeError("IP {} is not loaded, load IP before "
                                          "composing a pipeline"
                                          .format(ip._fullpath))
@@ -592,6 +590,11 @@ class Composable(DefaultHierarchy):
         if self._soft_reset and self._enable_soft_reset:
             self._soft_reset[0].write(1)
             self._soft_reset[0].write(0)
+
+        for lpipe in flat_list:
+            for ip in lpipe:
+                if hasattr(ip, "start"):
+                    ip.start()
 
         self._configure_switch(switch_conf)
         self._current_pipeline = cle_list
