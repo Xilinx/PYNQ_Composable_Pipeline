@@ -83,26 +83,27 @@ def hierarchy(ipdevice):
 
 def test_composable_class(hierarchy):
     cpipe, _ = hierarchy
-    cpipe.compose([cpipe.f1, cpipe.f2])
+    cpipe.compose([cpipe.source_data, cpipe.f1, cpipe.f2, cpipe.sink_data])
     assert True
 
 
 pipes_join_exc = [
-    "[cpipe.f1, cpipe.fork, [[cpipe.f3], [1]], cpipe.f2]",
-    "[cpipe.f1, cpipe.fork, [[1], [cpipe.f3]], cpipe.f2]",
-    "[cpipe.f1, cpipe.fork, [[1], [1]], cpipe.f2]"
+    "[cpipe.source_data, cpipe.fork, [[cpipe.f3], [1]], cpipe.sink_data]",
+    "[cpipe.source_data, cpipe.fork, [[1], [cpipe.f3]], cpipe.sink_data]",
+    "[cpipe.source_data, cpipe.fork, [[1], [1]], cpipe.sink_data]"
 ]
 
 pipes_fork_exc = [
-    "[cpipe.f1, [[cpipe.f3], [1]], cpipe.join , cpipe.f2]",
-    "[cpipe.f1, [[1], [cpipe.f3]], cpipe.join, cpipe.f2]",
-    "[cpipe.f1, [[1], [1]], cpipe.join, cpipe.f2]",
-    "[cpipe.f1, [[cpipe.f3, [[cpipe.f4], [1]]], [1]], cpipe.f2]"
+    "[cpipe.source_data, [[cpipe.f3], [1]], cpipe.join , cpipe.sink_data]",
+    "[cpipe.source_data, [[1], [cpipe.f3]], cpipe.join, cpipe.sink_data]",
+    "[cpipe.source_data, [[1], [1]], cpipe.join, cpipe.sink_data]",
+    "[cpipe.source_data, [[cpipe.f3, [[cpipe.f4], [1]]], [1]],"
+    " cpipe.sink_data]"
 ]
 
 broken_pipelines = [
-    "[cpipe.f1, cpipe.f3, cpipe.join, cpipe.f2]",
-    "[cpipe.f1, cpipe.fork, cpipe.f3, cpipe.f2]"
+    "[cpipe.source_data, cpipe.f3, cpipe.join, cpipe.sink_data]",
+    "[cpipe.source_data, cpipe.fork, cpipe.f3, cpipe.sink_data]"
 ]
 
 
@@ -131,59 +132,65 @@ def test_composable_exception_connection(hierarchy, pipeline):
 
 
 pipelines = [
-    ("[cpipe.f0, cpipe.f1, cpipe.f2, cpipe.f3, cpipe.f4, cpipe.f5, cpipe.f6,\
-       cpipe.f7]",
-     {'0': 2, '64': 1 << 31, '68': 0, '72': 1, '76': 2, '80': 3, '84': 4,
-      '88': 5, '92': 6, '96': 1 << 31, '100': 1 << 31, '104': 1 << 31,
-      '108': 1 << 31, '112': 1 << 31, '116': 1 << 31, '120': 1 << 31}),
+    ("[cpipe.source_data, cpipe.f1, cpipe.f2, cpipe.f3, cpipe.f4, cpipe.f5,\
+       cpipe.f6, cpipe.sink_data]",
+     {'0': 2, '64': 1 << 31, '68': 12, '72': 1, '76': 2, '80': 3, '84': 4,
+      '88': 5, '92': 1 << 31, '96': 1 << 31, '100': 1 << 31, '104': 1 << 31,
+      '108': 1 << 31, '112': 6, '116': 1 << 31, '120': 1 << 31}),
 
-    ("[cpipe.f0, cpipe.f1, cpipe.f2, cpipe.f3, cpipe.f4]",
-     {'0': 2, '64': 1 << 31, '68': 0, '72': 1, '76': 2, '80': 3,
+    ("[cpipe.source_data, cpipe.f1, cpipe.f2, cpipe.f3, cpipe.sink_data]",
+     {'0': 2, '64': 1 << 31, '68': 12, '72': 1, '76': 2, '80': 1 << 31,
       '84': 1 << 31, '88': 1 << 31, '92': 1 << 31, '96': 1 << 31,
-      '100': 1 << 31, '104': 1 << 31, '108': 1 << 31, '112': 1 << 31,
+      '100': 1 << 31, '104': 1 << 31, '108': 1 << 31, '112': 3,
       '116': 1 << 31, '120': 1 << 31}),
 
-    ("[cpipe.f0, cpipe.f1, cpipe.f2, cpipe.f3, cpipe.f4, cpipe.f6, cpipe.f7]",
-     {'0': 2, '64': 1 << 31, '68': 0, '72': 1, '76': 2, '80': 3,
-      '84': 1 << 31, '88': 4, '92': 6, '96': 1 << 31, '100': 1 << 31,
-      '104': 1 << 31, '108': 1 << 31, '112': 1 << 31, '116': 1 << 31,
+    ("[cpipe.source_data, cpipe.f1, cpipe.f2, cpipe.f3, cpipe.f4,\
+       cpipe.f6, cpipe.sink_data]",
+     {'0': 2, '64': 1 << 31, '68': 12, '72': 1, '76': 2, '80': 3,
+      '84': 1 << 31, '88': 4, '92': 1 << 31, '96': 1 << 31, '100': 1 << 31,
+      '104': 1 << 31, '108': 1 << 31, '112': 6, '116': 1 << 31,
       '120': 1 << 31}),
 
-    ("[cpipe.f0, cpipe.f5, cpipe.f2, cpipe.f3, cpipe.f4, cpipe.f6, cpipe.f7]",
+    ("[cpipe.source_data, cpipe.f5, cpipe.f2, cpipe.f3, cpipe.f4,\
+      cpipe.f6, cpipe.sink_data]",
      {'0': 2, '64': 1 << 31, '68': 1 << 31, '72': 5, '76': 2, '80': 3,
-      '84': 0, '88': 4, '92': 6, '96': 1 << 31, '100': 1 << 31,
-      '104': 1 << 31, '108': 1 << 31, '112': 1 << 31, '116': 1 << 31,
+      '84': 12, '88': 4, '92': 1 << 31, '96': 1 << 31, '100': 1 << 31,
+      '104': 1 << 31, '108': 1 << 31, '112': 6, '116': 1 << 31,
       '120': 1 << 31}),
 
-    ("[cpipe.f1, cpipe.fork, [[cpipe.f3], [1]], cpipe.join, cpipe.f2]",
-     {'0': 2, '64': 1 << 31, '68': 1 << 31, '72': 8, '76': 9, '80': 1 << 31,
-      '84': 1 << 31, '88': 1 << 31, '92': 1 << 31, '96': 3, '100': 10,
-      '104': 1, '108': 1 << 31, '112': 1 << 31, '116': 1 << 31,
-      '120': 1 << 31}),
+    ("[cpipe.source_data, cpipe.fork, [[cpipe.f3], [1]], cpipe.join,\
+     cpipe.sink_data]",
+     {'0': 2, '64': 1 << 31, '68': 1 << 31, '72': 1 << 31, '76': 9,
+      '80': 1 << 31, '84': 1 << 31, '88': 1 << 31, '92': 1 << 31,
+      '96': 3, '100': 10, '104': 12, '108': 1 << 31, '112': 8,
+      '116': 1 << 31, '120': 1 << 31}),
 
-    ("[cpipe.f1, cpipe.fork, [[cpipe.f7], [1]], cpipe.join, cpipe.f2]",
-     {'0': 2, '64': 1 << 31, '68': 1 << 31, '72': 8, '76': 1 << 31,
+    ("[cpipe.source_data, cpipe.fork, [[cpipe.f7], [1]], cpipe.join,\
+     cpipe.sink_data]",
+     {'0': 2, '64': 1 << 31, '68': 1 << 31, '72': 1 << 31, '76': 1 << 31,
       '80': 1 << 31, '84': 1 << 31, '88': 1 << 31, '92': 9, '96': 7, '100': 10,
-      '104': 1, '108': 1 << 31, '112': 1 << 31, '116': 1 << 31,
+      '104': 12, '108': 1 << 31, '112': 8, '116': 1 << 31,
       '120': 1 << 31}),
 
-    ("[cpipe.f7, cpipe.fork, [[1], [1]], cpipe.join, cpipe.f0, cpipe.f2]",
-     {'0': 2, '64': 8, '68': 1 << 31, '72': 0, '76': 1 << 31, '80': 1 << 31,
-      '84': 1 << 31, '88': 1 << 31, '92': 1 << 31, '96': 9, '100': 10,
-      '104': 7, '108': 1 << 31, '112': 1 << 31, '116': 1 << 31,
-      '120': 1 << 31}),
+    ("[cpipe.source_data, cpipe.fork, [[1], [1]], cpipe.join,\
+      cpipe.f0, cpipe.sink_data]",
+     {'0': 2, '64': 8, '68': 1 << 31, '72': 1 << 31, '76': 1 << 31,
+      '80': 1 << 31, '84': 1 << 31, '88': 1 << 31, '92': 1 << 31,
+      '96': 9, '100': 10, '104': 12, '108': 1 << 31, '112': 0,
+      '116': 1 << 31, '120': 1 << 31}),
 
-    ("[cpipe.f7, cpipe.fork, [[cpipe.dual, cpipe.f0], [cpipe.dual]], \
-        cpipe.join, cpipe.f3, cpipe.f2]",
-     {'0': 2, '64': 13, '68': 1 << 31, '72': 3, '76': 8, '80': 1 << 31,
+    ("[cpipe.source_data, cpipe.fork, [[cpipe.dual, cpipe.f0],\
+      [cpipe.dual]], cpipe.join, cpipe.f3, cpipe.sink_data]",
+     {'0': 2, '64': 13, '68': 1 << 31, '72': 1 << 31, '76': 8, '80': 1 << 31,
       '84': 1 << 31, '88': 1 << 31, '92': 1 << 31, '96': 0, '100': 14,
-      '104': 7, '108': 1 << 31, '112': 1 << 31, '116': 9,
+      '104': 12, '108': 1 << 31, '112': 3, '116': 9,
       '120': 10}),
 
-    ("[cpipe.f7, cpipe.fork, [[cpipe.f9], [1]], cpipe.join, cpipe.f0]",
-     {'0': 2, '64': 8, '68': 1 << 31, '72': 1 << 31, '76': 1 << 31,
+    ("[cpipe.source_data, cpipe.fork, [[cpipe.f9], [1]],\
+     cpipe.join, cpipe.sink_data]",
+     {'0': 2, '64': 1 << 31, '68': 1 << 31, '72': 1 << 31, '76': 1 << 31,
       '80': 1 << 31, '84': 1 << 31, '88': 1 << 31, '92': 1 << 31, '96': 11,
-      '100': 10, '104': 7, '108': 9, '112': 1 << 31, '116': 1 << 31,
+      '100': 10, '104': 12, '108': 9, '112': 8, '116': 1 << 31,
       '120': 1 << 31})
 ]
 

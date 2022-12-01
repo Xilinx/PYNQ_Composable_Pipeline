@@ -545,7 +545,6 @@ class Composable(DefaultHierarchy):
                         cmi = self._c_dict[nkey]['mi']
                         in_use[ckey]['mi'] = cmi
 
-
                 elif 'si' not in in_use[ckey].keys():
                     in_use[ckey]['si'] = si
 
