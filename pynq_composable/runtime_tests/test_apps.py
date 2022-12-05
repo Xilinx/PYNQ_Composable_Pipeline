@@ -21,13 +21,16 @@ apps = [
 def test_apps(obj):
     app = eval(obj)
     app.start()
-    name = f'app_{apps.index(obj)}'
-    app._cpipe.graph.render(format='png', outfile=f'result_tests/{name}.png')
     time.sleep(5)
     status = app._video._video._started and app._video._video._running
-    with open(f'result_tests/{name}.txt', 'w') as f:
-        f.write(f'pipeline: {str(obj)}\n')
-        f.write(f'Pass status: {status}\n')
-        f.write(f'Pipeline graph: {name}.png\n')
+    if status:
+        app._cpipe.graph.attr(label=r'PASSED',
+                              _attributes={"fontcolor": "green"})
+    else:
+        app._cpipe.graph.attr(label=r'FAILED',
+                              _attributes={"fontcolor": "red"})
+
+    name = f'app_{apps.index(obj)}_' + ('passed' if status else 'failed')
+    app._cpipe.graph.render(format='png', outfile=f'result_tests/{name}.png')
     app.stop()
     assert status
