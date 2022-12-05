@@ -141,10 +141,17 @@ def test_app(app, create_composable):
     cpipe.compose(app_obj)
     file = '../mountains.mp4' if pytest.videofile else 0
     video = VideoStream(ol, VSource.OpenCV, VSink.DP, file=file)
+    name = f'reloc_{valid_apps.index(app)}'
     try:
         video.start()
+        cpipe.graph.render(format='png', outfile=f'result_tests/{name}.png')
         time.sleep(5)
-        assert video._video._started and video._video._running
+        status = app._video._started and app._video._running
+        with open(f'result_tests/{name}.txt', 'w') as f:
+            f.write(f'pipeline: {str(app[1])}\n')
+            f.write(f'Pass status: {status}\n')
+            f.write(f'Pipeline graph: {name}.png\n')
         video.stop()
+        assert status
     except pytest.PytestUnhandledThreadExceptionWarning:
-        assert False, f"App {app} failed"
+        assert False, f'App {app} failed'
