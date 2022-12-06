@@ -103,7 +103,10 @@ pipes_fork_exc = [
 
 broken_pipelines = [
     "[cpipe.source_data, cpipe.f3, cpipe.join, cpipe.sink_data]",
-    "[cpipe.source_data, cpipe.fork, cpipe.f3, cpipe.sink_data]"
+    "[cpipe.source_data, cpipe.fork, cpipe.f3, cpipe.sink_data]",
+    "[cpipe.source_data, cpipe.f1, cpipe.f2, cpipe.f3]",
+    "[cpipe.f1, cpipe.f2, cpipe.f3, cpipe.sink_data]",
+    "[cpipe.f1, cpipe.f2, cpipe.f3, cpipe.f4]"
 ]
 
 
