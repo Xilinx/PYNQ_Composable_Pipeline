@@ -20,6 +20,7 @@ apps = [
 @pytest.mark.parametrize('obj', apps)
 def test_apps(obj):
     app = eval(obj)
+    app._cpipe._graph_debug = True
     app.start()
     time.sleep(5)
     status = app._video._video._started and app._video._video._running

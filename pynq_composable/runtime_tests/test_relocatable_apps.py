@@ -198,6 +198,7 @@ def test_app(app, create_composable):
     dfx_regions = get_dfx_regions_to_download(app[0], cpipe)
     cpipe.load(dfx_regions)
     app_obj = convert_string_to_ip_object(app[1], cpipe)
+    cpipe._graph_debug = True
     cpipe.compose(app_obj)
     file = '../mountains.mp4' if pytest.videofile else 0
     video = VideoStream(ol, VSource.OpenCV, VSink.DP, file=file)
