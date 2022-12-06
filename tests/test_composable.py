@@ -551,12 +551,13 @@ def test_default_paths(ipdevice):
     assert cpipe.axis_switch.mi[12] == 0
     cpipe.tap(0)
     assert cpipe.axis_switch.mi[12] == 12
-    pipe = eval(pipelines[0][0])
+    pipeline = pipelines[0][0]
+    pipeline = pipeline.replace('source_data', 'data_in')
+    pipeline = pipeline.replace('sink_data', 'data_out')
+    pipe = eval(pipeline)
     cpipe.compose(pipe)
     conf1 = pipelines[0][1].copy()
-    conf1['112'] = 12
     assert ipdevice.ip.memory == conf1
-    cpipe.tap(4)
+    cpipe.tap(3)
     conf2 = pipelines[1][1].copy()
-    conf2['112'] = 12
     assert ipdevice.ip.memory == conf2
