@@ -10,6 +10,34 @@ import itertools
 
 
 app_construct = [
+    (['dilate'], ['ps_video_in', 'pr/dilate', 'ps_video_out']),
+
+    (['erode'], ['ps_video_in', 'pr/erode', 'ps_video_out']),
+
+    (['fast'], ['ps_video_in', 'pr/fast', 'ps_video_out']),
+
+    (['cornerharris'], ['ps_video_in', 'pr/cornerHarris', 'ps_video_out']),
+
+    (['filter2d'], ['ps_video_in', 'pr/filter2d_accel', 'ps_video_out']),
+
+    (['rgb2xyz'], ['ps_video_in', 'pr/rgb2xyz_accel', 'ps_video_out']),
+
+    (['add'],
+     ['ps_video_in', 'duplicate_accel', [['lut_accel'], [1]], 'pr/add_accel',
+      'ps_video_out']),
+
+    (['bitand'],
+     ['ps_video_in', 'duplicate_accel', [['lut_accel'], [1]], 'pr/bitwise',
+      'ps_video_out']),
+
+    (['subtract'],
+     ['ps_video_in', 'duplicate_accel', [['lut_accel'], [1]],
+      'pr/subtract_accel', 'ps_video_out']),
+
+    (['absdiff'],
+     ['ps_video_in', 'duplicate_accel', [['lut_accel'], [1]],
+      'pr/absdiff_accel', 'ps_video_out']),
+
     (['subtract', 'filter2d'],
      ['ps_video_in', 'filter2d_accel', 'duplicate_accel',
       [['pr/filter2d_accel'], [1]],
