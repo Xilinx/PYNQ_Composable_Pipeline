@@ -764,7 +764,8 @@ class Composable(DefaultHierarchy):
 
         self.compose(pipeline)
 
-    def tap(self, ip: Union[Type[DefaultIP], int] = None) -> None:
+    def tap(self, ip: Union[Type[DefaultIP], int] = None,
+            sink: bool = True) -> None:
         """Observe the output of an IP object in the current pipeline
 
         Tap into the output of the IP cores in the current pipeline
@@ -783,6 +784,9 @@ class Composable(DefaultHierarchy):
             Examples:
                 tap(cpipe.dilate)
                 tap(6)
+        sink: bool
+            True: Keep sink of original pipeline as sink of tap pipeline
+            False: Do not keep sink of original pipeline as sink tap pipeline
         """
 
         if self._current_pipeline is None:
@@ -812,10 +816,8 @@ class Composable(DefaultHierarchy):
             if len(self._c_dict[key]['si']) != 1:
                 raise SystemError("tap into an IP with multiple outputs is "
                                   "not supported")
-
-            for _, v in self.c_dict.default.items():
-                if v.get('fullpath') == self._current_pipeline[-1]._fullpath:
-                    new_list.append(self._current_pipeline[-1])
+        if sink:
+            new_list.append(self._current_pipeline[-1])
 
         self._untapped_pipeline = self._current_pipeline.copy()
         self.compose(new_list)
