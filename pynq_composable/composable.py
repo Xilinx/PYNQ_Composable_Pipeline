@@ -534,15 +534,19 @@ class Composable(DefaultHierarchy):
                 if i == len(linear_pipeline) - 1:
                     break
                 ckey = self._relative_path(ip._fullpath, 'si')
-                si = self._c_dict[ckey]['si']
+                csi = self._c_dict[ckey]['si']
+                cmi = self._c_dict[ckey].get('mi')
                 nextip = linear_pipeline[i+1]
                 nkey = self._relative_path(nextip._fullpath, 'mi')
-                mi = self._c_dict[nkey]['mi']
+                nmi = self._c_dict[nkey]['mi']
+                nsi = self._c_dict[nkey].get('si')
 
                 if ckey not in in_use.keys():
-                    in_use[ckey] = {'si': si}
+                    in_use[ckey] = {'si': csi}
                 elif 'si' not in in_use[ckey].keys():
-                    in_use[ckey]['si'] = si
+                    in_use[ckey]['si'] = csi
+                if cmi and 'mi' not in in_use[ckey].keys():
+                    in_use[ckey]['mi'] = cmi
 
                 if (lensi := len(in_use[ckey]['si'])) == 0:
                     raise SystemError(f'Node {ckey} has {lensi} free '
@@ -553,9 +557,11 @@ class Composable(DefaultHierarchy):
                 in_use[ckey]['si'] = in_use[ckey]['si'][1:]
 
                 if nkey not in in_use.keys():
-                    in_use[nkey] = {'mi': mi}
+                    in_use[nkey] = {'mi': nmi}
                 elif 'mi' not in in_use[nkey].keys():
-                    in_use[nkey]['mi'] = mi
+                    in_use[nkey]['mi'] = nmi
+                if nsi and 'si' not in in_use[nkey].keys():
+                    in_use[nkey]['si'] = nsi
 
                 if (lenmi := len(in_use[nkey]['mi'])) == 0:
                     raise SystemError(f'Node {nkey} has {lenmi} free '
@@ -564,6 +570,7 @@ class Composable(DefaultHierarchy):
 
                 index = in_use[nkey]['mi'][0]
                 in_use[nkey]['mi'] = in_use[nkey]['mi'][1:]
+
                 switch_conf[index] = value
                 graph.edge(ckey, nkey,
                            label=_edge_label(value, index, gdebug))
