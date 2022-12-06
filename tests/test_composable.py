@@ -238,7 +238,7 @@ def test_composable_tap(hierarchy):
     pipe = eval(pipelines[0][0])
     cpipe.compose(pipe)
     assert ipdevice.ip.memory == pipelines[0][1]
-    cpipe.tap(pipe[4])
+    cpipe.tap(pipe[3])
     assert ipdevice.ip.memory == pipelines[1][1]
     cpipe.untap()
     assert ipdevice.ip.memory == pipelines[0][1]
@@ -249,7 +249,7 @@ def test_composable_tap_by_index(hierarchy):
     pipe = eval(pipelines[0][0])
     cpipe.compose(pipe)
     assert ipdevice.ip.memory == pipelines[0][1]
-    cpipe.tap(4)
+    cpipe.tap(3)
     assert ipdevice.ip.memory == pipelines[1][1]
     cpipe.untap()
     assert ipdevice.ip.memory == pipelines[0][1]
@@ -395,7 +395,7 @@ def test_composable_insert_list(hierarchy):
     pipe = eval(pipelines[1][0])
     cpipe.compose(pipe)
     assert ipdevice.ip.memory == pipelines[1][1]
-    cpipe.insert(([cpipe.f5, cpipe.f6, cpipe.f7], 5))
+    cpipe.insert(([cpipe.f4, cpipe.f5, cpipe.f6], 4))
     assert ipdevice.ip.memory == pipelines[0][1]
 
 
