@@ -83,7 +83,7 @@ def hierarchy(ipdevice):
 
 def test_composable_class(hierarchy):
     cpipe, _ = hierarchy
-    cpipe.compose([cpipe.source_data, cpipe.f1, cpipe.f2, cpipe.sink_data])
+    cpipe.compose([cpipe.source_data, cpipe.sink_data])
     assert True
 
 
