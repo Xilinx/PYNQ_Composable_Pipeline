@@ -554,8 +554,7 @@ def test_default_paths(ipdevice):
     pipeline = pipelines[0][0]
     pipeline = pipeline.replace('source_data', 'data_in')
     pipeline = pipeline.replace('sink_data', 'data_out')
-    pipe = eval(pipeline)
-    cpipe.compose(pipe)
+    cpipe.compose(eval(pipeline))
     conf1 = pipelines[0][1].copy()
     assert ipdevice.ip.memory == conf1
     cpipe.tap(3)
