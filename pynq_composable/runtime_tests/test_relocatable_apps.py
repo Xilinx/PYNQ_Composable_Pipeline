@@ -187,10 +187,10 @@ def get_dfx_regions_to_download(dfx, cpipe) -> list:
 
 
 @pytest.mark.skipif(not pytest.webcam and not pytest.videofile,
-                    reason="Web Camera or Video file not found")
+                    reason='Web Camera or Video file not found')
 @pytest.mark.parametrize('app', valid_apps)
 def test_app(app, create_composable):
-    """ This test will compose the apps and start a video stream
+    """This test will compose the apps and start a video stream
 
     Each `app` contains the general name of dfx to download and pipeline
     """
@@ -207,12 +207,14 @@ def test_app(app, create_composable):
         video.start()
         time.sleep(5)
         status = video._video._started and video._video._running
+        label = 'FAILED\n'
+        color = 'red'
         if status:
-            cpipe.graph.attr(label=r'PASSED',
-                             _attributes={"fontcolor": "green"})
-        else:
-            cpipe.graph.attr(label=r'FAILED',
-                             _attributes={"fontcolor": "red"})
+            label = 'PASSED\n'
+            color = 'green'
+        label = label + pytest.overlay
+        cpipe.graph.attr(label=label, _attributes={'fontcolor': color})
+
         name = f'reloc_{valid_apps.index(app)}_' + \
                ('passed' if status else 'failed')
 
