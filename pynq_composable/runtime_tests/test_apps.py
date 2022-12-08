@@ -10,13 +10,10 @@ import time
 
 apps = [
     "DifferenceGaussians(pytest.overlay, VSource.OpenCV, VSink.DP)",
-    "CornerDetect(pytest.overlay, VSource.OpenCV, VSink.DP)",
-    "ColorDetect(pytest.overlay, VSource.OpenCV, VSink.DP)",
-    "EdgeDetect(pytest.overlay, VSource.OpenCV, VSink.DP)"
 ]
 
 
-@pytest.mark.skipif(not pytest.webcam, reason="Web Camera is not detected")
+@pytest.mark.skipif(not pytest.webcam, reason='Web Camera is not detected')
 @pytest.mark.parametrize('obj', apps)
 def test_apps(obj):
     app = eval(obj)
@@ -24,13 +21,14 @@ def test_apps(obj):
     app.start()
     time.sleep(5)
     status = app._video._video._started and app._video._video._running
+    label = 'FAILED\n'
+    color = 'red'
     if status:
-        app._cpipe.graph.attr(label=r'PASSED',
-                              _attributes={"fontcolor": "green"})
-    else:
-        app._cpipe.graph.attr(label=r'FAILED',
-                              _attributes={"fontcolor": "red"})
+        label = 'PASSED\n'
+        color = 'green'
+    label = label + pytest.overlay
 
+    app._cpipe.graph.attr(label=label, _attributes={'fontcolor': color})
     name = f'app_{apps.index(obj)}_' + ('passed' if status else 'failed')
     app._cpipe.graph.render(format='png', outfile=f'result_tests/{name}.png')
     app.stop()
