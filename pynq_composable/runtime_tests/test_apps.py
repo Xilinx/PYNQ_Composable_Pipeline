@@ -10,6 +10,9 @@ import time
 
 apps = [
     "DifferenceGaussians(pytest.overlay, VSource.OpenCV, VSink.DP)",
+    "CornerDetect(pytest.overlay, VSource.OpenCV, VSink.DP)",
+    "ColorDetect(pytest.overlay, VSource.OpenCV, VSink.DP)",
+    "EdgeDetect(pytest.overlay, VSource.OpenCV, VSink.DP)"
 ]
 
 
