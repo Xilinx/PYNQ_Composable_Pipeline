@@ -9,16 +9,19 @@ import time
 
 
 apps = [
-    "DifferenceGaussians(pytest.overlay, VSource.OpenCV, VSink.DP)",
-    "CornerDetect(pytest.overlay, VSource.OpenCV, VSink.DP)",
-    "ColorDetect(pytest.overlay, VSource.OpenCV, VSink.DP)",
-    "EdgeDetect(pytest.overlay, VSource.OpenCV, VSink.DP)"
+    "DifferenceGaussians(pytest.overlay, VSource.OpenCV, sink, file=file)",
+    "CornerDetect(pytest.overlay, VSource.OpenCV, sink, file=file)",
+    "ColorDetect(pytest.overlay, VSource.OpenCV, sink, file=file)",
+    "EdgeDetect(pytest.overlay, VSource.OpenCV, sink, file=file)"
 ]
 
 
-@pytest.mark.skipif(not pytest.webcam, reason='Web Camera is not detected')
+@pytest.mark.skipif(not pytest.webcam and not pytest.videofile,
+                    reason='Web Camera or Video file not found')
 @pytest.mark.parametrize('obj', apps)
 def test_apps(obj):
+    file = '../mountains.mp4' if pytest.videofile else 0
+    sink = VSink.DP if pytest.board == 'KV260' else VSink.HDMI
     app = eval(obj)
     app._cpipe._graph_debug = True
     app.start()

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import cv2 as cv
+import os
 from pynq import Overlay
 from pynq_composable import Composable
 import pytest
@@ -56,3 +57,4 @@ def pytest_configure():
     pytest.webcam = webcam_present(0)
     pytest.videofile = webcam_present('../mountains.mp4')
     pytest.overlay = _overlay_file
+    pytest.board = os.environ.get("BOARD")
