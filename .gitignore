@@ -20,3 +20,4 @@ hd_visual/
 .vscode/
 tests/files/composable_test.pkl
 tests/files/composable_test_composable.pkl
+tests/graph_output/
