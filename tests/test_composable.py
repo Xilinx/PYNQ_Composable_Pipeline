@@ -103,7 +103,10 @@ pipes_fork_exc = [
 
 broken_pipelines = [
     "[cpipe.source_data, cpipe.f3, cpipe.join, cpipe.sink_data]",
-    "[cpipe.source_data, cpipe.fork, cpipe.f3, cpipe.sink_data]"
+    "[cpipe.source_data, cpipe.fork, cpipe.f3, cpipe.sink_data]",
+    "[cpipe.source_data, cpipe.f1, cpipe.f2, cpipe.f3]",
+    "[cpipe.f1, cpipe.f2, cpipe.f3, cpipe.sink_data]",
+    "[cpipe.f1, cpipe.f2, cpipe.f3, cpipe.f4]"
 ]
 
 
@@ -235,7 +238,7 @@ def test_composable_tap(hierarchy):
     pipe = eval(pipelines[0][0])
     cpipe.compose(pipe)
     assert ipdevice.ip.memory == pipelines[0][1]
-    cpipe.tap(pipe[4])
+    cpipe.tap(pipe[3])
     assert ipdevice.ip.memory == pipelines[1][1]
     cpipe.untap()
     assert ipdevice.ip.memory == pipelines[0][1]
@@ -246,7 +249,7 @@ def test_composable_tap_by_index(hierarchy):
     pipe = eval(pipelines[0][0])
     cpipe.compose(pipe)
     assert ipdevice.ip.memory == pipelines[0][1]
-    cpipe.tap(4)
+    cpipe.tap(3)
     assert ipdevice.ip.memory == pipelines[1][1]
     cpipe.untap()
     assert ipdevice.ip.memory == pipelines[0][1]
@@ -392,7 +395,7 @@ def test_composable_insert_list(hierarchy):
     pipe = eval(pipelines[1][0])
     cpipe.compose(pipe)
     assert ipdevice.ip.memory == pipelines[1][1]
-    cpipe.insert(([cpipe.f5, cpipe.f6, cpipe.f7], 5))
+    cpipe.insert(([cpipe.f4, cpipe.f5, cpipe.f6], 4))
     assert ipdevice.ip.memory == pipelines[0][1]
 
 
@@ -548,12 +551,12 @@ def test_default_paths(ipdevice):
     assert cpipe.axis_switch.mi[12] == 0
     cpipe.tap(0)
     assert cpipe.axis_switch.mi[12] == 12
-    pipe = eval(pipelines[0][0])
-    cpipe.compose(pipe)
+    pipeline = pipelines[0][0]
+    pipeline = pipeline.replace('source_data', 'data_in')
+    pipeline = pipeline.replace('sink_data', 'data_out')
+    cpipe.compose(eval(pipeline))
     conf1 = pipelines[0][1].copy()
-    conf1['112'] = 12
     assert ipdevice.ip.memory == conf1
-    cpipe.tap(4)
+    cpipe.tap(3)
     conf2 = pipelines[1][1].copy()
-    conf2['112'] = 12
     assert ipdevice.ip.memory == conf2
