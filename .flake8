@@ -1,0 +1,3 @@
+[flake8]
+per-file-ignores =
+    pynq_composable/runtime_tests/*: F841
