@@ -223,8 +223,8 @@ def test_app(app, create_composable):
         label = label + pytest.overlay
         cpipe.graph.attr(label=label, _attributes={'fontcolor': color})
 
-        name = f'reloc_{valid_apps.index(app)}_' + \
-               ('passed' if status else 'failed')
+        name = ('passed' if status else 'failed') + \
+               f'/reloc_{valid_apps.index(app)}'
 
         cpipe.graph.render(format='png', outfile=f'result_tests/{name}.png')
         video.stop()

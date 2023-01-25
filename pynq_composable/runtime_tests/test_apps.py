@@ -35,7 +35,7 @@ def test_apps(obj):
     label = label + pytest.overlay
 
     app._cpipe.graph.attr(label=label, _attributes={'fontcolor': color})
-    name = f'app_{apps.index(obj)}_' + ('passed' if status else 'failed')
+    name = ('passed' if status else 'failed') + f'/app_{apps.index(obj)}'
     app._cpipe.graph.render(format='png', outfile=f'result_tests/{name}.png')
     app.stop()
     assert status
