@@ -26,7 +26,7 @@ app_construct = [
      ['ps_video_in', 'duplicate_accel', [['lut_accel'], [1]], 'pr/add_accel',
       'ps_video_out']),
 
-    (['bitand'],
+    (['bitwise'],
      ['ps_video_in', 'duplicate_accel', [['lut_accel'], [1]], 'pr/bitwise',
       'ps_video_out']),
 
@@ -51,9 +51,13 @@ app_construct = [
      [['rgb2gray_accel', 'pr/cornerHarris', 'gray2rgb_accel'], [1]],
      'pr/add_accel', 'ps_video_out']),
 
-    (['dilate', 'dilate', 'bitand'], ['ps_video_in', 'duplicate_accel',
+    (['dilate', 'dilate', 'bitwise'], ['ps_video_in', 'duplicate_accel',
      [['rgb2gray_accel', 'colorthresholding_accel', 'pr/erode', 'pr/dilate',
        'pr/dilate', 'pr/erode'], [1]], 'pr/bitwise', 'ps_video_out']),
+
+    (['dilate', 'bitwise'], ['ps_video_in', 'duplicate_accel',
+     [['rgb2gray_accel', 'colorthresholding_accel', 'pr/erode', 'pr/dilate'],
+      [1]], 'pr/bitwise', 'ps_video_out']),
 
     (['add'], ['ps_video_in', 'duplicate_accel',
      [['rgb2gray_accel', 'filter2d_accel', 'colorthresholding_accel',
@@ -64,7 +68,7 @@ app_construct = [
       'pr/rgb2xyz_accel', 'gray2rgb_accel'], [1]], 'pr/add_accel',
       'ps_video_out']),
 
-    (['bitand', 'rgb2xyz'],
+    (['bitwise', 'rgb2xyz'],
      ['ps_video_in', 'duplicate_accel', [['rgb2gray_accel',
       'pr/rgb2xyz_accel', 'gray2rgb_accel'], [1]], 'pr/bitwise',
       'ps_video_out']),
