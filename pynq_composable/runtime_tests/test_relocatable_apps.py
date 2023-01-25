@@ -182,9 +182,8 @@ def get_dfx_regions_to_download(dfx, cpipe) -> list:
     """Retrieve actual DFX region to download"""
     dfx_regions = []
     for ip in dfx:
-        name = ip.replace('bitand', 'bitwise')
         for k, v in cpipe.c_dict.items():
-            if name.lower() in k.lower() and v['dfx']:
+            if ip.lower() in k.lower() and v['dfx']:
                 dfx_regions.append(k)
                 break
     return dfx_regions
