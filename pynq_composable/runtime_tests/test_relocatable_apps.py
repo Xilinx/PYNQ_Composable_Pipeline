@@ -174,7 +174,7 @@ def get_ip_object_from_overlay(ip, cpipe, regions):
     return getattr(cpipe, ip)
 
 
-def convert_string_to_ip_object(app, cpipe, regions) -> list:
+def string_to_ip_object(app, cpipe, regions) -> list:
     """From list of IP name to use and generate object list with driver"""
     obj = []
     for ip_name in app:
@@ -184,7 +184,7 @@ def convert_string_to_ip_object(app, cpipe, regions) -> list:
         else:
             branch = []
             for ip_list in ip_name:
-                branch.append(convert_string_to_ip_object(ip_list, cpipe, regions))
+                branch.append(string_to_ip_object(ip_list, cpipe, regions))
             obj.append(branch)
     return obj
 
@@ -219,7 +219,7 @@ def test_app(app, create_composable):
         pipeline[0] = 'hdmi_sink_in'
         pipeline[-1] = 'hdmi_sink_out'
 
-    app_obj = convert_string_to_ip_object(pipeline, cpipe, app[0])
+    app_obj = string_to_ip_object(pipeline, cpipe, app[0])
     cpipe._graph_debug = True
     cpipe.compose(app_obj)
     file = '../mountains.mp4' if pytest.videofile else 0
