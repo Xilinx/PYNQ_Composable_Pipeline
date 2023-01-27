@@ -94,6 +94,17 @@ app_construct = [
     (['fast'],
      ['ps_video_in', 'rgb2gray_accel', 'filter2d_accel',
       'colorthresholding_accel', 'gray2rgb_accel', 'ps_video_out']),
+
+    (['fast'], ['ps_video_in', 'pr/fifo', 'ps_video_out']),
+
+    (['cornerharris'], ['ps_video_in', 'pr/fifo', 'ps_video_out']),
+
+    (['rgb2xyz'], ['ps_video_in', 'pr/fifo', 'ps_video_out']),
+
+    (['rgb2xyz'], ['ps_video_in', 'pr/rgb2xyz', 'ps_video_out']),
+
+    (['rgb2xyz'], ['ps_video_in', 'pr/rgb2xyz', 'pr/fifo', 'ps_video_out']),
+
 ]
 
 
