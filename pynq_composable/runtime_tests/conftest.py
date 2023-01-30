@@ -6,6 +6,7 @@ import cv2 as cv
 import os
 from pynq import Overlay
 from pynq_composable import Composable
+from pynq_composable.virtual import _mem_items
 import pytest
 
 
@@ -41,7 +42,8 @@ def parameter():
     dfx_ip = list()
     for k, v in cpipe.c_dict.unloaded.items():
         element = {'ipname': k, 'modtype': v['modtype']}
-        dfx_ip.append(element)
+        if v['modtype'] not in _mem_items:
+            dfx_ip.append(element)
     return dfx_ip
 
 
