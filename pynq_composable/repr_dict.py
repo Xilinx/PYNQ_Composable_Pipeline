@@ -77,6 +77,14 @@ class ReprDictComposable(dict):
         return ReprDictComposable(newdict, expanded=self._expanded,
                                   rootname=self._rootname)
 
+    @property
+    def dfx(self):
+        """Displays only dfx IP"""
+
+        newdict = self._filter_by_status('dfx', True)
+        return ReprDictComposable(newdict, expanded=self._expanded,
+                                  rootname=self._rootname)
+
     def _repr_json_(self):
         if 'dfx' not in self:
             show_dict = dict()

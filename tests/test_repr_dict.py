@@ -22,6 +22,12 @@ _unloaded = {
     'pr_1/filter2d_accel': {'dfx': True, 'loaded': False}
 }
 
+_dfx = {
+    'pr_0/filter2d_accel': {'dfx': True, 'loaded': True},
+    'pr_0/fast_accel': {'dfx': True, 'loaded': False},
+    'pr_1/filter2d_accel': {'dfx': True, 'loaded': False}
+}
+
 _default = {
     'ps_video_in': {'dfx': False, 'loaded': True, 'default': True},
     'ps_video_out': {'dfx': False, 'loaded': True, 'default': True}
@@ -49,6 +55,11 @@ def test_unloaded(reprdictionary):
     assert test_dict == _unloaded
 
 
+def test_dfx(reprdictionary):
+    test_dict = reprdictionary.dfx
+    assert test_dict == _dfx
+
+
 def test_default(reprdictionary):
     test_dict = reprdictionary.default
     assert test_dict == _default
@@ -59,3 +70,7 @@ def test_global(reprdictionary):
     c_dict.update(_loaded)
     c_dict.update(_unloaded)
     assert reprdictionary == c_dict
+
+
+def test_json_repr(reprdictionary):
+    assert reprdictionary._repr_json_()
