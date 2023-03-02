@@ -238,7 +238,7 @@ def test_app(app, create_composable):
         cpipe.graph.attr(label=label, _attributes={'fontcolor': color})
 
         name = ('passed' if status else 'failed') + \
-               f'/reloc_{valid_apps.index(app)}'
+            f'/reloc_{valid_apps.index(app)}'
 
         cpipe.graph.render(format='png', outfile=f'result_tests/{name}.png')
         video.stop()
