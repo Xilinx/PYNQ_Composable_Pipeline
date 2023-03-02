@@ -2,8 +2,10 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+from deepdiff import DeepDiff
 import numpy as np
 import os
+import pickle as pkl
 from pynq import Overlay
 from pynq.lib.video import VideoMode
 from pynq_composable import Composable, StreamSwitch, VitisVisionIP, \
@@ -56,18 +58,18 @@ def load_ip(cpipe: Composable) -> None:
 
 @pytest.mark.dependency()
 def test_parser(tmp_path):
-    dir = tmp_path / "hwh"
-    shutil.copytree("../overlay/", dir)
-    for item in os.listdir(str(dir)):
+    path = tmp_path / "hwh"
+    ol = Overlay(pytest.overlay, download=False)
+    bitpath = os.path.dirname(ol.bitfile_name)
+    shutil.copytree(bitpath, path)
+    for item in os.listdir(str(path)):
         if item.endswith(".pkl"):
-            os.remove(os.path.join(str(dir), item))
+            os.remove(os.path.join(str(path), item))
 
-    ol = Overlay(os.path.join(str(dir), "cv_dfx_3_pr.bit"))
+    ol = Overlay(os.path.join(str(path), "cv_dfx_3_pr.bit"))
     cpipe = ol.composable
     pklfile = "../overlay/cv_dfx_3_pr_composable.pkl"
     if os.path.isfile(pklfile):
-        import pickle as pkl
-        from deepdiff import DeepDiff
         with open(pklfile, "rb") as file:
             _, c_dict, dfx_dict = pkl.load(file)
 
