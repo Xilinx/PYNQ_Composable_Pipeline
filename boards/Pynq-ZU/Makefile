@@ -23,7 +23,7 @@ project:
 	cp default_paths.json overlay/$(overlay_name)_paths.json
 
 clean:
-	rm -rf *.jou *.log NA *.str .Xil/
+	rm -rf *.jou *.log NA *.str .Xil/ $(overlay_name)
 
 distclean: clean
 	rm -rf $(overlay_name) *.zip
